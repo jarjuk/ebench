@@ -35,6 +35,7 @@ class Ebench:
     
 
     def __init__( self, debug = False ):
+        self.debug = debug
         if self.debug:
             pyvisa.log_to_screen()
 
@@ -134,13 +135,11 @@ class Cmd:
                     }
                 if menuAction is not None:
                     # Call menu action (w. parameters)
-                    menuAction( cmd, **propVals )
+                    menuAction( **propVals )
 
-    def usage( menuKey, mainMenu, mainMenuHelp, subMenuHelp, command=None  ):
+    def usage( mainMenu, mainMenuHelp, subMenuHelp, command=None  ):
         """Output 'mainMenuHelp' if 'command' is None else 'subMenuHelp' for
         'command'
-
-        :menuKey: menu option chosen by user to start usage
 
         :mainMenu: application main commands
 
@@ -165,14 +164,14 @@ class Cmd:
 
 class Tst(Cmd):
 
-    def tst1( menuKey, par1, par2="default par2 value"):
-        logging.info( "menuKey: {}, par1:{}, par2:{}".format( menuKey, par1, par2))
+    def tst1( par1, par2="default par2 value"):
+        logging.info( "par1:{}, par2:{}".format( par1, par2))
         print( "tst1: ")
         print( " - par1: {} ".format(par1))
         print( " - par2: {} ".format(par2))
-    def tst2( menuKey, par1="par1", tstPar2=1 ):
-        logging.info( "menuKey={}, par1:{}, tstPar2:{}".format( menuKey, par1, tstPar2))
-        print( "menuKey={}, par1:{}, tstPar2:{}".format( menuKey, par1, tstPar2))
+    def tst2( par1="par1", tstPar2=1 ):
+        logging.info( "par1:{}, tstPar2:{}".format( par1, tstPar2))
+        print( "par1:{}, tstPar2:{}".format( par1, tstPar2))
 
 def tstMainMenuHelp(  mainMenu ):
      print( "Commands:")
@@ -206,10 +205,10 @@ tstMenu = {
     'q'              : ("Exit", None, None),
     'Q'              : ("Exit", None, None ),
     '?'              : ("Usage help",helpPar,
-                          lambda menuKey, **argV: Cmd.usage( menuKey, mainMenu=tstMenu, mainMenuHelp=tstMainMenuHelp, subMenuHelp=tstSubMenuHelp, **argV ) ),
+                          lambda **argV: Cmd.usage( mainMenu=tstMenu, mainMenuHelp=tstMainMenuHelp, subMenuHelp=tstSubMenuHelp, **argV ) ),
     "tst1"           : ("Test action 1", tst1Par, Tst.tst1),
     "tst2"           : ("Test action( 2",  tst2Par, Tst.tst2 ),
-    "version"        : ("Output version() number", None, lambda x: print(version())),
+    "version"        : ("Output version() number", None, version) ,
 }
     
 def main( _argv ):

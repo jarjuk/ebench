@@ -29,9 +29,7 @@ class UTG962(Ebench):
          def __init__( self, addr=ADDR,  debug = False ):
             super().__init__( debug=debug)
             # self.sgen = UTG962._rm.open_resource(addr)
-            self.sgen = singleton_rm().open_resource(addr)
-            if self.debug:
-                 pyvisa.log_to_screen()
+            self.sgen = Ebench.singleton_rm().open_resource(addr)
             try:
                 self.idn = self.sgen.query('*IDN?')
                 logging.warning("Successfully connected  '{}' with '{}'".format(addr, self.idn))
@@ -117,9 +115,7 @@ class UTG962(Ebench):
                except KeyError:
                      logging.fatal( "Could not extract keyName for ch {} numStr {}".format( ch, numStr ))
                      raise 
-           if self.debug: print( "numStr={}".format(numStr))
            for ch in str(numStr):
-              if self.debug: print( "ch={}".format(ch))
               self.write( "KEY:{}".format(ch2cmd(ch)))
          def llFKey( self, val, keyMap):
              try:
@@ -501,17 +497,17 @@ mainMenu = {
     'q'              : ( "Exit", None, None),
     'Q'              : ( "Exit", None, None),
     '?'              : ( "Usage help", helpPar,
-                         lambda menuKey, **argV: Cmd.usage( menuKey, mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
-    "sine"           : ( "Generate sine -wave on channel 1|2", sineProps, lambda menuKey, **argv: sgen().generate( wave="sine", **argv) ),
-    "square"         : ( "Generate square -wave on channel 1|2", squareProps, lambda menuKey, **argv: sgen().generate( wave="square", **argv) ),
-    "pulse"          : ( "Generate pulse -wave on channel 1|2", pulseProps, lambda menuKey, **argv: sgen().generate( wave="pulse", **argv) ),
-    "arb"            : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, lambda menuKey, **argv: sgen().arbGenerate(wave="arb", **argv)),
-    "on"             : ( "Switch on channel 1|2", onOffProps, lambda menuKey, **argv: sgen().on(**argv)),
-    "off"            : ( "Switch off channel 1|2", onOffProps, lambda menuKey, **argv: sgen().off(**argv)),
-    "reset"          : ( "Send reset to UTG900 signal generator", None, lambda menuKey, **argv: sgen().reset(**argv)),
-    "screen"         : ( "Take screenshot to 'captureDir'", screenCaptureProps, lambda menuKey, **argv: sgen().screenShot(**argv)),
-    "list_resources" : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, lambda menuKey: Ebench.list_resources()),
-    "version"        : ( "Output version number", None, lambda x: print(version())),
+                         lambda **argV: Cmd.usage( mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
+    "sine"           : ( "Generate sine -wave on channel 1|2", sineProps, lambda **argv: sgen().generate( wave="sine", **argv) ),
+    "square"         : ( "Generate square -wave on channel 1|2", squareProps, lambda **argv: sgen().generate( wave="square", **argv) ),
+    "pulse"          : ( "Generate pulse -wave on channel 1|2", pulseProps, lambda **argv: sgen().generate( wave="pulse", **argv) ),
+    "arb"            : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, lambda  **argv: sgen().arbGenerate(wave="arb", **argv)),
+    "on"             : ( "Switch on channel 1|2", onOffProps, lambda **argv: sgen().on(**argv)),
+    "off"            : ( "Switch off channel 1|2", onOffProps, lambda **argv: sgen().off(**argv)),
+    "reset"          : ( "Send reset to UTG900 signal generator", None, lambda **argv: sgen().reset(**argv)),
+    "screen"         : ( "Take screenshot to 'captureDir'", screenCaptureProps, lambda **argv: sgen().screenShot(**argv) ),
+    "list_resources" : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, lambda: print(Ebench.list_resources()) ),
+    "version"        : ( "Output version number", None, lambda : print(version())),
 }
 
 
