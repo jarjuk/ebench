@@ -7,6 +7,8 @@ from absl import flags, app, logging
 from absl.flags import FLAGS
 import re
 
+import pyvisa
+
 
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
 
@@ -15,6 +17,38 @@ def version():
     with open( versionPath, "r") as fh:
         version = fh.read().rstrip()
     return version
+
+def list_resources():
+    print( Ebench.list_resources() )
+
+class Ebench:
+
+    _rm = pyvisa.ResourceManager()
+    @staticmethod
+    def list_resources():
+        logging.info( "List resources called")
+        return Ebench._rm.list_resources()
+
+    @staticmethod
+    def singleton_rm():
+        return Ebench._rm
+    
+
+    def __init__( self, debug = False ):
+        if self.debug:
+            pyvisa.log_to_screen()
+
+    def close():
+        pass
+
+    def closetti():
+        try:
+            logging.info(  "Closing Resource manager {}".format(Ebench._rm))
+            Ebench._rm.close()
+            Ebench._rm = None
+        except:
+            logging.warn(  "Closing Resource manager {} - failed".format(Ebench._rm))
+            pass
 
 
 

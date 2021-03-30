@@ -9,6 +9,9 @@ import pyvisa
 import re
 from time import sleep
 
+from ebench import version, Ebench, Cmd
+
+
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
 # flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
 flags.DEFINE_string('addr', ADDR, "UTG900 pyvisa resource address")
@@ -16,31 +19,17 @@ flags.DEFINE_string('captureDir', "pics", "Capture directory")
 
 CMD="UTG900.py"
 
-def version():
-    versionPath = os.path.join( os.path.dirname( __file__), "..", "VERSION")
-    with open( versionPath, "r") as fh:
-        version = fh.read().rstrip()
-    return version
 
-
-class UTG962:
+class UTG962(Ebench):
          """
          Unit-T UTG900 signal generator PYVISA control wrapper.
          """
 
-         _rm = pyvisa.ResourceManager()
-         @staticmethod
-         def list_resources():
-             return UTG962._rm.list_resources()
-         
-         # def list_resources(self):
-         #     return UTG962._rm.list_resources()
-             
-
          # Construct && close
          def __init__( self, addr=ADDR,  debug = False ):
-            self.sgen = UTG962._rm.open_resource(addr)
-            self.debug = debug
+            super().__init__( debug=debug)
+            # self.sgen = UTG962._rm.open_resource(addr)
+            self.sgen = singleton_rm().open_resource(addr)
             if self.debug:
                  pyvisa.log_to_screen()
             try:
@@ -51,18 +40,12 @@ class UTG962:
             self.reset()
 
          def close(self ):
+             __super__.close()
              try:
                  logging.info(  "Closing sgen {}".format(self.sgen))
                  self.sgen.close()
              except:
                  logging.warning(  "Closing sgen {} - failed".format(self.sgen))                 
-                 pass
-             try:
-                 logging.info(  "Closing Resource manager {}".format(UTG962._rm))
-                 UTG962._rm.close()
-                 UTG962._rm = None
-             except:
-                 logging.warn(  "Closing Resource manager {} - failed".format(UTG962._rm))
                  pass
 
 
@@ -449,11 +432,22 @@ class UTG962:
          def getName(self):
             return( self.query( "*IDN?"))
 
-def list_resources():
-    return UTG962._rm.list_resources()
-        
+
 # ------------------------------------------------------------------
-# State && Global
+# State && access state
+gSgen = None
+
+def sgen():
+    global gSgen
+    if gSgen is None:
+        logging.info( "Opening gSgen" )
+        gSgen = UTG962( addr = FLAGS.addr )
+    return gSgen
+
+
+# ------------------------------------------------------------------
+# Menu: command and parameters
+
 helpProps = {
     "command" : "show help for command",
 }
@@ -499,26 +493,32 @@ subMenu = {
     "version"         :  {},
 }
 
+helpPar = {
+      "command": "Command to give help on (None: help on main menu)"
+}
 
 mainMenu = {
-    'q'              : "Exit",
-    'Q'              : "Exit",
-    '?'              : "Usage help",
-    "sine"           : "Generate sine -wave on channel 1|2",
-    "square"         : "Generate square -wave on channel 1|2",
-    "pulse"          : "Generate pulse -wave on channel 1|2",
-    "arb"            : "Upload wave file and use it to generate wave on channel 1|2",
-    "on"             : "Switch on channel 1|2",
-    "off"            : "Switch off channel 1|2",
-    "reset"          : "Send reset to UTG900 signal generator",
-    "screen"         : "Take screenshot to 'captureDir'",
-    "list_resources" : "List pyvisa resources (=pyvisa list_resources() wrapper)'",
-    "version"        : "Output version number",
+    'q'              : ( "Exit", None, None),
+    'Q'              : ( "Exit", None, None),
+    '?'              : ( "Usage help", helpPar,
+                         lambda menuKey, **argV: Cmd.usage( menuKey, mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
+    "sine"           : ( "Generate sine -wave on channel 1|2", sineProps, lambda menuKey, **argv: sgen().generate( wave="sine", **argv) ),
+    "square"         : ( "Generate square -wave on channel 1|2", squareProps, lambda menuKey, **argv: sgen().generate( wave="square", **argv) ),
+    "pulse"          : ( "Generate pulse -wave on channel 1|2", pulseProps, lambda menuKey, **argv: sgen().generate( wave="pulse", **argv) ),
+    "arb"            : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, lambda menuKey, **argv: sgen().arbGenerate(wave="arb", **argv)),
+    "on"             : ( "Switch on channel 1|2", onOffProps, lambda menuKey, **argv: sgen().on(**argv)),
+    "off"            : ( "Switch off channel 1|2", onOffProps, lambda menuKey, **argv: sgen().off(**argv)),
+    "reset"          : ( "Send reset to UTG900 signal generator", None, lambda menuKey, **argv: sgen().reset(**argv)),
+    "screen"         : ( "Take screenshot to 'captureDir'", screenCaptureProps, lambda menuKey, **argv: sgen().screenShot(**argv)),
+    "list_resources" : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, lambda menuKey: Ebench.list_resources()),
+    "version"        : ( "Output version number", None, lambda x: print(version())),
 }
 
 
 
 # ------------------------------------------------------------------
+#  menu documentation (=help system)
+
 def mainMenuHelp(mainMenu):
     print( "{} - {}: Tool to control UNIT-T UTG900 Waveform generator".format(CMD, version()) )
     print( "" )
@@ -546,11 +546,11 @@ def mainMenuHelp(mainMenu):
     print( "  One-liner in linux: {} --addr $({} list_resources)".format(CMD, CMD))
     
 
-def subMenuHelp( command, menuText, subMenu ):
+def subMenuHelp( command, menuText, commandParameters ):
     print( "{} - {}".format( command, menuText))
     print( "" )
-    if len(subMenu.keys()) > 0:
-       for k,v in subMenu.items():
+    if len(commandParameters.keys()) > 0:
+       for k,v in commandParameters.items():
            print( "%10s  : %s" % (k,v) )
     else:
         print( "*No parameters*")
@@ -559,163 +559,17 @@ def subMenuHelp( command, menuText, subMenu ):
     print( "- parameters MUST be given in the order listed above")
     print( "- parameters are optional and they MAY be left out")
 
-def cmdHelp( command=None ):
-    if command is None or not command:
-        mainMenuHelp(mainMenu)
-    else:
-        subMenuHelp( command, menuText=mainMenu[command], subMenu=subMenu[command] )
-        
-    
-def invalid( msg):
-    print( msg )
-    
-# def listResources():
-#      rm = pyvisa.ResourceManager()
-#      print( rm.list_resources() )
-#      rm.close()
-
-def promptValue( prompt, key=None, cmds=None, validValues=None ):
-    ans = None
-    if cmds is None:
-        # ans <- interactive
-        ans = input( "{} > ".format(prompt) )
-    else:
-        if len(cmds ) > 0:
-            # ans <- batch
-            if key is None:
-                # not expecting key-value pair - take first
-                ans = cmds.pop(0)
-            else:
-                # expecting key=value
-                peek1st = cmds[0]
-                match = re.search( r"(?P<key>.+)=(?P<value>.*)", peek1st )
-                if match is not None:
-                    # key-value pair found
-                    if match.group('key') == key:
-                        # key matches
-                        cmds.pop(0)
-                        ans = match.group('value')
-                    else:
-                        # key does not match
-                        ans = None
-                else:
-                    # no key-value pair (when expecting one)
-                    ans = None
-
-
-
-    # ans found - lets check validity
-    if validValues is not None:
-        if ans not in  validValues:
-            print( "{} > expecting one of {} - got '{}'".format( prompt, validValues, ans  ))
-            return None
-    return ans 
 
 # ------------------------------------------------------------------
-# State && access state
-gSgen = None
+# Main
 
-def sgen():
+def main( _argv ):
     global gSgen
-    if gSgen is None:
-        logging.info( "Opening gSgen" )
-        gSgen = UTG962( addr = FLAGS.addr )
-    return gSgen
-
-
-# ------------------------------------------------------------------
-def main(_argv):
-    
-    global gSgen
-    
     logging.set_verbosity(FLAGS.debug)
-    cmds = None
-    if len(_argv) > 1:
-        cmds = _argv[1:]
-    logging.info( "Starting cmds={}".format(cmds))
-
-    goon = True
-    while goon:
-        if cmds is not None and len(cmds) == 0:
-            # all commands consumed - quit batch
-            break
-        cmd = promptValue( "Command [q=quit,?=help]", cmds=cmds, validValues=mainMenu.keys() )
-        logging.debug( "Command '{}'".format(cmd))
-        if cmd is None:
-            continue
-        elif cmd == 'q' or cmd == 'Q':
-            goon = False
-        elif cmd =='?':
-            if cmds is None:
-                cmdHelp()
-            else:
-                propVals = {
-                    k: promptValue(v,key=k,cmds=cmds) for k,v in helpProps.items()
-                }
-                cmdHelp( **propVals )
-        elif cmd == 'list':
-            listResources()
-        elif cmd == 'on':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in onOffProps.items()
-            }
-            sgen().on(**propVals)
-        elif cmd == 'off':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in onOffProps.items()
-            }
-            sgen().off(**propVals)
-        elif cmd == 'sine':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in sineProps.items()
-            }
-            logging.info( "sine: propVals:{}".format(propVals))
-            sgen().generate( wave="sine", **propVals )
-        elif cmd == 'arb':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in arbProps.items()
-            }
-            logging.info( "arb: propVals:{}".format(propVals))
-            sgen().arbGenerate( wave="arb", **propVals )
-        elif cmd == 'pulse':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in pulseProps.items()
-            }
-            logging.info( "pulse: propVals:{}".format(propVals))
-            sgen().generate( wave="pulse", **propVals )
-        elif cmd == 'square':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in squareProps.items()
-            }
-            logging.info( "square: propVals:{}".format(propVals))
-            sgen().generate( wave="square", **propVals )
-        elif cmd == 'reset':
-            sgen().reset()
-        elif cmd == 'list_resources':
-            resourses = list_resources()
-            if len(resourses) == 1:
-                print( resourses[0] )
-            else:
-                print( resourses )
-        elif cmd == 'version':
-            print( version())
-        elif cmd == 'screen':
-            propVals = {
-                k: promptValue(v,key=k,cmds=cmds) for k,v in screenCaptureProps.items()
-            }
-            sgen().screenShot(captureDir=FLAGS.captureDir, **propVals )
-    
-    # sgen = 
-
-    # Close if not opened
+    Cmd.mainMenu( _argv, mainMenu=mainMenu)
     if gSgen is not None:
-        logging.info( "Closing gSgen" )
         gSgen.close()
         gSgen = None
-
-    logging.info( "done" )
-    
-
 
 
 if __name__ == '__main__':
