@@ -86,9 +86,6 @@ class MSO1104(Ebench):
         cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, ch)
         self.write( cmd )
         
-    # def chUnit( self, ch):
-    #     cmd = "CHAN{}:UNIT?".format(ch)
-    #     return  self.query(cmd, strip=True)
 
     def setChOnOff( self, ch, onOff:None):
         cmd = ":CHAN{}:DISP {}".format(ch,"ON" if onOff else "OFF" )
@@ -167,45 +164,6 @@ class MSO1104(Ebench):
     def displayLAPod( self, pod, onOff="ON" ):
         self.write(":LA:DISP POD{},{}".format(pod, onOff))
 
-    # def laPod1Off( self ):
-    #      self.displayLAPod( pod=1, onOff="OFF")
-
-    # def laLabels( self, labels:dict=None ):
-    #      """Set labels on LogicAnalyzer ch, None clears
-
-    #      :labels: dictionary with ascii keys 0..15
-    #      """
-    #      if labels is None:
-    #          labels = { "{}".format(i): "" for i in range(16) }
-    #      # labels = defaultLabels | labels
-    #      # print( labels )
-    #      for ch,label in labels.items():
-    #           self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
-    #           self.delay(0.2)
-
-    # def measureFreq(self, ch, t=None):
-    #     """
-    #     :t: type MAX, MIN, CURRent, AVERages
-    #     """
-    #     return self.oneMeasurement( item="FREQ", ch=ch, t=t)
-
-    # def measureVpp(self, ch, t=None):
-    #     return self.oneMeasurement( item="VPP", ch=ch, t=t)
-
-    # def measureVmin(self, ch, t=None):
-    #     return self.oneMeasurement( item="VMIN", ch=ch, t=t)
-
-    # def measureVmax(self, ch, t=None):
-    #     return self.oneMeasurement( item="VMAX", ch=ch, t=t)
-
-    # def measurePeriod(self, ch, t=None):
-    #     return self.oneMeasurement( item="PER", ch=ch, t=t)
-
-    # def statFreq(self, ch, t=None):
-    #     return self.setStat( item="FREQ", ch=ch)
-
-    # def statPeriod(self, ch, t=None):
-    #     return self.setStat( item="PER", ch=ch)
 
     def statClear(self, index=None ):
         if index == None:
@@ -214,6 +172,18 @@ class MSO1104(Ebench):
              self.write(":MEAS:CLE ITEM{}".format(index))
 
     # API --->
+    def general( self, statsOnOff=None, adiOnOff=None, amSource=None):
+        if statsOnOff in ["ON", "1","OFF", "0" ]:
+            self.write( ":MEAS:STAT:DISP {}".format(statsOnOff))
+        if amSource is not None and not not amSource:
+            for source in amSource.split(","):
+                if source in [1,2,3,4,"1","2","3","4"]:
+                    source = "CHAN{}".format(source)
+                self.write( ":MEAS:AMS {}".format(source))
+        if adiOnOff in ["ON", "1","OFF", "0" ]:
+            self.write( ":MEAS:ADIS {}".format(adiOnOff))
+        self.delay()
+    
     def delay(self, delay=1):
         sleep(delay)
     
@@ -221,8 +191,16 @@ class MSO1104(Ebench):
          self.write("*RST")
          self.delay()
 
-    def setup(self, ch, probe="10x", scale=None, offset=None):
-        logging.info( "Setup ch: {}".format(ch))
+    def clear(self):
+         self.write(":CLEAR")
+         self.delay()
+
+    def setup(self, ch, probe="10x", scale=None, offset=None, stats=None):
+        """:stats: Comma separated list of stat measurements (presented bottom
+        of the screen) on the channel. 
+
+        """
+        logging.info( "Setup ch: {}, stats='{}'".format(ch, stats))
         self.setChOnOff( ch=ch, onOff = True )
         if probe is None or not probe:
             probe = "10x"
@@ -235,6 +213,10 @@ class MSO1104(Ebench):
             (val,siUnit) = self.valUnit(offset)
             self.setOffset(ch,val)
             self.setDisplayUnit(ch,siUnit)
+        if stats is not None and not not stats:
+            items = stats.split(",")
+            for item in items:
+                self.setStat(item=item.upper(), ch=ch)
         self.delay()
 
     def measurement( self, ch, measurements:str, sep=","):
@@ -247,6 +229,9 @@ class MSO1104(Ebench):
         return measurementResults
         
 
+    def clearStats( self):
+        self.statClear()
+        
     def podSetup( self, pod, labels=None, sep="," ):
         """Put 'pod' 1/2 on display and update 8 pod digital channel labels.
 
@@ -254,7 +239,6 @@ class MSO1104(Ebench):
         separated by 'sep' -character. Empty strin for missing labels.
 
         :sep: label separator in 'labels'
-
         """
 
         # Set POD display on
@@ -277,7 +261,6 @@ class MSO1104(Ebench):
         for ch,label in labelNames.items():
               self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
               self.delay(0.2)
-        
         
     def podOff( self, pod ):
         self.displayLAPod( pod=pod, onOff="OFF" )
@@ -319,6 +302,7 @@ setupPar = channelPar | {
     "probe"    : "Probe value (default 10x) [x]",
     "offset"   : "Channel offset, value + unit[V,A,W]",
     "scale"    : "Channel scale, value + unit[V,A,W]",
+    "stats"    : "Comma -separated list of stat measuremnts",
 }
 
 measurePar = channelPar | {
@@ -338,6 +322,12 @@ podPar ={
 
 screenCapturePar  = {
     'fileName'   :   "Screen capture file name (optional)",    
+}
+
+generalPar = {
+    "statsOnOff": "Display statistics ON/OFF",
+    "amSource"  : "All measurement source, Comma separated list: 1/2/3/4/MATH",
+    "adiOnOff"  : "All measurement display ON/OFF",
 }
 
 
@@ -363,12 +353,15 @@ def main( _argv ):
 
     mainMenu = {
         "Init"           : (None, None, None),
+        "general"        : ( "General setup", generalPar, gSkooppi.general ),
         "setup"          : ( "Setup channel", setupPar, gSkooppi.setup ),
         "podSetup"       : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
         "podOff"         : ( "Setup digical channels", podOffPar, gSkooppi.podOff),
 #       "on"             : ( "Open channel", onOffPar, gSkooppi.on ), 
         "off"            : ( "Close channel", onOffPar, gSkooppi.off),
+        "statClear"      : ( "Clear statistics", None, gSkooppi.clearStats),
         "reset"          : ( "Send reset to Rigol", None, gSkooppi.reset),
+        "clear"          : ( "Send clear to Rigol", None, gSkooppi.clear),
         "Measure"        : (None, None, None),
         "measure"        : ("Measure", measurePar, gSkooppi.measurement),
         "Record"         : (None, None, None),
