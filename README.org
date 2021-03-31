@@ -1,3 +1,12 @@
 * enbench - Setup of tools controlling e-instruments $Release:0.0.6-SNAPSHOT$
 
 
+* Ref
+
+Ref: https://github.com/vuthalab/RigolInstruments/blob/master/RigolInstruments.py
+Ref: [[file:~/work/data-sheets/skoopit/Rigol-mso1000z_series-programming-guide.pdf]]
+
+   [[file:~/work/data-sheets/skoopit]]
+
+
+

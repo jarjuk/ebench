@@ -1,3 +1,15 @@
+
+* Activate conda ympäristö =pdata=
+
+#+BEGIN_SRC elisp
+(conda-env-activate "pdata")
+#+END_SRC
+
+#+RESULTS:
+: Switched to conda environment: pdata
+
+
+
 * Test and develop
 
 #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*

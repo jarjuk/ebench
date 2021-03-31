@@ -9,7 +9,7 @@ import pyvisa
 import re
 from time import sleep
 
-from ebench import version, Ebench, Cmd
+from ebench import version, Ebench, Cmd, subMenuHelp, mainMenuHelpCommon, usage
 
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
@@ -35,16 +35,15 @@ class UTG962(Ebench):
                 logging.warning("Successfully connected  '{}' with '{}'".format(addr, self.idn))
             except:
                 pass
-            self.reset()
 
          def close(self ):
-             __super__.close()
-             try:
+            super().close()
+            try:
                  logging.info(  "Closing sgen {}".format(self.sgen))
                  self.sgen.close()
-             except:
-                 logging.warning(  "Closing sgen {} - failed".format(self.sgen))                 
-                 pass
+            except:
+                 logging.warning(  "Closing sgen {} - failed".format(self.sgen))
+            self.sgen = None
 
 
          # Low level commuincation 
@@ -297,14 +296,6 @@ class UTG962(Ebench):
          def otherCh( self, ch ):
              return 1 if ch == 2 else 2
 
-         def valUnit( self, valUnitsStr ):
-                match = re.search( r"(?P<value>[0-9-\.]+)(?P<unit>[a-zA-Z%]+)", valUnitsStr )
-                if match is None:
-                      msg = "Could not extract unit value from '{}'".format( valUnitsStr )
-                      logging.error(msg)
-                      raise ValueError(msg)
-                return ( match.group('value'), match.group('unit') )
-
          # API ---> 
          def reset(self):
               # Known state
@@ -331,16 +322,6 @@ class UTG962(Ebench):
               sleep( 0.1)
 
  
-         def screenShot( self, captureDir, fileName=None, ext="png"  ):
-             if fileName is None:
-                 now = datetime.now()
-                 fileName = "UTG-{}.{}".format( now.strftime("%Y%m%d-%H%M%S"), ext )
-             filePath = os.path.join( captureDir, fileName )
-             logging.info( "screenShot: filePath={}".format(filePath) )
-             self.ilScreenShot( filePath = filePath)
-             self.llOpen()
-             return filePath
-
          def generate( self, ch=1, wave="sine", freq=None, amp=None,  offset=None, phase=None, duty=None, raised=None, fall=None ):
              """sine, square, pulse generation
              """
@@ -444,9 +425,9 @@ def sgen():
 # ------------------------------------------------------------------
 # Menu: command and parameters
 
-helpProps = {
-    "command" : "show help for command",
-}
+# helpProps = {
+#     "command" : "show help for command",
+# }
 
 onOffProps  = {
     'ch'    :   "Channel 1,2 to switch on/off",    
@@ -476,18 +457,18 @@ pulseProps = squareProps | {
     'fall'  :     "Fall [ns,us,ms,s,ks]",
 }
 
-subMenu = {
-    "sine"            : sineProps,
-    "square"          : squareProps,
-    "pulse"           : pulseProps,
-    "arb"             : arbProps,    
-    "on"              : onOffProps,
-    "off"             : onOffProps,
-    "screen"          :  screenCaptureProps,
-    "reset"           :  {},
-    "list_resources"  :  {},
-    "version"         :  {},
-}
+# subMenu = {
+#     "sine"            : sineProps,
+#     "square"          : squareProps,
+#     "pulse"           : pulseProps,
+#     "arb"             : arbProps,    
+#     "on"              : onOffProps,
+#     "off"             : onOffProps,
+#     "screen"          :  screenCaptureProps,
+#     "reset"           :  {},
+#     "list_resources"  :  {},
+#     "version"         :  {},
+# }
 
 helpPar = {
       "command": "Command to give help on (None: help on main menu)"
@@ -497,7 +478,7 @@ mainMenu = {
     'q'              : ( "Exit", None, None),
     'Q'              : ( "Exit", None, None),
     '?'              : ( "Usage help", helpPar,
-                         lambda **argV: Cmd.usage( mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
+                         lambda **argV: usage( mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
     "sine"           : ( "Generate sine -wave on channel 1|2", sineProps, lambda **argv: sgen().generate( wave="sine", **argv) ),
     "square"         : ( "Generate square -wave on channel 1|2", squareProps, lambda **argv: sgen().generate( wave="square", **argv) ),
     "pulse"          : ( "Generate pulse -wave on channel 1|2", pulseProps, lambda **argv: sgen().generate( wave="pulse", **argv) ),
@@ -511,18 +492,11 @@ mainMenu = {
 }
 
 
-
 # ------------------------------------------------------------------
 #  menu documentation (=help system)
 
 def mainMenuHelp(mainMenu):
-    print( "{} - {}: Tool to control UNIT-T UTG900 Waveform generator".format(CMD, version()) )
-    print( "" )
-    print( "Usage: {} [options] [commands and parameters] ".format( CMD ))
-    print( "" )
-    print( "Commands:")
-    for k,v in mainMenu.items():
-        print( "%15s  : %s" % (k,v) )
+    mainMenuHelpCommon( cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control UNIT-T UTG900 Waveform generator")
     print( "" )
     print( "More help:")
     print( "  {} --help                          : to list options".format(CMD) )
@@ -540,21 +514,6 @@ def mainMenuHelp(mainMenu):
     print( "")
     print( "Hint:")
     print( "  One-liner in linux: {} --addr $({} list_resources)".format(CMD, CMD))
-    
-
-def subMenuHelp( command, menuText, commandParameters ):
-    print( "{} - {}".format( command, menuText))
-    print( "" )
-    if len(commandParameters.keys()) > 0:
-       for k,v in commandParameters.items():
-           print( "%10s  : %s" % (k,v) )
-    else:
-        print( "*No parameters*")
-    print( "" )
-    print( "Notice:")
-    print( "- parameters MUST be given in the order listed above")
-    print( "- parameters are optional and they MAY be left out")
-
 
 # ------------------------------------------------------------------
 # Main
@@ -562,7 +521,7 @@ def subMenuHelp( command, menuText, commandParameters ):
 def main( _argv ):
     global gSgen
     logging.set_verbosity(FLAGS.debug)
-    Cmd.mainMenu( _argv, mainMenu=mainMenu)
+    Cmd.mainMenu(_argv, mainMenu=mainMenu)
     if gSgen is not None:
         gSgen.close()
         gSgen = None
