@@ -8,7 +8,12 @@ from absl.flags import FLAGS
 import pyvisa
 from time import sleep
 
-from ebench import version, Instrument, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, list_resources, MenuValueError
+# Name of command line tool
+from .CMDS import CMD_UNIT
+CMD=CMD_UNIT
+
+
+from .ebench import version, Instrument, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, list_resources, MenuValueError
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
 flags.DEFINE_string('ip', None, "IP address of pyvisa instrument")
@@ -17,7 +22,7 @@ flags.DEFINE_string('captureDir', "pics", "Capture directory")
 flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
 
 
-CMD="UTG900.py"
+
 
 class SignalGenerator(Instrument):
     def __init__( self, addr, debug = False ):
@@ -626,7 +631,7 @@ def mainMenuHelp(mainMenu):
 # ------------------------------------------------------------------
 # Main
 
-def main( _argv ):
+def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
     logging.info( "starting")
 
@@ -664,10 +669,14 @@ def main( _argv ):
         sgen = None
 
 
-if __name__ == '__main__':
+def main():
     try:
-        app.run(main)
+        app.run(_main)
     except SystemExit:
         pass
+    
+    
+if __name__ == '__main__':
+    main()
     
 

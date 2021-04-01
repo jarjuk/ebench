@@ -7,9 +7,14 @@ from absl.flags import FLAGS
 import pyvisa
 from time import sleep
 
-from ebench import version, Instrument, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot
+import ebench
 
-CMD="Rigol"
+# Installing this module as command
+from .CMDS import CMD_RIGOL
+CMD=CMD_RIGOL
+
+from .ebench import Instrument, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, version
+
 
 flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
 flags.DEFINE_string('addr', None, "pyvisa instrument address")
@@ -417,7 +422,7 @@ def mainMenuHelp(mainMenu):
 # ------------------------------------------------------------------
 # Main
 
-def main( _argv ):
+def _main( _argv ):
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
     
@@ -457,11 +462,18 @@ def main( _argv ):
         gSkooppi.close()
         gSkooppi = None
 
-
-if __name__ == '__main__':
+def main():
     try:
-        app.run(main)
+        app.run(_main)
     except SystemExit:
         pass
+    
+    
+if __name__ == '__main__':
+    main()
+    # try:
+    #     app.run(main)
+    # except SystemExit:
+    #     pass
     
     
