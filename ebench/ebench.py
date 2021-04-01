@@ -17,6 +17,12 @@ import pyvisa
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
 
 class MenuValueError(ValueError):
+    """Exception catched in inveractive mode: Instead of aborting
+    execution, user is notified of the error and operation continues
+    with promting for next action. (In non-interactive mode execution
+    is aborted)
+
+    """
     pass
 class MenuNoRecording(Exception):
     pass
@@ -158,14 +164,15 @@ class Cmd:
 
     def promptValue( prompt:str, key:str=None, cmds:List[str]=None, validValues:List[str]=None ):
         ans = None
+        logging.debug( "promptValue: key={}, cmds={},".format(key,cmds))
         if cmds is None:
             # ans <- interactive
             ans = input( "{} > ".format(prompt) )
         else:
-            if len(cmds ) > 0:
+            # ans <- batch
+            if len(cmds) > 0:
                 # ans <- batch
                 if key is None:
-                    # not expecting key-value pair - take first
                     ans = cmds.pop(0)
                 else:
                     # expecting key=value
@@ -189,8 +196,11 @@ class Cmd:
         # ans found - lets check validity
         if validValues is not None:
             if ans not in  validValues:
-                print( "{} > expecting one of {} - got '{}'".format( prompt, validValues, ans  ))
+                msg = "{} > expecting one of {} - got '{}'".format( prompt, validValues, ans  )
+                logging.error(msg)
+                print(msg)
                 return None
+        logging.info( "promptValue: --> {}".format(ans))
         return ans 
 
     def mainMenu( self, _argv, mainMenu:Dict[str,List], mainPrompt= "Command [q=quit,?=help]" ):
@@ -256,11 +266,11 @@ class Cmd:
             # batch executes all CLI parameters
             cmds = _argv[1:]
 
-        logging.info( "Interactive: {} Starting cmds={}".format(interactive, cmds))
+        logging.info( "interactive: {} Starting cmds={}".format(interactive, cmds))
         
         goon = True
         while goon:
-            if cmds is not None and not interactive():
+            if not interactive and len(cmds) == 0:
                 # all commands consumed - quit batch
                 break
             menuCommand = Cmd.promptValue( mainPrompt, cmds=cmds, validValues=mainMenu.keys() )
@@ -297,7 +307,7 @@ def menuScreenShot( instrument:Instrument, captureDir, prefix ):
         instrument
 
         """
-        return instrument.screenShot( **argv)
+        return instrument.screenShot( captureDir=captureDir, prefix=prefix, **argv)
     return f
 
 def menuStartRecording(cmdController:Cmd):
