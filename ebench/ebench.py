@@ -4,6 +4,8 @@ from typing import Dict, List
 
 from pprint import pformat
 from datetime import datetime
+import inspect
+import textwrap
 
 import os
 from absl import flags, logging
@@ -19,18 +21,18 @@ class MenuValueError(ValueError):
 class MenuNoRecording(Exception):
     pass
 
-
-class Ebench:
+TOOLNAME="ebench"
+class Instrument:
 
     _rm = pyvisa.ResourceManager()
     @staticmethod
     def list_resources():
         logging.info( "List resources called")
-        return Ebench._rm.list_resources()
+        return Instrument._rm.list_resources()
 
     @staticmethod
     def singleton_rm():
-        return Ebench._rm
+        return Instrument._rm
     
 
     def __init__( self, debug = False ):
@@ -39,15 +41,15 @@ class Ebench:
             pyvisa.log_to_screen()
 
     def close(self):
-        Ebench.closetti()
+        Instrument.closetti()
 
     def closetti():
         try:
-            logging.info(  "Closing Resource manager {}".format(Ebench._rm))
-            Ebench._rm.close()
-            Ebench._rm = None
+            logging.info(  "Closing Resource manager {}".format(Instrument._rm))
+            Instrument._rm.close()
+            Instrument._rm = None
         except:
-            logging.warn(  "Closing Resource manager {} - failed".format(Ebench._rm))
+            logging.warn(  "Closing Resource manager {} - failed".format(Instrument._rm))
             pass
     
     def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
@@ -90,8 +92,18 @@ class Ebench:
         return (val,unit)
 
 
+
 class Cmd:
 
+    # Well knonw menu items
+    MENU_QUIT="q"             # quits loop
+    MENU_REC_SAVE="."         # save recording
+    MENU_REC_START="!"        # start/rerset recording
+    MENU_HELP="?"             # list commands
+    MENU_CMD_PARAM="??"       # list command paramters
+    MENU_VERSION="version"    # output version number
+    MENU_SCREEN="screen"      # output screenshot
+    
     def __init__( self):
         self.recording = []
 
@@ -107,6 +119,7 @@ class Cmd:
 
     # Actions
     def startRecording(self):
+        """@see module startRecording"""
         self.recording = []
         # Recording actions not recorded
         raise MenuNoRecording
@@ -117,22 +130,18 @@ class Cmd:
         """
         self.recording = self.recording + [menuCommand] + [ "{}={}".format(k,v) for k,v in commandParameters.items() ]
         logging.debug( "appendRecording: {}".format(self.recording))
-    
+
+    def anyRecordings( self ) -> bool:
+        """Recording status. True is something in recording bufffer"""
+        return len(self.recording) > 0
         
     def stopRecording(self, pgm, fileName =None, fileDir=None ):
-        """Save recording to 'fileName' in 'fileDir' and start a new
-        recording. If 'fileName' not given (or if it empty) just print
-        recording.
-
-        :fileName: where to save (None or empty just print to screen)
-
-        :fileDir: directory of fileName
-
+        """@see module function 'stopRecording'
         """
         logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
         commandsAndParameters = " ".join( self.recording)
         pgm_commandsAndParameters = "{} {}".format(pgm, commandsAndParameters)
-        if fileName is None or not fileName or fileName == ".":
+        if fileName is None or not fileName or fileName == Cmd.MENU_REC_SAVE:
             print(pgm_commandsAndParameters)
         else:
             if not os.path.exists( fileDir):
@@ -200,27 +209,58 @@ class Cmd:
         - menuAction: function to call with 'commandParameters' (as
           **argv values prompted with parameterPrompt)
         
-        Special mainMenu commands:
-        - q : quits loop
-        - Q : quits loop
 
         """
 
-        def isInteractive():
-            """Interactive receives only pgroramm name in _argv
-            """
-            return len(_argv) == 1
+        # Interactive receives only pgroramm name in _argv
+        interactive = len(_argv) == 1
+        pgm=_argv[0]
+
+        
+        def execMenuCommand(mainMenu,menuCommand):
+            # Extract mainMenu elements
+            menuSelection = mainMenu[menuCommand]
+
+            # menuPrompt = menuSelection[0]
+            parameterPrompt = menuSelection[1]
+            menuAction =  menuSelection[2]
+            commandParameters = {}
+
+            if parameterPrompt is not None:
+                # Promp user/read CLI keyvalue parameters
+                commandParameters = {
+                        k: Cmd.promptValue(v,key=k,cmds=cmds) for k,v in parameterPrompt.items()
+                }
+
+            if menuAction is not None:
+                # Call menu action (w. parameters)
+                try:
+                    returnVal = menuAction( **commandParameters )
+                    self.appendRecording( menuCommand, commandParameters )
+                    if returnVal is not None and interactive:
+                        print( pformat(returnVal) )
+                except MenuValueError as err:
+                    if interactive:
+                        # Interactive error - print erros msg && continue
+                        print( "Error: {}".format(str(err)))
+                    else:
+                        raise
+                except MenuNoRecording:
+                    # Help, start/stop recording commands
+                    pass
+            return True
+
         
         cmds = None
-        if not isInteractive():
+        if not interactive:
+            # batch executes all CLI parameters
             cmds = _argv[1:]
 
-        logging.info( "Interactive: {} Starting cmds={}".format(isInteractive(), cmds))
-
+        logging.info( "Interactive: {} Starting cmds={}".format(interactive, cmds))
         
         goon = True
         while goon:
-            if cmds is not None and len(cmds) == 0:
+            if cmds is not None and not interactive():
                 # all commands consumed - quit batch
                 break
             menuCommand = Cmd.promptValue( mainPrompt, cmds=cmds, validValues=mainMenu.keys() )
@@ -228,52 +268,90 @@ class Cmd:
             logging.debug( "Command '{}'".format(menuCommand))
             if menuCommand is None:
                 continue
-            elif menuCommand == 'q' or menuCommand == 'Q':
+            elif menuCommand == Cmd.MENU_QUIT:
                 goon = False
             else:
-                # Extract mainMenu elements
-                menuSelection = mainMenu[menuCommand]
-                
-                # menuPrompt = menuSelection[0]
-                parameterPrompt = menuSelection[1]
-                menuAction =  menuSelection[2]
-                commandParameters = {}
+                goon = execMenuCommand( mainMenu, menuCommand)
 
-                if parameterPrompt is not None:
-                    # Promp user/read CLI keyvalue parameters
-                    commandParameters = {
-                            k: Cmd.promptValue(v,key=k,cmds=cmds) for k,v in parameterPrompt.items()
-                        }
-                        
-                if menuAction is not None:
-                    # Call menu action (w. parameters)
-                    try:
-                        returnVal = menuAction( **commandParameters )
-                        self.appendRecording( menuCommand, commandParameters )
-                        if returnVal is not None and isInteractive():
-                            print( pformat(returnVal) )
-                    except MenuValueError as err:
-                        if isInteractive():
-                            # Error in command parameter value - start over instead of exiting
-                            print( "Error: {}".format(str(err)))
-                            continue
-                        else:
-                            raise
-                    except MenuNoRecording:
-                        # Help, start/stop recording commands
-                        pass
+        # Confirmm whether save recording
+        if self.anyRecordings() and interactive and Cmd.MENU_REC_SAVE in mainMenu:
+            print( "Save recordings?")
+            execMenuCommand( mainMenu, Cmd.MENU_REC_SAVE)
 
 # ------------------------------------------------------------------
-# Common menu actions 
+# Common menu actions
+
+def menuScreenShot( instrument:Instrument, captureDir, prefix ):
+    """Lambda function to use in mainMenu construct
+
+    Usage example: 
+
+    Document string in f is presented in help commands
+
+    """
+
+    def f( **argv ):
+        """Take a screen shot from instrument and save it to a file
+
+        Method of taking the screen shot varies deding on the
+        instrument
+
+        """
+        return instrument.screenShot( **argv)
+    return f
+
+def menuStartRecording(cmdController:Cmd):
+    """Lambda function to use in mainMenu construct
+
+    Usage example: Cmd.MENU_REC_START  : ( "Start recording", None, menuStartRecording ),
+
+    Document string in f is presented in help commands
+
+    """
+    def f(**argv):
+        """Clear the command list, which {TOOLNAME} -tool collects during
+        interactive session
+
+        The command list can be later saved into a file
+
+        """
+        return cmdController.startRecording(**argv)
+    return f
+
+
+def menuStopRecording( cmdController:Cmd, pgm, fileDir ):
+    """Lambda function to use in mainMenu construct
+
+    Usage example: 
+      Cmd.MENU_REC_SAVE   : 
+       ( "Stop recording", stopRecordingPar, 
+          menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir ) ),
+
+    Document string in f is presented in help commands
+
+    """
+    def f(**argv):
+        """Save current command recording history to 'fileName' in 'fileDir'
+        and clear command history.
+
+        If no 'fileName' given, just print current command history
+        (and do not clear command history)
+
+        """
+        return cmdController.stopRecording(pgm=pgm, fileDir=fileDir, **argv )
+    return f
+
 
 def version():
+    """Version number of ebench tool"""
     versionPath = os.path.join( os.path.dirname( __file__), "..", "VERSION")
     with open( versionPath, "r") as fh:
         version = fh.read().rstrip()
     return version
 
+
 def list_resources():
-    print( Ebench.list_resources() )
+    print( Instrument.list_resources() )
 
 def mainMenuHelpCommon( cmd, mainMenu, synopsis ):
     print( "{} - {}: {}".format(cmd, version(), synopsis) )
@@ -290,9 +368,29 @@ def mainMenuHelpCommon( cmd, mainMenu, synopsis ):
             print( "---------- %10s ----------" % (k.center(10)) )
 
 
-def subMenuHelp( command, menuText, commandParameters ):
+def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
+    """Print 'menuText' as synopsis, followed by 'menuAction' docstring
+     and 'commandParameters'"""
+
+    # Synopsis
     print( "{} - {}".format( command, menuText))
     print( "" )
+    
+    # Docstring
+    if menuAction is not None:
+        if menuAction.__doc__ is None or not menuAction.__doc__:
+            missingDoc = textwrap.dedent( f"""
+                 !!!!!!!!!!!
+                 '{command}' -command does not define doc-string clarifying actions taken. 
+   
+                 Raise an issue to developer to add the missing  doc-string to {command}'-command
+                 !!!!!!!!!!!""")
+            
+            print(missingDoc)
+        else:
+            print(inspect.getdoc(menuAction))
+        print( "" )
+    
     if len(commandParameters.keys()) > 0:
        for k,v in commandParameters.items():
            print( "%10s  : %s" % (k,v) )
@@ -316,12 +414,18 @@ def usage( mainMenu, mainMenuHelp, subMenuHelp, command=None  ):
     one liner from mainMenu for command synopsis, and then command
     parameters from mainMenu
 
+    :doc: Output menuAction docString True/False(=default), unless
+    'command' is one of MENU_QUIT, MENU_HELP, MENU_CMD_DOC, MENU_CMD_PARAM
+
     """
     if command is None or not command:
         mainMenuHelp(mainMenu=mainMenu)
     else:
         commandParameters = {} if mainMenu[command][1] is None else mainMenu[command][1]
-        subMenuHelp( command, menuText=mainMenu[command][0], commandParameters=commandParameters )
+        menuActionToDoc = None
+        if command not in [ Cmd.MENU_QUIT, Cmd.MENU_HELP, Cmd.MENU_CMD_PARAM]:
+            menuActionToDoc = mainMenu[command][2]
+        subMenuHelp( command, menuText=mainMenu[command][0], commandParameters=commandParameters, menuAction=menuActionToDoc )
 
     # Help actions not recorded
     raise MenuNoRecording()

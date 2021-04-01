@@ -7,74 +7,77 @@ from absl.flags import FLAGS
 import pyvisa
 from time import sleep
 
-from ebench import version, Ebench, Cmd, subMenuHelp, mainMenuHelpCommon, usage
+from ebench import version, Instrument, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot
 
 CMD="Rigol"
-ADDR = "TCPIP0::skooppi::INSTR"
-flags.DEFINE_string('addr', ADDR, "UTG900 pyvisa resource address")
+
+flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
+flags.DEFINE_string('addr', None, "pyvisa instrument address")
 flags.DEFINE_string('captureDir', "pics", "Capture directory")
 flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
 
-class MSO1104(Ebench):
-    """
-    Rigol MS1104 osciloscope services
+
+class Osciloscope(Instrument):
+    """Pyvisa instrument managing pyvisa resource and communicating using
+    write and query operations
     """
 
-
-    # Construct && close
-    def __init__( self, addr=ADDR,  debug = False ):
+    def __init__( self, addr, debug = False ):
         super().__init__( debug=debug)
-        self.rm = pyvisa.ResourceManager()
         self.addr = addr
-        self.ip = "skooppi"
-        self.skooppi = Ebench.singleton_rm().open_resource(addr)
         try:
-           self.idn = self.skooppi.query('*IDN?')
-           logging.warning("Successfully connected  '{}' with '{}'".format(addr, self.idn))
-        except:
-           pass
-
+            self.instrument = Instrument.singleton_rm().open_resource(self.addr)
+            
+        except pyvisa.errors.VisaIOError as err:
+            self.instrument = None
+            logging.error(err)
+            
     def close(self):
-        super().close()
         try:
-            logging.info(  "Closing skooppi {}".format(self.skooppi))
-            self.skooppi.close()
+            logging.info(  "Closing instrument {}".format(self.instrument))
+            if self.instrument is not None:
+                self.instrument.close()
         except:
-            logging.error(  "Closing skooppi {} - failed".format(self.skooppi))                 
-        self.skooppi = None        
+            logging.error(  "Closing instrument {} - failed".format(self.instrument))                 
+        self.instrument = None        
 
-    # Low level commuincation 
+    @property
+    def addr(self) -> str :
+        if not hasattr(self, "_addr"):
+             return None
+        return self._addr
+
+    @addr.setter
+    def addr( self, addr:str):
+        self._addr = addr
+
+    # Low level communication
     def write(self, cmd ):
         logging.info( "write: {}".format(cmd))
-        self.skooppi.write(cmd)
+        self.instrument.write(cmd)
 
     def query(self, cmd, strip=False ):
         logging.info( "query: {}".format(cmd))
-        ret = self.skooppi.query(cmd)
+        ret = self.instrument.query(cmd)
         if strip: ret = ret.rstrip()
         return( ret )
 
-    # IL (intermediate language)
-    def measureStatItem( self, item, ch, t):
-         cmd = ":MEASure:STAT:ITEM? {},{},CHAN{}".format(t, item, ch)
-         return( float(self.query(cmd)))
+class Rigol(Osciloscope):
+    """
+    Rigol instrument
+    """
 
-    def measureItem( self, item, ch):
-         cmd = ":MEASure:ITEM? {},CHAN{}".format(item, ch)
-         logging.info( "measureItem: cmd={}".format(cmd))
-         return( float(self.query(cmd)))
-
-    def oneMeasurement(self, ch, item, t=None):
-       if t is None:
-           val = self.measureItem( item=item, ch=ch)
-       else:
-           val = self.measureStatItem( item=item, ch=ch, t=t )
-
-       if val > 10**12:
-            # Ridiculous values discard, e.g.g FREQ
-            val = None
-
-       return( val )
+    # Construct && close
+    def __init__( self, ip:None, addr=None, debug = False ):
+        if addr is None:
+            addr = "TCPIP0::{}::INSTR".format(ip)
+        super().__init__( addr=addr, debug=debug)
+        self.ip = ip
+        try:
+           idn = self.instrument.query('*IDN?')
+           logging.warning("Successfully connected  '{}' with '{}'".format(addr, idn))
+        except:
+           pass
 
     def ilScreenShot( self, filePath):
         cmd = "lxi  screenshot  {} --address {} >/dev/null".format( filePath, self.ip )
@@ -82,26 +85,74 @@ class MSO1104(Ebench):
         os.system(cmd)
 
 
-    def setStat( self, item, ch ):
+        
+
+class MSO1104(Rigol):
+    """
+    Rigol MS1104 osciloscope
+    """
+
+    # Construct && close
+    def __init__( self, addr=None, ip=None, debug = False ):
+        super().__init__( addr=addr, ip=ip, debug=debug)
+
+        
+    # Rigol specicig commands
+    def rigolClear( self):
+        self.write(":CLEAR")
+        
+    def rigolReset( self):
+        self.write("*RST")
+
+    def rigolChannelStatMeasure( self, item, ch, t):
+         cmd = ":MEASure:STAT:ITEM? {},{},CHAN{}".format(t, item, ch)
+         return( float(self.query(cmd)))
+
+    def rigolChannelMeasure( self, item, ch):
+         cmd = ":MEASure:ITEM? {},CHAN{}".format(item, ch)
+         logging.info( "rigolChannelMeasure: cmd={}".format(cmd))
+         return( float(self.query(cmd)))
+
+    def rigolMeasurement(self, ch, item, t=None):
+       if t is None:
+           val = self.rigolChannelMeasure( item=item, ch=ch)
+       else:
+           val = self.rigolChannelStatMeasure( item=item, ch=ch, t=t )
+
+       if val > 10**12:
+            # Ridiculous values discard, e.g.g FREQ
+            val = None
+       return( val )
+
+    def rigolChannelMeasurementStat( self, item, ch ):
         cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, ch)
         self.write( cmd )
         
-
-    def setChOnOff( self, ch, onOff:None):
+    def rigolChannelOnOff( self, ch, onOff:None):
         cmd = ":CHAN{}:DISP {}".format(ch,"ON" if onOff else "OFF" )
         return  self.write(cmd)
 
     def setdChOnOff( self, dCh, onOff:bool= None):
         cmd = ":LA:DIGI{}:DISPLAY {}" .format(dCh,"ON" if onOff else "OFF" )
         return  self.write(cmd)
-        
     
-    def setProbe( self, ch, probe ):
+    def rigolChannelProbe( self, ch, probe ):
         (val,unit) = self.valUnit(probe, validValues=["x"])
         cmd = ":CHAN{}:PROB {}".format( ch, probe)
         self.write( cmd )
 
-    def setOffset( self, ch, offset ):
+    def rigolStatDisplayOnOff( self, statsOnOff):
+        self.write( ":MEAS:STAT:DISP {}".format(statsOnOff))
+
+    def rigolChannelAmsOnOff( self, source):
+        if source in [1,2,3,4,"1","2","3","4"]:
+            source = "CHAN{}".format(source)
+        self.write( ":MEAS:AMS {}".format(source))
+
+    def rigolChannelAdiOnOff( self, adiOnOff):
+        self.write( ":MEAS:ADIS {}".format(adiOnOff))
+
+    def rigolChannelOffset( self, ch, offset ):
         """Set or query the vertical offset of the specified channel. The
         default unit is V.
 
@@ -114,7 +165,7 @@ class MSO1104(Ebench):
         cmd = ":CHAN{}:OFFSET {}".format( ch, offset)
         self.write( cmd )
          
-    def setScale( self, ch, scale ):
+    def rigolChannelScale( self, ch, scale ):
         """Set or query the vertical scale of the specified channel. The
         default unit is V.
 
@@ -138,7 +189,7 @@ class MSO1104(Ebench):
         cmd = ":CHAN{}:SCAL {}".format( ch, scale)
         self.write( cmd )
          
-    def setDisplayUnit( self, ch, siUnit ):
+    def rigolChannelDisplayUnit( self, ch, siUnit ):
         """Set or query the amplitude display unit of the specified channel"""
         def si2RigolUnit( siUnit):
             unitMapper = {
@@ -155,17 +206,16 @@ class MSO1104(Ebench):
         cmd = ":CHAN{}:UNIT {}".format( ch,si2RigolUnit(siUnit))
         self.write(cmd)
 
+    def rigolDigitalLabel( self, ch, label):
+        self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
+    
     def getName(self):
        return( self.query( "*IDN?"))
-
-    # def laPod1On( self  ):
-    #      self.displayLAPod( pod=1, onOff="ON")
          
-    def displayLAPod( self, pod, onOff="ON" ):
+    def rigolDigitalPodOnOff( self, pod, onOff="ON" ):
         self.write(":LA:DISP POD{},{}".format(pod, onOff))
 
-
-    def statClear(self, index=None ):
+    def rigolStatClear(self, index=None ):
         if index == None:
             self.write(":MEAS:CLE ALL")
         else:
@@ -173,64 +223,86 @@ class MSO1104(Ebench):
 
     # API --->
     def general( self, statsOnOff=None, adiOnOff=None, amSource=None):
+        """
+        Scope general settings: statsittis on/off
+        """
         if statsOnOff in ["ON", "1","OFF", "0" ]:
-            self.write( ":MEAS:STAT:DISP {}".format(statsOnOff))
+            # self.write( ":MEAS:STAT:DISP {}".format(statsOnOff))
+            self.rigolStatDisplayOnOff(statsOnOff)
         if amSource is not None and not not amSource:
             for source in amSource.split(","):
-                if source in [1,2,3,4,"1","2","3","4"]:
-                    source = "CHAN{}".format(source)
-                self.write( ":MEAS:AMS {}".format(source))
+                # if source in [1,2,3,4,"1","2","3","4"]:
+                #     source = "CHAN{}".format(source)
+                # self.write( ":MEAS:AMS {}".format(source))
+                self.rigolChannelAmsOnOff( source)
         if adiOnOff in ["ON", "1","OFF", "0" ]:
-            self.write( ":MEAS:ADIS {}".format(adiOnOff))
+            self.rigolChannelAdiOnOff(adiOnOff )
         self.delay()
     
     def delay(self, delay=1):
         sleep(delay)
     
     def reset(self):
-         self.write("*RST")
-         self.delay()
+        self.rigolReset()
 
     def clear(self):
-         self.write(":CLEAR")
-         self.delay()
+        self.rigolClear()
+        self.delay()
 
-    def setup(self, ch, probe="10x", scale=None, offset=None, stats=None):
-        """:stats: Comma separated list of stat measurements (presented bottom
-        of the screen) on the channel. 
+    def setup(self, channel, probe="10x", scale=None, offset=None, stats=None):
+        """Setup osciloscope 'channel' probe attenuation, scale and offset, and
+        statistic measurement collection.
+
+
+        :probe: Attenuation factor of the probe used (default probe=10x). 
+
+        :scale: Set vertical scale and unit of 'channel', if given (=no
+        change if not give). Example: scale=1V.
+
+        :offset: Set offset and unit of channel
+
+        :stats: comma separed list of measurement items to start
+        collecting in scope bottom row. Empty list does not change
+        measurement statistic collection
+
+        Valid measument identifiers: MAX, VMIN, VPP, VTOP, VBASe,
+        VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea, PREShoot, PERiod,
+        FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy, NDUTy, TVMAX,
+        TVMIN, PSLEWrate, NSLEWrate, VUPper, VMID, VLOWer, VARIance,
+        PVRMS, PPULses, NPULses, PEDGes, and NEDGes
 
         """
-        logging.info( "Setup ch: {}, stats='{}'".format(ch, stats))
-        self.setChOnOff( ch=ch, onOff = True )
+        logging.info( "Setup channel: {}, stats='{}'".format(channel, stats))
+        self.rigolChannelOnOff( ch=channel, onOff = True )
         if probe is None or not probe:
             probe = "10x"
-        self.setProbe( ch, probe )
+        self.rigolChannelProbe( channel, probe )
         if scale is not None and not not scale:
             (val,siUnit) = self.valUnit(scale)
-            self.setScale(ch,val)
-            self.setDisplayUnit(ch,siUnit)
+            self.rigolChannelScale(channel,val)
+            self.rigolChannelDisplayUnit(channel,siUnit)
         if offset is not None and not not offset:
             (val,siUnit) = self.valUnit(offset)
-            self.setOffset(ch,val)
-            self.setDisplayUnit(ch,siUnit)
+            self.rigolChannelOffset(channel,val)
+            self.rigolChannelDisplayUnit(channel,siUnit)
         if stats is not None and not not stats:
             items = stats.split(",")
             for item in items:
-                self.setStat(item=item.upper(), ch=ch)
+                self.rigolChannelMeasurementStat(item=item.upper(), ch=channel)
         self.delay()
 
     def measurement( self, ch, measurements:str, sep=","):
         logging.info( "measurement ch: {}, measurements: {}".format(ch, measurements))
         measuremenList = measurements.split(sep)
         measurementResults =  {
-            measurement.upper(): self.oneMeasurement( ch, measurement.upper() ) for measurement in measuremenList 
+            measurement.upper(): self.rigolMeasurement( ch, measurement.upper() ) for measurement in measuremenList 
             
         }
         return measurementResults
         
 
     def clearStats( self):
-        self.statClear()
+        self.rigolStatClear()
         
     def podSetup( self, pod, labels=None, sep="," ):
         """Put 'pod' 1/2 on display and update 8 pod digital channel labels.
@@ -242,7 +314,7 @@ class MSO1104(Ebench):
         """
 
         # Set POD display on
-        self.displayLAPod( pod=pod, onOff="ON" )
+        self.rigolDigitalPodOnOff( pod=pod, onOff="ON" )
 
         # Extract digial channel labels (separated by)
         labelArray = labels.split(sep)
@@ -259,22 +331,23 @@ class MSO1104(Ebench):
 
         # Write labels to scope
         for ch,label in labelNames.items():
-              self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
-              self.delay(0.2)
+            #self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
+            self.rigolDigitalLabel(ch,label)
+            self.delay(0.2)
         
-    def podOff( self, pod ):
-        self.displayLAPod( pod=pod, onOff="OFF" )
+    def digitalPodOff( self, pod ):
+        self.rigolDigitalPodOnOff( pod=pod, onOff="OFF" )
         self.delay()
         
-    def on(self, ch ):
+    def channelOn(self, ch ):
         logging.info( "on ch: {}".format(ch))
-        self.setChOnOff( ch=ch, onOff = True )
+        self.rigolChannelOnOff( ch=ch, onOff = True )
         self.delay()        
         
         
-    def off(self, ch ):
+    def channelOff(self, ch ):
         logging.info( "off ch: {}".format(ch))
-        self.setChOnOff( ch=ch, onOff = False )
+        self.rigolChannelOnOff( ch=ch, onOff = False )
         self.delay()
 
         
@@ -282,11 +355,11 @@ class MSO1104(Ebench):
 # ------------------------------------------------------------------
 # State && access state
 
-def skooppi():
-    logging.info( "Open skooppi in: {}".format(FLAGS.addr))
-    return MSO1104(addr = FLAGS.addr)
+# def skooppi():
+#     logging.info( "Open skooppi in: {}".format(FLAGS.addr))
+#     return MSO1104(addr = FLAGS.addr, ip=FLAGS.ip)
 
-cmdController = Cmd()
+# cmdController = Cmd()
 
 # ------------------------------------------------------------------
 # Menu: command parameters
@@ -296,7 +369,7 @@ helpPar = {
 }
 
 channelPar = {
-    "ch"       : "Channel 1-4"
+    "channel"  : "Channel 1-4 to act upon"
 }
 setupPar = channelPar | {
     "probe"    : "Probe value (default 10x) [x]",
@@ -343,43 +416,38 @@ def mainMenuHelp(mainMenu):
 # ------------------------------------------------------------------
 # Main
 
-
 def main( _argv ):
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
     
-    gSkooppi=MSO1104(addr=FLAGS.addr)
+    gSkooppi=MSO1104(addr=FLAGS.addr, ip=FLAGS.ip)
     cmdController = Cmd()
 
     mainMenu = {
-        "Init"           : (None, None, None),
-        "general"        : ( "General setup", generalPar, gSkooppi.general ),
-        "setup"          : ( "Setup channel", setupPar, gSkooppi.setup ),
-        "podSetup"       : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
-        "podOff"         : ( "Setup digical channels", podOffPar, gSkooppi.podOff),
-#       "on"             : ( "Open channel", onOffPar, gSkooppi.on ), 
-        "off"            : ( "Close channel", onOffPar, gSkooppi.off),
-        "statClear"      : ( "Clear statistics", None, gSkooppi.clearStats),
-        "reset"          : ( "Send reset to Rigol", None, gSkooppi.reset),
-        "clear"          : ( "Send clear to Rigol", None, gSkooppi.clear),
-        "Measure"        : (None, None, None),
-        "measure"        : ("Measure", measurePar, gSkooppi.measurement),
-        "Record"         : (None, None, None),
-        "!"              : ( "Start recording", None, cmdController.startRecording),
-        "."              : ( "Stop recording", stopRecordingPar,
-                             lambda **argv: cmdController.stopRecording( pgm=_argv[0], fileDir=FLAGS.recordingDir, **argv ) ),
-        "screen"         : ( "Take screenshot", screenCapturePar,
-                             lambda **argv: gSkooppi.screenShot( captureDir = FLAGS.captureDir, prefix="Rigol-", **argv)),
-        "Misc"           : (None, None, None),        
-        "list_resources" : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, lambda: print(Ebench.list_resources()) ),
-        "version"        : ( "Output version number", None, lambda : print(version())),
-        "Help"           : (None, None, None),                
-        'q'              : ( "Exit", None, None),
-        '?'              : ( "List commands", None,
+        "Init"              : (None, None, None),
+        "general"           : ( "General setup", generalPar, gSkooppi.general),
+        "setup"             : ( "Setup channel", setupPar, gSkooppi.setup ),
+        "podSetup"          : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
+        "podOff"            : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
+        "on"                : ( "Open channel", onOffPar, gSkooppi.channelOn),
+        "off"               : ( "Close channel", onOffPar, gSkooppi.channelOff),
+        "statClear"         : ( "Clear statistics", None, gSkooppi.clearStats),
+        "reset"             : ( "Send reset to Rigol", None, gSkooppi.reset),
+        "clear"             : ( "Send clear to Rigol", None, gSkooppi.clear),
+        "Measure"           : (None, None, None),
+        "measure"           : ("Measure", measurePar, gSkooppi.measurement),
+        "Record"            : (None, None, None),
+        Cmd.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
+        Cmd.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
+        Cmd.MENU_SCREEN     : ( "Take screenshot", screenCapturePar, menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
+        "Misc"              : (None, None, None),        
+        Cmd.MENU_VERSION    : ( "Output version number", None, version ),
+        "Help"              : (None, None, None),                
+        Cmd.MENU_QUIT       : ( "Exit", None, None),
+        Cmd.MENU_HELP       : ( "List commands", None,
                              lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
-        '??'             : ( "List command parameters", helpPar,
+        Cmd.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
                              lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
-        
     }
 
     
