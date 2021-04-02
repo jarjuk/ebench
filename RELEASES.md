@@ -1,3 +1,4 @@
+## 0.0.8-SNAPSHOT/20210402-19:45:31
 ## 0.0.7/20210402-19:44:32
 
 - From from https://github.com/jarjuk/UTG900 0.0.6-SNAPSHOT
