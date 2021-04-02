@@ -8,6 +8,7 @@ import inspect
 import textwrap
 
 import os
+import sys
 from absl import flags, logging
 import re
 
@@ -30,42 +31,26 @@ class MenuNoRecording(Exception):
 TOOLNAME="ebench"
 class Instrument:
 
-    _rm = pyvisa.ResourceManager()
-    @staticmethod
-    def list_resources():
-        logging.info( "List resources called")
-        return Instrument._rm.list_resources()
-
-    @staticmethod
-    def singleton_rm():
-        return Instrument._rm
-    
-
     def __init__( self, debug = False ):
         self.debug = debug
-        if self.debug:
-            pyvisa.log_to_screen()
 
     def close(self):
-        Instrument.closetti()
+        pass
 
-    def closetti():
-        try:
-            logging.info(  "Closing Resource manager {}".format(Instrument._rm))
-            Instrument._rm.close()
-            Instrument._rm = None
-        except:
-            logging.warn(  "Closing Resource manager {} - failed".format(Instrument._rm))
-            pass
-    
+        
     def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
         if fileName is None or not fileName:
             now = datetime.now()
             fileName = "{}{}.{}".format( prefix, now.strftime("%Y%m%d-%H%M%S"), ext )
         filePath = os.path.join( captureDir, fileName )
         logging.info( "screenShot: filePath={}".format(filePath) )
-        self.ilScreenShot(filePath=filePath)
+        self.screenShotImplementation(filePath=filePath)
         return filePath
+
+    def screenShotImplementation( self, filePath):
+        """screenShotImplementation method MUST be be implemented for a concrete instrument
+        """
+        raise NotImplementedError("screenShotImplementation not implmemented for class {}".format( self.__class__.__name__))
         
 
     def valUnit( self, valUnitStr, validValues:List[str]=None ):
@@ -97,8 +82,109 @@ class Instrument:
              
         return (val,unit)
 
+class PyInstrument(Instrument):
+    """Instrument which can be accessed using pyvisa
+    """
+    
+    # ------------------------------------------------------------------
+    # Singleton
+
+    # ResourceManager signleton
+    _rm = None
+
+    def singleton_rm():
+        if PyInstrument._rm is None:
+            PyInstrument._rm = pyvisa.ResourceManager()
+        return PyInstrument._rm
+
+    def closetti():
+        try:
+            logging.info(  "Closing Resource manager {}".format(PyInstrument._rm))
+            PyInstrument._rm.close()
+            PyInstrument._rm = None
+        except:
+            logging.warn(  "Closing Resource manager {} - failed".format(PyInstrument._rm))
 
 
+    # ------------------------------------------------------------------
+    # construct && close
+    
+    def __init__( self, addr, debug = False ):
+        super().__init__( debug=debug)
+        logging.info( "Open PyInstrument instrument in addr {}".format(addr))
+        self.addr = addr
+        try:
+            self.instrument = PyInstrument.singleton_rm().open_resource(self.addr)
+        except pyvisa.errors.VisaIOError as err:
+                 self.instrument = None
+                 logging.error(err)
+        except ValueError as err:
+                 self.instrument = None
+                 logging.error(err)
+        
+        if debug:
+            pyvisa.log_to_screen()
+
+    def close(self):
+        super().close()
+        PyInstrument.closetti()
+
+    # ------------------------------------------------------------------
+    # properties
+    @property
+    def addr(self) -> str :
+        if not hasattr(self, "_addr"):
+             return None
+        return self._addr
+
+    @addr.setter
+    def addr( self, addr:str):
+        self._addr = addr
+
+    # ------------------------------------------------------------------
+    # Low level communication
+    def write(self, cmd ):
+        logging.info( "write: {}".format(cmd))
+        self.instrument.write(cmd)
+
+    def read_raw(self):
+        raw = self.instrument.read_raw()
+        logging.info( "read_raw return getsizeof(raw) {} bytes".format(sys.getsizeof(raw)))
+        return raw
+
+    def query(self, cmd, strip=False ):
+        logging.info( "query: {}".format(cmd))
+        ret = self.instrument.query(cmd)
+        if strip: ret = ret.rstrip()
+        return( ret )
+
+    # ------------------------------------------------------------------
+    # Common commands to all visa instrumetn
+    
+    def pyvisaGetName(self):
+       return( self.query( "*IDN?"))
+
+    def pyvisaReset(self):
+        self.write( "*RST" )
+
+class Osciloscope(PyInstrument):
+    """Pyvisa instrument managing pyvisa resource and communicating using
+    write and query operations
+    """
+
+    def __init__( self, addr, debug = False ):
+        super().__init__( addr=addr, debug=debug)
+        
+    def close(self):
+        super().close()
+
+class SignalGenerator(PyInstrument):
+    def __init__( self, addr, debug = False ):
+        super().__init__( addr=addr, debug=debug)
+
+    def close(self):
+        super().close()
+        
 class Cmd:
 
     # Well knonw menu items
@@ -291,6 +377,7 @@ class Cmd:
 # ------------------------------------------------------------------
 # Common menu actions
 
+
 def menuScreenShot( instrument:Instrument, captureDir, prefix ):
     """Lambda function to use in mainMenu construct
 
@@ -359,9 +446,10 @@ def version():
         version = fh.read().rstrip()
     return version
 
-
 def list_resources():
-    print( Instrument.list_resources() )
+    logging.info( "List resources called")
+    return PyInstrument.singleton_rm().list_resources()
+
 
 def mainMenuHelpCommon( cmd, mainMenu, synopsis ):
     print( "{} - {}: {}".format(cmd, version(), synopsis) )
