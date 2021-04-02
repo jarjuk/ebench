@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
-from CMDS import CMD_UNIT
+
+
+from .Unit import UnitSignalGenerator
+from .ebench import version, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, list_resources, MenuValueError
+
+# Installing this module as command
+from .CMDS import CMD_UNIT
 CMD=CMD_UNIT
-
-from ebench import version, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, list_resources, MenuValueError
-from Unit import UnitSignalGenerator
-
 
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
-flags.DEFINE_string('ip', None, "IP address of pyvisa instrument")
-flags.DEFINE_string('addr', ADDR, "UTG900 pyvisa resource address")
-flags.DEFINE_string('captureDir', "pics", "Capture directory")
-flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
 
 class UTG962(UnitSignalGenerator):
 

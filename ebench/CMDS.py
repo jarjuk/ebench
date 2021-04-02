@@ -1,2 +1,2 @@
-CMD_RIGOL="ebMSO1104"
-CMD_UNIT="ebUTG962"
+CMD_RIGOL="ebRigol"
+CMD_UNIT="ebUnit"

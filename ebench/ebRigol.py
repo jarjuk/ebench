@@ -1,23 +1,13 @@
-#!/usr/bin/env python3
-
-
-from Rigol import RigolScope
-from ebench import Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, version
+from .Rigol import RigolScope
+from .ebench import Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, version
 
 # Installing this module as command
-from CMDS import CMD_RIGOL
+from .CMDS import CMD_RIGOL
 CMD=CMD_RIGOL
 
 from absl import app, flags, logging
 from absl.flags import FLAGS
 from time import sleep
-
-
-
-flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
-flags.DEFINE_string('addr', None, "pyvisa instrument address")
-flags.DEFINE_string('captureDir', "pics", "Capture directory")
-flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
 
 
 

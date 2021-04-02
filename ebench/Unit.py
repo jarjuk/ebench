@@ -1,5 +1,5 @@
 
-from ebench import SignalGenerator, MenuValueError
+from .ebench import SignalGenerator, MenuValueError
 
 import os
 from absl import logging

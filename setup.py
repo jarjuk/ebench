@@ -29,8 +29,8 @@ setuptools.setup(
     },
     scripts=scripts,
     entry_points = {
-        "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.Rigol:main"
-                             , f"{CMDS.CMD_UNIT}=ebench.Unit:main", ],
+        "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol:main"
+                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main", ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -1,4 +1,4 @@
-from ebench import Osciloscope
+from .ebench import Osciloscope
 
 import os
 from absl import logging

@@ -16,6 +16,12 @@ import pyvisa
 
 
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
+flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
+flags.DEFINE_string('addr', None, "pyvisa instrument address")
+flags.DEFINE_string('captureDir', "pics", "Capture directory")
+flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
+
+
 
 class MenuValueError(ValueError):
     """Exception catched in inveractive mode: Instead of aborting
