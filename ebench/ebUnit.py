@@ -2,13 +2,15 @@
 
 
 from .Unit import UnitSignalGenerator
-from .ebench import version, Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, list_resources, MenuValueError
+from .ebench import version, MenuCtrl, subMenuHelp
+from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot
+from .ebench import list_resources, MenuValueError
 
 # Installing this module as command
 from .CMDS import CMD_UNIT
 CMD=CMD_UNIT
 
-from absl import app, flags, logging
+from absl import app, logging
 from absl.flags import FLAGS
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
@@ -251,26 +253,25 @@ helpPar = {
 # ------------------------------------------------------------------
 #  menu documentation (=help system)
 
-def mainMenuHelp(mainMenu):
-    mainMenuHelpCommon( cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control UNIT-T UTG900 Waveform generator")
-    print( "" )
-    print( "More help:")
-    print( "  {} --help                          : to list options".format(CMD) )
-    print( "  {} ? command=<command>             : to get help on command <command> parameters".format(CMD) )
-    print( "")
-    print( "Examples:")
-    print( "  {} ? command=sine                  : help on sine command parameters".format(CMD))
-    print( "  {} list_resources                  : Identify --addr option parameter".format(CMD))
-    print( "  {} --addr 'USB0::1::2::3::0::INSTR': Run interactively on device found in --addr 'USB0::1::2::3::0::INSTR'".format(CMD))
-    print( "  {} --captureDir=pics screen        : Take screenshot to pics directory (form device in default --addr)".format(CMD))
-    print( "  {} reset                           : Send reset to UTH900 waveform generator".format(CMD))    
-    print( "  {} sine channel=2 freq=2kHz        : Generate 2 kHz sine signal on channel 2".format(CMD))
-    print( "  {} sine channel=1 square channel=2 : chaining sine generation on channel 1, and square generation on channel 2".format(CMD))
-    
-    print( "")
-    print( "Hint:")
-    print( "  Run reset to synchronize {} -tool with device state. Ref= ?? command=reset".format(CMD))
-    print( "  One-liner in linux: {} --addr $({} list_resources)".format(CMD, CMD))
+usageText = f"""
+More help:
+  {CMD} --help                          : to list options
+  {CMD} ? command=<command>             : to get help on command <command> parameters
+
+Examples:
+  {CMD} ? command=sine                  : help on sine command parameters
+  {CMD} list_resources                  : Identify --addr option parameter
+  {CMD} --addr 'USB0::1::2::3::0::INSTR': Run interactively on device found in --addr 'USB0::1::2::3::0::INSTR'
+  {CMD} --captureDir=pics screen        : Take screenshot to pics directory (form device in default --addr)
+  {CMD} reset                           : Send reset to UTH900 waveform generator
+  {CMD} sine channel=2 freq=2kHz        : Generate 2 kHz sine signal on channel 2
+  {CMD} sine channel=1 square channel=2 : chaining sine generation on channel 1, and square generation on channel 2
+
+Hint:
+  Run reset to synchronize {CMD} -tool with device state. Ref= ?? command=reset
+  One-liner in linux: {CMD} --addr $({CMD} list_resources)
+
+"""
 
 # ------------------------------------------------------------------
 # Main
@@ -280,29 +281,31 @@ def _main( _argv ):
     logging.info( "starting")
 
     sgen = UTG962( addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = Cmd()
+    cmdController = MenuCtrl()
 
     mainMenu = {
-        "sine"              : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
-        "square"            : ( "Generate square -wave on channel 1|2", squarePar, sgen.square  ),
-        "pulse"             : ( "Generate pulse -wave on channel 1|2", pulsePar, sgen.pulse ),
-        "arb"               : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, sgen.arb),
-        "on"                : ( "Switch on channel 1|2", onOffProps, sgen.on ),
-        "off"               : ( "Switch off channel 1|2", onOffProps, sgen.off),
-        "reset"             : ( "Send reset to UTG900 signal generator", None, sgen.reset),
-        "Record"            : (None, None, None),
-        Cmd.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        Cmd.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
-        Cmd.MENU_SCREEN     : ( "Take screenshot", screenCapturePar, menuScreenShot(instrument=sgen,captureDir=FLAGS.captureDir,prefix="UTG-" )),
-        "list_resources"    : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources ),
-        "Misc"              : (None, None, None),        
-        Cmd.MENU_VERSION    : ( "Output version number", None, version ),
-        "Help"              : (None, None, None),                
-        Cmd.MENU_QUIT       : ( "Exit", None, None),
-        Cmd.MENU_HELP       : ( "List commands", None,
-                             lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
-        Cmd.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
-                             lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
+        "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
+        "square"                 : ( "Generate square -wave on channel 1|2", squarePar, sgen.square  ),
+        "pulse"                  : ( "Generate pulse -wave on channel 1|2", pulsePar, sgen.pulse ),
+        "arb"                    : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, sgen.arb),
+        "on"                     : ( "Switch on channel 1|2", onOffProps, sgen.on ),
+        "off"                    : ( "Switch off channel 1|2", onOffProps, sgen.off),
+        "reset"                  : ( "Send reset to UTG900 signal generator", None, sgen.reset),
+        "Record"                 : (None, None, None),
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar,
+                                     menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
+                                     menuScreenShot(instrument=sgen,captureDir=FLAGS.captureDir,prefix="UTG-" )),
+        "list_resources"         : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources ),
+        "Misc"                   : (None, None, None),        
+        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
+        "Help"                   : (None, None, None),                
+        MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+        MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, usageText=usageText )),
+        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
     }
 

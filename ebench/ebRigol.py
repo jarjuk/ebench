@@ -1,5 +1,5 @@
 from .Rigol import RigolScope
-from .ebench import Cmd, subMenuHelp, mainMenuHelpCommon, usage, menuStartRecording, menuStopRecording, menuScreenShot, version
+from .ebench import MenuCtrl, subMenuHelp, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
 
 # Installing this module as command
 from .CMDS import CMD_RIGOL
@@ -218,9 +218,6 @@ podSetupPar = podPar | {
     "labels" : "Pod 4-character labels separated with comma(,)",
 }
 
-def mainMenuHelp(mainMenu):
-    mainMenuHelpCommon( cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control UNIT-T UTG900 Waveform generator")
-
 
 # ------------------------------------------------------------------
 # Main
@@ -230,33 +227,34 @@ def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
     
     gSkooppi=MSO1104(addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = Cmd()
+    cmdController = MenuCtrl()
 
     mainMenu = {
-        "Init"              : (None, None, None),
-        "general"           : ( "General setup", generalPar, gSkooppi.general),
-        "setup"             : ( "Setup channel", setupPar, gSkooppi.setup ),
-        "podSetup"          : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
-        "podOff"            : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
-        "on"                : ( "Open channel", onOffPar, gSkooppi.channelOn),
-        "off"               : ( "Close channel", onOffPar, gSkooppi.channelOff),
-        "statClear"         : ( "Clear statistics", None, gSkooppi.clearStats),
-        "reset"             : ( "Send reset to Rigol", None, gSkooppi.reset),
-        "clear"             : ( "Send clear to Rigol", None, gSkooppi.clear),
-        "Measure"           : (None, None, None),
-        "measure"           : ("Measure", measurePar, gSkooppi.measurement),
-        "Record"            : (None, None, None),
-        Cmd.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        Cmd.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
-        Cmd.MENU_SCREEN     : ( "Take screenshot", screenCapturePar, menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
-        "Misc"              : (None, None, None),        
-        Cmd.MENU_VERSION    : ( "Output version number", None, version ),
-        "Help"              : (None, None, None),                
-        Cmd.MENU_QUIT       : ( "Exit", None, None),
-        Cmd.MENU_HELP       : ( "List commands", None,
-                             lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
-        Cmd.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
-                             lambda **argV: usage(mainMenu=mainMenu, mainMenuHelp=mainMenuHelp, subMenuHelp=subMenuHelp, **argV )),
+        "Init"                   : (None, None, None),
+        "general"                : ( "General setup", generalPar, gSkooppi.general),
+        "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
+        "podSetup"               : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
+        "podOff"                 : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
+        "on"                     : ( "Open channel", onOffPar, gSkooppi.channelOn),
+        "off"                    : ( "Close channel", onOffPar, gSkooppi.channelOff),
+        "statClear"              : ( "Clear statistics", None, gSkooppi.clearStats),
+        "reset"                  : ( "Send reset to Rigol", None, gSkooppi.reset),
+        "clear"                  : ( "Send clear to Rigol", None, gSkooppi.clear),
+        "Measure"                : (None, None, None),
+        "measure"                : ("Measure", measurePar, gSkooppi.measurement),
+        "Record"                 : (None, None, None),
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
+                                     menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
+        "Misc"                   : (None, None, None),        
+        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
+        "Help"                   : (None, None, None),                
+        MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+        MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control Rigol MSO1104Z osciloscope")),
+        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+                                 lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
     }
 
     

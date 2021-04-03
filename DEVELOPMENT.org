@@ -71,7 +71,7 @@
  #+END_SRC
 
  #+RESULTS:
- : 0.0.8-SNAPSHOT
+ : 0.0.8-rev1
 
 
  Ref: https://packaging.python.org/guides/distributing-packages-using-setuptools/
@@ -82,7 +82,7 @@
 
  #+RESULTS:
  #+begin_example
- version 0.0.8-SNAPSHOT , packages ['ebench']
+ version 0.0.8-rev1 , packages ['ebench']
  running sdist
  running egg_info
  writing ebench.egg-info/PKG-INFO
@@ -93,37 +93,38 @@
  reading manifest file 'ebench.egg-info/SOURCES.txt'
  writing manifest file 'ebench.egg-info/SOURCES.txt'
  running check
- creating ebench-0.0.8-SNAPSHOT
- creating ebench-0.0.8-SNAPSHOT/ebench
- creating ebench-0.0.8-SNAPSHOT/ebench.egg-info
- creating ebench-0.0.8-SNAPSHOT/tmp
- copying files to ebench-0.0.8-SNAPSHOT...
- copying setup.py -> ebench-0.0.8-SNAPSHOT
- copying ebench/CMDS.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/Rigol.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/Unit.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/__init__.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/ebRigol.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/ebUnit.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench/ebench.py -> ebench-0.0.8-SNAPSHOT/ebench
- copying ebench.egg-info/PKG-INFO -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/SOURCES.txt -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/dependency_links.txt -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/entry_points.txt -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/requires.txt -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/top_level.txt -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench.egg-info/zip-safe -> ebench-0.0.8-SNAPSHOT/ebench.egg-info
- copying ebench/../RELEASES.md -> ebench-0.0.8-SNAPSHOT/ebench/..
- copying ebench/../VERSION -> ebench-0.0.8-SNAPSHOT/ebench/..
- copying tmp/apu.sh -> ebench-0.0.8-SNAPSHOT/tmp
- Writing ebench-0.0.8-SNAPSHOT/setup.cfg
+ creating ebench-0.0.8.post1
+ creating ebench-0.0.8.post1/ebench
+ creating ebench-0.0.8.post1/ebench.egg-info
+ creating ebench-0.0.8.post1/tmp
+ copying files to ebench-0.0.8.post1...
+ copying setup.py -> ebench-0.0.8.post1
+ copying ebench/CMDS.py -> ebench-0.0.8.post1/ebench
+ copying ebench/Rigol.py -> ebench-0.0.8.post1/ebench
+ copying ebench/Unit.py -> ebench-0.0.8.post1/ebench
+ copying ebench/__init__.py -> ebench-0.0.8.post1/ebench
+ copying ebench/ebRigol.py -> ebench-0.0.8.post1/ebench
+ copying ebench/ebUnit.py -> ebench-0.0.8.post1/ebench
+ copying ebench/ebench.py -> ebench-0.0.8.post1/ebench
+ copying ebench/flycheck_ebench.py -> ebench-0.0.8.post1/ebench
+ copying ebench.egg-info/PKG-INFO -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/SOURCES.txt -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/dependency_links.txt -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/entry_points.txt -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/requires.txt -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/top_level.txt -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench.egg-info/zip-safe -> ebench-0.0.8.post1/ebench.egg-info
+ copying ebench/../RELEASES.md -> ebench-0.0.8.post1/ebench/..
+ copying ebench/../VERSION -> ebench-0.0.8.post1/ebench/..
+ copying tmp/apu.sh -> ebench-0.0.8.post1/tmp
+ Writing ebench-0.0.8.post1/setup.cfg
  Creating tar archive
- removing 'ebench-0.0.8-SNAPSHOT' (and everything under it)
+ removing 'ebench-0.0.8.post1' (and everything under it)
  running bdist_wheel
  running build
  running build_py
- copying ebench/../VERSION -> build/lib/ebench/..
- copying ebench/../RELEASES.md -> build/lib/ebench/..
+ copying ebench/flycheck_ebench.py -> build/lib/ebench
+ copying ebench/ebench.py -> build/lib/ebench
  running build_scripts
  copying tmp/apu.sh -> build/scripts-3.9
  installing to build/bdist.linux-x86_64/wheel
@@ -133,23 +134,25 @@
  creating build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/UNI-T.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/CMDS.py -> build/bdist.linux-x86_64/wheel/ebench
+ copying build/lib/ebench/flycheck_ebench.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Rigol.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Unit.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebRigol.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/__init__.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebench.py -> build/bdist.linux-x86_64/wheel/ebench
+ copying build/lib/ebench/flycheck_ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/VERSION -> build/bdist.linux-x86_64/wheel
  copying build/lib/RELEASES.md -> build/bdist.linux-x86_64/wheel
  running install_egg_info
- Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT-py3.9.egg-info
+ Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1-py3.9.egg-info
  running install_scripts
- creating build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT.data
- creating build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT.data/scripts
- copying build/scripts-3.9/apu.sh -> build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT.data/scripts
- changing mode of build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT.data/scripts/apu.sh to 775
- creating build/bdist.linux-x86_64/wheel/ebench-0.0.8_SNAPSHOT.dist-info/WHEEL
- creating 'dist/ebench-0.0.8_SNAPSHOT-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+ creating build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1.data
+ creating build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1.data/scripts
+ copying build/scripts-3.9/apu.sh -> build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1.data/scripts
+ changing mode of build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1.data/scripts/apu.sh to 775
+ creating build/bdist.linux-x86_64/wheel/ebench-0.0.8.post1.dist-info/WHEEL
+ creating 'dist/ebench-0.0.8.post1-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
  adding 'RELEASES.md'
  adding 'VERSION'
  adding 'ebench/CMDS.py'
@@ -160,13 +163,15 @@
  adding 'ebench/ebRigol.py'
  adding 'ebench/ebUnit.py'
  adding 'ebench/ebench.py'
- adding 'ebench-0.0.8_SNAPSHOT.data/scripts/apu.sh'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/METADATA'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/WHEEL'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/entry_points.txt'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/top_level.txt'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/zip-safe'
- adding 'ebench-0.0.8_SNAPSHOT.dist-info/RECORD'
+ adding 'ebench/flycheck_ebUnit.py'
+ adding 'ebench/flycheck_ebench.py'
+ adding 'ebench-0.0.8.post1.data/scripts/apu.sh'
+ adding 'ebench-0.0.8.post1.dist-info/METADATA'
+ adding 'ebench-0.0.8.post1.dist-info/WHEEL'
+ adding 'ebench-0.0.8.post1.dist-info/entry_points.txt'
+ adding 'ebench-0.0.8.post1.dist-info/top_level.txt'
+ adding 'ebench-0.0.8.post1.dist-info/zip-safe'
+ adding 'ebench-0.0.8.post1.dist-info/RECORD'
  removing build/bdist.linux-x86_64/wheel
  #+end_example
 
@@ -181,44 +186,44 @@
 
  #+RESULTS:
  #+begin_example
- VERSION_FILE=dist/ebench-0.0.8-SNAPSHOT.tar.gz
- Processing ./dist/ebench-0.0.8-SNAPSHOT.tar.gz
- Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.8-SNAPSHOT) (0.5.2)
- Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.8-SNAPSHOT) (0.12.0)
- Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench===0.0.8-SNAPSHOT) (1.15.0)
- Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.8-SNAPSHOT) (1.11.3)
- Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.8-SNAPSHOT) (3.7.4.3)
+ VERSION_FILE=dist/ebench-0.0.8.post1.tar.gz
+ Processing ./dist/ebench-0.0.8.post1.tar.gz
+ Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.8.post1) (0.5.2)
+ Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.8.post1) (0.12.0)
+ Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench==0.0.8.post1) (1.15.0)
+ Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.8.post1) (3.7.4.3)
+ Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.8.post1) (1.11.3)
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.8_SNAPSHOT-py3-none-any.whl size=20813 sha256=96d8d17b4be3bddfa89e37dab26e229878490915a1bd057283bd0a81952061d7
-   Stored in directory: /home/jj/.cache/pip/wheels/14/3b/c1/d386dad4b5a0bee2cdf16eebc9f66dacd9a0da76aed1d50e2d
- Failed to build ebench
+   Created wheel for ebench: filename=ebench-0.0.8.post1-py3-none-any.whl size=26642 sha256=5ec7fbc28ec344a53a2fafa29a273e55cebb08aba65fdad05b09a34f31eeb4b7
+   Stored in directory: /home/jj/.cache/pip/wheels/9d/fe/c8/0bd9d9ce2913823c6353e7dffee04d30b08b7f129555f2e46c
+ Successfully built ebench
  Installing collected packages: ebench
    Attempting uninstall: ebench
-     Found existing installation: ebench 0.0.7
-     Uninstalling ebench-0.0.7:
-       Successfully uninstalled ebench-0.0.7
-     Running setup.py install for ebench: started
-     Running setup.py install for ebench: finished with status 'done'
- Successfully installed ebench-0.0.8-SNAPSHOT
- installed dist/ebench-0.0.8-SNAPSHOT.tar.gz
+     Found existing installation: ebench 0.0.8.post1
+     Uninstalling ebench-0.0.8.post1:
+       Successfully uninstalled ebench-0.0.8.post1
+ Successfully installed ebench-0.0.8.post1
+ installed dist/ebench-0.0.8.post1.tar.gz
  #+end_example
 
 
 *** Testit
 
 #+BEGIN_SRC bash :eval no-export :results output
-ebMSO1104 version
+ebRigol version
 #+END_SRC
 
 #+RESULTS:
+: '0.0.8-SNAPSHOT'
 
 #+BEGIN_SRC bash :eval no-export :results output
-ebUnit ?
+ebUnit version
 #+END_SRC
 
 #+RESULTS:
+: '0.0.8-SNAPSHOT'
 
 
 ** Create snapshot
