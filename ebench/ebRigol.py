@@ -127,22 +127,24 @@ class MSO1104(RigolScope):
 
 
     def measurement( self, measurements:str, csvFile:str=None, sep=",", sep2=":"):
-        """
-        Take 'measurements' (:MEASure:ITEM? {},CHAN{}') from scope and save result to 'csvFile' using command
-        
-        
+        """Make AVERAGE 'measurements' (:MEASure:ITEM? {},CHAN{}') from scope and
+        save result to 'csvFile'
 
-        :measuments: Comma separated list of ch:item pairs.
-                     For example, '1:VRMS,2:FREQ' measures Vrms on channel 1 and
-                     frequency on channel 2.
+        :measurements: Comma separated list of ch:item pairs.  For
+        example, '1:Vavg,2:FREQ' measures Vrms on channel 1 and
+        frequency on channel 2.
         
         :csvFile:  name of CSV file where to append the results
+
         """
         logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
         measuremenList = [ chItem.split(sep2) for chItem  in measurements.split(sep) ]
+        statistic = "AVER"
         logging.debug( "measurement: measuremenList{}".format(measuremenList))
+        
         measurementRow =  {
-            "{}:{}".format(ch,item.upper()): self.rigolMeasurement( ch, item.upper() ) for (ch,item) in measuremenList 
+            "{}:{}".format(ch,item.upper()): self.rigolMeasurement( ch, item=item.upper(), statistic=statistic )
+            for (ch,item) in measuremenList 
             
         }
         if csvFile is not None and not not csvFile:
@@ -182,6 +184,39 @@ class MSO1104(RigolScope):
             #self.write(":LA:DIGITAL{}:LABEL {}".format(ch, label) )
             self.rigolDigitalLabel(ch,label)
             self.delay(0.2)
+
+    def setupTrigger( self, source, slope, level ):
+        """Setup trigger level. This includes defining:
+
+        - setup edge trigger  source
+        - setup trigger slope
+        - setup edge trigger  level
+
+        :source: D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11,
+        D12, D13, D14, D15, CHAN1, CHAN2, CHAN3, CHAN4, or AC        
+
+        :slope: POS, NEG, or RFAL
+
+        :level: The unit is the same as the current amplitude unit of
+        the signal source selected. 
+
+        
+        """
+        logging.info( "setupTrigger: source:{}, slope: {}, level:{}".format(
+            source, slope, level))
+        if source is not None and not not source:
+            self.rigolTriggerEdgeSource( source=MSO1104.channelToRigolSource(source))
+        if slope is not None and not not slope:
+            self.rigolTriggerEdgeSlope(slope)
+        if level is not None and not not level:
+            self.rigolTriggerEdgeLevel(level)
+        
+    def triggerStatus( self ):
+        """Return trigger status (:TRIG:STAT) 
+        """
+        status = self.rigolTriggerStatusQuery()
+        logging.info( "triggerStatus: status:{}".format(status))
+        return status
         
     def digitalPodOff( self, pod ):
         self.rigolDigitalPodOnOff( pod=pod, onOff="OFF" )
@@ -210,11 +245,26 @@ class MSO1104(RigolScope):
         delayUnit=0.2
         sleep(delay*delayUnit)
 
+    def channelToRigolSource( channel:str ) -> str:
+        """We are using numbers 1,2,3,4 to refer scope channels, 
+        all other names are expected to be Rigol names
+
+        :channel: Number 1,2,3,4, D0, ... D15, AC
+        
+        :return: CHAN1,...D0, ...
+
+        """
+        if channel in ["1", "2", "3", "4", 1, 2, 3, 4]:
+            return "CHAN{}".format(channel)
+        return channel
+
 
 # ------------------------------------------------------------------
 # Menu: command parameters
 
 CMD_MEASURE= "measure"
+CMD_SETUP_TRIGGER= "setupTrigger"
+CMD_TRIGGER_STATUS="_triggerStatus"
 
 helpPar = {
       "command": "Command to give help on (None: help on main menu)"
@@ -230,15 +280,22 @@ setupPar = channelPar | {
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 
+triggerSetupPar = {
+
+    "source"   : "Trigger source 1,2,3,4,D0..D15",
+    "slope"    : "Trigger source POS,NEG,RFAL",
+    "level"    : "Trigger level (without unit)",
+    
+}
+
 measurePar =  {
     "measurements"   : "Comma -separated list of measurements",
     "csvFile"        : "Name of CSV-file for appending measurements into",
 }
 measureDefaults = {
-    "measurements": "1:VRMS,2:FREQ",
+    "measurements": "1:Vavg,2:FREQ",
     "csvFile": "measurement.csv",
 }
-
 
 
 onOffPar = channelPar
@@ -270,7 +327,8 @@ podSetupPar = podPar | {
 
 
 defaults = {
-    CMD_MEASURE: measureDefaults
+    CMD_MEASURE: measureDefaults,
+    CMD_SETUP_TRIGGER: { k: None for k in triggerSetupPar.keys()},
 }
 
 
@@ -288,6 +346,7 @@ def _main( _argv ):
         "Init"                   : (None, None, None),
         "general"                : ( "General setup", generalPar, gSkooppi.general),
         "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
+        CMD_SETUP_TRIGGER        : ( "Setup trigger", triggerSetupPar, gSkooppi.setupTrigger ),
         "podSetup"               : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
         "podOff"                 : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
         "on"                     : ( "Open channel", onOffPar, gSkooppi.channelOn),
@@ -297,6 +356,7 @@ def _main( _argv ):
         "clear"                  : ( "Send clear to Rigol", None, gSkooppi.clear),
         "Measure"                : (None, None, None),
         CMD_MEASURE              : ("Measure", measurePar, gSkooppi.measurement),
+        CMD_TRIGGER_STATUS       : ("Trigger status", None, gSkooppi.triggerStatus),
         "Record"                 : (None, None, None),
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
         MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),

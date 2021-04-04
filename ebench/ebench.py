@@ -171,8 +171,9 @@ class PyInstrument(Instrument):
         logging.info( "query: {}".format(cmd))
         if self.instrument is not None:
             ret = self.instrument.query(cmd)
+            logging.debug( "query: {} --> {}".format(cmd,ret))
             if strip: ret = ret.rstrip()
-            return( ret )
+            return  ret
         else:
             logging.error( "query '{}' failed - self.instrument is None".format(cmd))
             return None
@@ -408,7 +409,7 @@ class MenuCtrl:
                     # Call menu action (w. parameters)
                     returnVal = menuAction( **commandParameters )
                     self.appendRecording( menuCommand, commandParameters )
-                    if returnVal is not None and interactive:
+                    if returnVal is not None: # and interactive:
                         print( pformat(returnVal) )
                 except MenuValueError as err:
                     if interactive:
@@ -419,6 +420,14 @@ class MenuCtrl:
                 except MenuNoRecording:
                     # Help, start/stop recording commands
                     pass
+                except Exception as err:
+                    # In Interactive mode all errors are printed, user quits 
+                    if interactive:
+                        # Interactive error - print erros msg && continue
+                        print( "Error: {}".format(str(err)))
+                    else:
+                        raise
+                    
             return True
 
         

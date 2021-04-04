@@ -35,8 +35,8 @@ class RigolScope(Osciloscope):
     def rigolClear( self):
         self.write(":CLEAR")
         
-    def rigolChannelStatMeasure( self, item, ch, t):
-         cmd = ":MEASure:STAT:ITEM? {},{},CHAN{}".format(t, item, ch)
+    def rigolChannelStatMeasure( self, item, ch, statistic):
+         cmd = ":MEASure:STAT:ITEM? {},{},CHAN{}".format(statistic, item, ch)
          return( float(self.query(cmd)))
 
     def rigolChannelMeasure( self, item, ch):
@@ -44,16 +44,37 @@ class RigolScope(Osciloscope):
          logging.info( "rigolChannelMeasure: cmd={}".format(cmd))
          return( float(self.query(cmd)))
 
-    def rigolMeasurement(self, ch, item, t=None):
-       if t is None:
-           val = self.rigolChannelMeasure( item=item, ch=ch)
-       else:
-           val = self.rigolChannelStatMeasure( item=item, ch=ch, t=t )
+    def rigolMeasurement(self, ch, item, statistic=None):
+        """Single channel item (statics) measurement . 
 
-       if val > 10**12:
+        :ch: channel to measure
+
+        :statistic: If 'statistic' given make statistic item
+                    measurement (:MEASure:STATistic:ITEM) else make
+                    item measurement (:MEASure:ITEM <item>). 
+
+                    Valid values MAXimum|MINimum|CURRent|AVERages|
+DEViation}
+
+
+        :item: VMAX, VMIN, VPP, VTOP, VBASe, VAMP, VAVG, VRMS,
+        OVERshoot, MARea, MPARea, PREShoot, PERiod, FREQuency, RTIMe, FTIMe,
+        PWIDth, NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate,
+        VUPper, VMID, VLOWer, VARIance, PVRMS, PPULses, NPULses, PEDGes, and
+        NEDGes
+
+        """
+        
+        
+        if statistic is None:
+            val = self.rigolChannelMeasure( item=item, ch=ch)
+        else:
+            val = self.rigolChannelStatMeasure( item=item, ch=ch, statistic=statistic )
+
+        if val > 10**12:
             # Ridiculous values discard, e.g.g FREQ
             val = None
-       return( val )
+        return( val )
 
     def rigolChannelMeasurementStat( self, item, ch ):
         cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, ch)
@@ -101,7 +122,7 @@ class RigolScope(Osciloscope):
         """
         cmd = ":CHAN{}:OFFSET {}".format( ch, offset)
         self.write( cmd )
-         
+
     def rigolChannelScale( self, ch, scale ):
         """Set or query the vertical scale of the specified channel. The
         default unit is V.
@@ -143,6 +164,59 @@ class RigolScope(Osciloscope):
         cmd = ":CHAN{}:UNIT {}".format( ch,si2RigolUnit(siUnit))
         self.write(cmd)
 
+    # Trigger stuff
+
+    def rigolTriggerStatusQuery(self):
+        """Query :TRIG:STATUS?
+
+        The query returns TD, WAIT, RUN, AUTO, or STOP.
+        """
+        return self.query( ":TRIG:STAT?", strip=True)
+
+    def rigolTriggerMode(self, mode:str):
+        """Set trigger TRIGger:MODE <mode>
+
+        :mode: EDGE, PULS, RUNT, WIND, NEDG, SLOP, VID, PATT, DEL,
+        TIM, DUR, SHOL, RS232, IIC, or SPI
+
+        """
+        self.write( ":TRIG:MODE {}".format(mode))
+    
+    def rigolTriggerCoupling( self, coupling:str):
+        """Set trigger coupling :TRIGger:COUPling
+
+        :coupling: AC, DC, LFR, or HFR
+
+        """
+        self.write( ":TRIG:COUP {}".format( coupling ))
+                           
+    def rigolTriggerEdgeSource( self, source:str ):
+        """Set the trigger source in edge trigger :TRIGger:EDGe:SOURce <source>
+
+        :source: D0, D1, D2, D3, D4, D5, D6, D7, D8, D9, D10, D11,
+        D12, D13, D14, D15, CHAN1, CHAN2, CHAN3, CHAN4, or AC """
+        self.write( ":TRIG:EDGE:SOURCE {}".format( source ))
+
+    def rigolTriggerEdgeSlope( self, slope:str ):
+        """Set or query the edge type in edge trigger.  
+        :TRIGger:EDGe:SLOPe <slope>
+
+        :slope: POS, NEG, or RFAL
+
+        """
+        self.write( ":TRIG:EDGE:SLOPE {}".format(slope))
+
+        
+    def rigolTriggerEdgeLevel( self, level):
+        """Set :TRIGger:EDGe:LEVel <level>.
+        
+        :level: The unit is the same as the current amplitude unit of
+        the signal source selected. 
+
+        Example: TRIGger:EDGe:LEVel 0.16
+        """
+        self.write(":TRIGger:EDGe:LEVel {}".format(level))
+                           
     # MSO commands
     
     def rigolDigitalLabel( self, ch, label):

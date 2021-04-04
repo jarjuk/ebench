@@ -1,12 +1,21 @@
 ## 0.0.8-SNAPSHOT/20210402-19:45:31
 
+
 - Issues fixed:
   - ebRigol (no device found): _version command does not work
 
+
 - Features added
+  - ebRigol setTrigger: added
+  - ebRigol measure: uses AVEREGE  statistics
   - HELLO.org w. hello.py && hello2.py
   - hidden menu item: menu command starting with _-char
 
+- Known issues:
+  - ebRigol: setup triggering not implemented
+  - README.org: API -usage documentation should be enhanced
+  - `UTG900.py arb` external waveform, implementation not working
+  - `UTG900.py arb` external waveform file, format documentation missing
 
 
 ## 0.0.7/20210402-19:44:32
