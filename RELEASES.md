@@ -1,4 +1,15 @@
 ## 0.0.9-SNAPSHOT/20210404-22:49:46
+
+- Features added:
+  - measurement: add automagically measurement timestamp
+
+- Known issues/missing features
+  - ebRigol: setup triggering not implemented
+  - README.org: API -usage documentation should be enhanced
+  - `UTG900.py arb` external waveform, implementation not working
+  - `UTG900.py arb` external waveform file, format documentation missing
+
+
 ## 0.0.8/20210404-22:49:09
 
 

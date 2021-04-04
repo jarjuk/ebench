@@ -243,8 +243,8 @@ ebUnit _version
  #+END_SRC
 
  #+RESULTS:
- : [master 4b21ca2] ## 0.0.8-SNAPSHOT/20210402-19:45:31
- :  4 files changed, 77 insertions(+), 56 deletions(-)
+ : [master 9dc4a9d] ## 0.0.9-SNAPSHOT/20210404-22:49:46
+ :  4 files changed, 71 insertions(+), 69 deletions(-)
 
 
 

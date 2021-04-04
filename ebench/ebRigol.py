@@ -8,9 +8,7 @@ CMD=CMD_RIGOL
 from absl import app, logging
 from absl.flags import FLAGS
 from time import sleep
-import os
 
-import csv
 
 
 class MSO1104(RigolScope):
@@ -100,31 +98,6 @@ class MSO1104(RigolScope):
                 self.rigolChannelMeasurementStat(item=item.upper(), ch=channel)
         self.delay()
 
-    def appendCvsFile( self, csvFile, measurementRow:dict ):
-        """
-        Append to FLAGS.csvDir/csvFile
-
-        :csvFile: name of the file (within directory FLAGS.csvDir)
-
-        :measurementRow: dict with keys in the format '<channel>:<measurement>'
-
-        """
-        filePath= os.path.join( FLAGS.csvDir, csvFile)
-
-        # Exepct columns to be the same
-        csv_columns = list(measurementRow.keys())
-        if not os.path.exists( filePath):
-            # Create CSV header
-            with open( filePath, "w") as csvfile:
-                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
-                writer.writeheader()
-            
-        with open( filePath, "a") as csvfile:
-            # Write datarow
-            writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
-            writer.writerow(measurementRow)
-
-
 
     def measurement( self, measurements:str, csvFile:str=None, sep=",", sep2=":"):
         """Make AVERAGE 'measurements' (:MEASure:ITEM? {},CHAN{}') from scope and
@@ -148,7 +121,7 @@ class MSO1104(RigolScope):
             
         }
         if csvFile is not None and not not csvFile:
-            self.appendCvsFile( csvFile, measurementRow )
+            self.instrumentAppendCvsFile( csvFile, measurementRow )
         return measurementRow
 
     def clearStats( self):

@@ -10,8 +10,10 @@ import textwrap
 import os
 import sys
 from absl import flags, logging
+from absl.flags import FLAGS
 import re
 
+import csv
 import pyvisa
 
 
@@ -45,6 +47,8 @@ class Instrument:
     def close(self):
         pass
 
+    # timestamp when measurement taken
+    MEASUREMENT_TS="timestamp"
         
     def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
         if fileName is None or not fileName:
@@ -89,6 +93,33 @@ class Instrument:
             raise MenuValueError(msg)
              
         return (val,unit)
+
+    def instrumentAppendCvsFile( self, csvFile, measurementRow:dict ):
+        """
+        Append to FLAGS.csvDir/csvFile
+
+        :csvFile: name of the file (within directory FLAGS.csvDir)
+
+        :measurementRow: dict with keys in the format '<channel>:<measurement>'
+
+        """
+        filePath= os.path.join( FLAGS.csvDir, csvFile)
+
+        # Exepct columns to be the same
+        csv_columns = [Instrument.MEASUREMENT_TS ] + list(measurementRow.keys())
+        if not os.path.exists( filePath):
+            # Create CSV header
+            with open( filePath, "w") as csvfile:
+                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            
+        with open( filePath, "a") as csvfile:
+            # Write datarow
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            measurementRow[Instrument.MEASUREMENT_TS] = datetime.now().strftime("%Y%m%d-%H%M%S")
+            writer.writerow(measurementRow)
+
+    
 
 class PyInstrument(Instrument):
     """Instrument which can be accessed using pyvisa
@@ -197,6 +228,9 @@ class Osciloscope(PyInstrument):
         
     def close(self):
         super().close()
+
+
+        
 
 class SignalGenerator(PyInstrument):
     def __init__( self, addr, debug = False ):
