@@ -1,4 +1,4 @@
-* enbench - Tool to control e-instruments $Release:0.0.8-SNAPSHOT$
+* enbench - Tool to control e-instruments $Release:0.0.8$
 
 * References
 
