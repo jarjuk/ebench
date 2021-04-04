@@ -106,7 +106,6 @@
  copying ebench/ebRigol.py -> ebench-0.0.8.post1/ebench
  copying ebench/ebUnit.py -> ebench-0.0.8.post1/ebench
  copying ebench/ebench.py -> ebench-0.0.8.post1/ebench
- copying ebench/flycheck_ebench.py -> ebench-0.0.8.post1/ebench
  copying ebench.egg-info/PKG-INFO -> ebench-0.0.8.post1/ebench.egg-info
  copying ebench.egg-info/SOURCES.txt -> ebench-0.0.8.post1/ebench.egg-info
  copying ebench.egg-info/dependency_links.txt -> ebench-0.0.8.post1/ebench.egg-info
@@ -123,7 +122,6 @@
  running bdist_wheel
  running build
  running build_py
- copying ebench/flycheck_ebench.py -> build/lib/ebench
  copying ebench/ebench.py -> build/lib/ebench
  running build_scripts
  copying tmp/apu.sh -> build/scripts-3.9
@@ -191,12 +189,12 @@
  Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.8.post1) (0.5.2)
  Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.8.post1) (0.12.0)
  Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench==0.0.8.post1) (1.15.0)
- Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.8.post1) (3.7.4.3)
  Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.8.post1) (1.11.3)
+ Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.8.post1) (3.7.4.3)
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.8.post1-py3-none-any.whl size=26642 sha256=5ec7fbc28ec344a53a2fafa29a273e55cebb08aba65fdad05b09a34f31eeb4b7
+   Created wheel for ebench: filename=ebench-0.0.8.post1-py3-none-any.whl size=21395 sha256=c002e28cf367839fdda7cc2d407a25d9fa48c3ece1a45d2df9ae20ba6784c611
    Stored in directory: /home/jj/.cache/pip/wheels/9d/fe/c8/0bd9d9ce2913823c6353e7dffee04d30b08b7f129555f2e46c
  Successfully built ebench
  Installing collected packages: ebench

@@ -1,7 +1,7 @@
 
-* First version
+* Basic hello  world
 
-** IMports
+** Imports
    :PROPERTIES:
    :header-args:bash: :dir  examples/hello
    :END:
@@ -25,12 +25,19 @@
 
 ** Define hello
 
+Define Python function hello, which accepts parameter, whom is being
+greeted.
+
  #+name: hello
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
  def hello( whom:str ):
      print( "Hello {}".format(whom))
  #+END_SRC
 
+
+Define dictionary, which maps function parameters to promts. In this
+case, ~hello~ -function has one parameter ~whom~, which needs to be
+prompted.
 
  #+name: helloPar
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
@@ -42,16 +49,52 @@
 
 ** Define menu
 
+Define a menu strcuture, which maps command "hello" to a 3-tuple of
+consisinting proproment, name parameter prompts dictionanary, and
+function pointer.
+
  #+name: menu
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
 
      mainMenu = {
-         "hello"             : ( "Say hello", helloPar, hello),
-         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+         "hello"                 : ( "Say hello", helloPar, hello),
+         MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
      }
-
-
  #+END_SRC
+
+#+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
+import ebench
+import textwrap
+
+# print(textwrap.dedent(ebench.MenuCtrl.mainMenu.__doc__))
+print(ebench.MenuCtrl.mainMenu.__doc__)
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+For interactive usage, prompt user for menu command and command
+        paramaters, for command line usage parse commands and
+        parameters from '_argv'. Invoke action for command.
+
+        :_argv: command line paramaters (in batch mode)
+
+        :mainMenu: dict mapping menuCommand:str -> menuSelection =
+        List[menuPrompt,parameterPrompt,menuAction], where
+        - menuPrompt: string presented to user to query for
+          'commandParameter' value
+        - parameterPrompt: dict mapping 'commandParameter' name to
+          commandParameter prompt
+        - menuAction: function to call with 'commandParameters' (as
+          ,**argv values prompted with parameterPrompt)
+
+        :defaults: is dictionary mapping 'menuCommand' to
+        'defaultParameters'.  If 'defaultParameters' for a
+        'menuCommand' is found, it is used to lookup 'defaultValue'
+        prompeted from user. Also, If 'defaultParameters' for a
+        'menuCommand' is found, 'defaultParameters' update with the
+        value user enters for the promt.
+#+end_example
+
 
 
 ** define =_main=
@@ -113,7 +156,21 @@
  #+END_SRC
 
 
+** Running it
 
+#+BEGIN_SRC bash :eval no-export :results output
+examples/hello/hello.py hello whom=world
+#+END_SRC
+
+#+RESULTS:
+: Hello world
+
+#+BEGIN_SRC bash :eval no-export :results output
+examples/hello/hello.py Hello
+#+END_SRC
+
+#+RESULTS:
+: [hello, q=quit] > expecting one of dict_keys(['hello', 'q']) - got 'Hello'
 
 
 * Second version
@@ -159,7 +216,7 @@
 
 defaults = {
 "hello" : {
-             "who": os.getlogin()
+             "who": os.environ['USER']
           }
 }
 
@@ -172,6 +229,7 @@ defaults = {
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
  from ebench import usage, usageCommand
  #+END_SRC
+
 
 ** Define command parameters for help command
 
@@ -215,22 +273,31 @@ This demo presents:
 
 ** Define menun2
 
- #+name: menu
+ #+name: menu2
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
 
-     mainMenu = {
-         "Commands:"              : ( None, None, None),
-         "hello"                  : ( "Say hello", helloPar, hello),
-         "Help:"                  : ( None, None, None),
-         MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                    lambda **argV: usage(cmd=os.path.basename(__file__), mainMenu=mainMenu, synopsis="Demo hello v2", usageText=usageText )),
-         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
-                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-         "_version"               : ("Version number", None, lambda **argv: print( ebench.version())),
-         "Exit:"                  : ( None, None, None),
-         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+   mainMenu = {
 
-     }
+       # First section: application commands
+       "Commands:"              : ( None, None, None),
+       "hello"                  : ( "Say hello", helloPar, hello),
+
+       # Second section: getting help
+       "Help:"                  : ( None, None, None),
+       MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                  lambda **argV: usage(cmd=os.path.basename(__file__)
+                                                       , mainMenu=mainMenu
+                                                       , synopsis="Demo hello v2"
+                                                       , usageText=usageText )),
+       MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+       "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+
+       # Third section: exiting
+       "Exit:"                  : ( None, None, None),
+       MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+
+   }
 
 
  #+END_SRC
@@ -275,13 +342,111 @@ This demo presents:
 
  <<usageText>>
 
- <<menu>>
+ <<menu2>>
 
  <<_main2>>
 
  <<main>>
 
  #+END_SRC
+
+
+
+** Running it
+
+*** Listing commands
+#+BEGIN_SRC bash :eval no-export :results output
+examples/hello/hello2.py ?
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+hello2.py: Demo hello v2
+
+Usage: hello2.py [options] [commands and parameters] 
+
+Commands:
+
+---------- Commands:  ----------
+          hello  : Say hello
+----------   Help:    ----------
+              ?  : List commands
+             ??  : List command parameters
+----------   Exit:    ----------
+              q  : Exit
+
+
+This demo presents:
+
+- command 'hello'  acceting two parameters, one of the parameters (whom) is
+  prompted for every command call, the other paremeter (who) defaults to 
+  to login-name, and its value is rememebered from previous call
+
+- menu separator
+
+- help to list command
+
+- help on command parameters
+
+- hidden command: _version
+
+
+
+#+end_example
+
+
+*** List command parameters
+
+#+BEGIN_SRC bash :eval no-export :results output
+examples/hello/hello2.py ?? command=hello
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+hello - Say hello
+
+Hello -command just demonstrates simple menu action.
+
+It receives to parameters 'whom' and 'who' and prints
+greeting. Defaulta value of 'who' parameter is logged user,
+and its value is remembered between hello commands
+
+Returns greeted 'whom' if greeter/who is not the same as
+greeted/whom.
+
+Notice, how
+
+      whom  : Whom to greet?
+       who  : Who is the greeter? Ret accepts default value: 
+
+Notice:
+- parameters MUST be given in the order listed above
+- parameters are optional and they MAY be left out
+#+end_example
+
+
+
+*** Say hello
+
+Expect to see 'Hello world from $USER'
+
+#+BEGIN_SRC bash :eval no-export :results output
+echo USER=$USER
+examples/hello/hello2.py hello whom="world" 
+#+END_SRC
+
+#+RESULTS:
+: USER=jj
+: Hello world from jj
+
+Expect to see 'Hello world from moon':
+
+#+BEGIN_SRC bash :eval no-export :results output
+examples/hello/hello2.py hello whom="world" who="moon"
+#+END_SRC
+
+#+RESULTS:
+: Hello world from moon
 
 
 

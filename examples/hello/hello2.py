@@ -34,7 +34,7 @@ helloPar = {
 
 defaults = {
 "hello" : {
-             "who": os.getlogin()
+             "who": os.environ['USER']
           }
 }
 
@@ -69,21 +69,23 @@ This demo presents:
 
 
 mainMenu = {
-    "hello"             : ( "Say hello", helloPar, hello),
-    MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
-}
 
-
-
-mainMenu = {
+    # First section: application commands
     "Commands:"              : ( None, None, None),
     "hello"                  : ( "Say hello", helloPar, hello),
+
+    # Second section: getting help
     "Help:"                  : ( None, None, None),
     MenuCtrl.MENU_HELP       : ( "List commands", None,
-                               lambda **argV: usage(cmd=os.path.basename(__file__), mainMenu=mainMenu, synopsis="Demo hello v2", usageText=usageText )),
+                               lambda **argV: usage(cmd=os.path.basename(__file__)
+                                                    , mainMenu=mainMenu
+                                                    , synopsis="Demo hello v2"
+                                                    , usageText=usageText )),
     MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
                                lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-    "_version"               : ("Version number", None, lambda **argv: print( ebench.version())),
+    "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+
+    # Third section: exiting
     "Exit:"                  : ( None, None, None),
     MenuCtrl.MENU_QUIT       : ("Exit", None, None),
 

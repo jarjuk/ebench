@@ -1,14 +1,16 @@
 from .Rigol import RigolScope
-from .ebench import MenuCtrl, subMenuHelp, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
+from .ebench import MenuCtrl, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
 
 # Installing this module as command
 from .CMDS import CMD_RIGOL
 CMD=CMD_RIGOL
 
-from absl import app, flags, logging
+from absl import app, logging
 from absl.flags import FLAGS
 from time import sleep
+import os
 
+import csv
 
 
 class MSO1104(RigolScope):
@@ -98,14 +100,54 @@ class MSO1104(RigolScope):
                 self.rigolChannelMeasurementStat(item=item.upper(), ch=channel)
         self.delay()
 
-    def measurement( self, channel, measurements:str, sep=","):
-        logging.info( "measurement channel: {}, measurements: {}".format(channel, measurements))
-        measuremenList = measurements.split(sep)
-        measurementResults =  {
-            measurement.upper(): self.rigolMeasurement( channel, measurement.upper() ) for measurement in measuremenList 
+    def appendCvsFile( self, csvFile, measurementRow:dict ):
+        """
+        Append to FLAGS.csvDir/csvFile
+
+        :csvFile: name of the file (within directory FLAGS.csvDir)
+
+        :measurementRow: dict with keys in the format '<channel>:<measurement>'
+
+        """
+        filePath= os.path.join( FLAGS.csvDir, csvFile)
+
+        # Exepct columns to be the same
+        csv_columns = list(measurementRow.keys())
+        if not os.path.exists( filePath):
+            # Create CSV header
+            with open( filePath, "w") as csvfile:
+                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            
+        with open( filePath, "a") as csvfile:
+            # Write datarow
+            writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
+            writer.writerow(measurementRow)
+
+
+
+    def measurement( self, measurements:str, csvFile:str=None, sep=",", sep2=":"):
+        """
+        Take 'measurements' (:MEASure:ITEM? {},CHAN{}') from scope and save result to 'csvFile' using command
+        
+        
+
+        :measuments: Comma separated list of ch:item pairs.
+                     For example, '1:VRMS,2:FREQ' measures Vrms on channel 1 and
+                     frequency on channel 2.
+        
+        :csvFile:  name of CSV file where to append the results
+        """
+        logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
+        measuremenList = [ chItem.split(sep2) for chItem  in measurements.split(sep) ]
+        logging.debug( "measurement: measuremenList{}".format(measuremenList))
+        measurementRow =  {
+            "{}:{}".format(ch,item.upper()): self.rigolMeasurement( ch, item.upper() ) for (ch,item) in measuremenList 
             
         }
-        return measurementResults
+        if csvFile is not None and not not csvFile:
+            self.appendCvsFile( csvFile, measurementRow )
+        return measurementRow
 
     def clearStats( self):
         self.rigolStatClear()
@@ -172,6 +214,8 @@ class MSO1104(RigolScope):
 # ------------------------------------------------------------------
 # Menu: command parameters
 
+CMD_MEASURE= "measure"
+
 helpPar = {
       "command": "Command to give help on (None: help on main menu)"
 }
@@ -186,9 +230,15 @@ setupPar = channelPar | {
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 
-measurePar = channelPar | {
-     "measurements"   : "Comma -separated list of measurements"
+measurePar =  {
+    "measurements"   : "Comma -separated list of measurements",
+    "csvFile"        : "Name of CSV-file for appending measurements into",
 }
+measureDefaults = {
+    "measurements": "1:VRMS,2:FREQ",
+    "csvFile": "measurement.csv",
+}
+
 
 
 onOffPar = channelPar
@@ -219,6 +269,11 @@ podSetupPar = podPar | {
 }
 
 
+defaults = {
+    CMD_MEASURE: measureDefaults
+}
+
+
 # ------------------------------------------------------------------
 # Main
 
@@ -241,7 +296,7 @@ def _main( _argv ):
         "reset"                  : ( "Send reset to Rigol", None, gSkooppi.reset),
         "clear"                  : ( "Send clear to Rigol", None, gSkooppi.clear),
         "Measure"                : (None, None, None),
-        "measure"                : ("Measure", measurePar, gSkooppi.measurement),
+        CMD_MEASURE              : ("Measure", measurePar, gSkooppi.measurement),
         "Record"                 : (None, None, None),
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
         MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
@@ -258,7 +313,9 @@ def _main( _argv ):
     }
 
     
-    cmdController.mainMenu( _argv, mainMenu=mainMenu, mainPrompt="[q=quit,?=commands,??=help on command]")
+    cmdController.mainMenu( _argv, mainMenu=mainMenu
+                            , mainPrompt="[q=quit,?=commands,??=help on command]"
+                            , defaults=defaults)
     if gSkooppi is not None:
         gSkooppi.close()
         gSkooppi = None

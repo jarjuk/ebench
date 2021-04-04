@@ -23,22 +23,6 @@ mainMenu = {
 
 
 
-mainMenu = {
-    "Commands:"              : ( None, None, None),
-    "hello"                  : ( "Say hello", helloPar, hello),
-    "Help:"                  : ( None, None, None),
-    MenuCtrl.MENU_HELP       : ( "List commands", None,
-                               lambda **argV: usage(cmd=os.path.basename(__file__), mainMenu=mainMenu, synopsis="Demo hello v2", usageText=usageText )),
-    MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
-                               lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-    "_version"               : ("Version number", None, lambda **argv: print( ebench.version())),
-    "Exit:"                  : ( None, None, None),
-    MenuCtrl.MENU_QUIT       : ("Exit", None, None),
-
-}
-
-
-
 def _main( _argv ):
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)

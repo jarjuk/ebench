@@ -18,8 +18,10 @@ import pyvisa
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
 flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
 flags.DEFINE_string('addr', None, "pyvisa instrument address")
-flags.DEFINE_string('captureDir', "pics", "Capture directory")
-flags.DEFINE_string('recordingDir', "tmp", "Directory where recordings are saved into")
+flags.DEFINE_string('captureDir', "pics", "Screen capture directory")
+flags.DEFINE_string('recordingDir', "tmp", "Directory where command line recordings are saved into")
+flags.DEFINE_string('csvDir', "tmp", "Directory where command CSV files are saved into")
+
 
 
 
@@ -210,7 +212,7 @@ class MenuCtrl:
     MENU_REC_START="!"        # start/rerset recording
     MENU_HELP="?"             # list commands
     MENU_CMD_PARAM="??"       # list command paramters
-    MENU_VERSION="version"    # output version number
+    MENU_VERSION="_version"   # output version number (hidden command)
     MENU_SCREEN="screen"      # output screenshot
     
     def __init__( self):
@@ -265,9 +267,19 @@ class MenuCtrl:
         raise MenuNoRecording
 
 
-    def promptValue( prompt:str, key:str=None, cmds:List[str]=None, validValues:List[str]=None, defaultParameters:dict={} ):
-        """
-        Prompt user for a value 
+    def promptValue( prompt:str, key:str=None, cmds:List[str]=None,
+                     validValues:List[str]=None, defaultParameters:dict={} ):
+        """Two uses 1) prompt user for menuCommand, 2) prompt user for
+        commandParameters
+
+        :key: Lookding for key-value pair for commandParameters 
+
+        :defaultParameters: >dict->value, use 'key' to check if
+        promted value has default value, if it has update prompted
+        result to 'defaultParameters'. As the result: is default value
+        is set, it used if user does not change it, default value is
+        rememebered between calls
+
         """
         ans = None
         logging.debug( "promptValue: key={}, cmds={},".format(key,cmds))
@@ -312,6 +324,20 @@ class MenuCtrl:
                         # no key-value pair (when expecting one)
                         ans = None
 
+                        
+            if ans is None and key in defaultParameters:
+                # Batch default
+                # value not in found 
+                logging.debug( "Bathc ans for key {} defaultValue {}".format(key, defaultParameters[key]))
+                ans = defaultParameters[key]
+
+            if key in defaultParameters:
+                logging.debug( "Change key: {} defaultValue {}->{}".format(key, defaultParameters[key], ans))
+                # update default value for key
+                defaultParameters[key] = ans
+                
+
+
 
 
         # ans found - lets check validity
@@ -325,11 +351,12 @@ class MenuCtrl:
         return ans 
 
     def mainMenu( self, _argv, mainMenu:Dict[str,List], mainPrompt= "Command [q=quit,?=help]", defaults:Dict[str,Dict]= None ):
-        """For interactive usage, prompt user for menu command and command
-        paramaters, for command line usage parse commands and
-        parameters from command line. Invoke action for command.
+        """
+        For interactive usage, prompt user for menu command and command
+        parameters, for command line usage parse commands and
+        parameters from '_argv'. Invoke action for command.
 
-        :_argv: command line paramaters
+        :_argv: command line paramaters (in batch mode)
 
         :mainMenu: dict mapping menuCommand:str -> menuSelection =
         List[menuPrompt,parameterPrompt,menuAction], where
@@ -407,7 +434,8 @@ class MenuCtrl:
             if not interactive and len(cmds) == 0:
                 # all commands consumed - quit batch
                 break
-            menuCommand = MenuCtrl.promptValue( mainPrompt, cmds=cmds, validValues=mainMenu.keys() )
+            menuCommand = MenuCtrl.promptValue(mainPrompt,
+                                               cmds=cmds, validValues=mainMenu.keys() )
                 
             logging.debug( "Command '{}'".format(menuCommand))
             if menuCommand is None:
@@ -486,7 +514,6 @@ def menuStopRecording( cmdController:MenuCtrl, pgm, fileDir ):
         return cmdController.stopRecording(pgm=pgm, fileDir=fileDir, **argv )
     return f
 
-
 def version():
     """Version number of ebench tool"""
     versionPath = os.path.join( os.path.dirname( __file__), "..", "VERSION")
@@ -495,10 +522,11 @@ def version():
     return version
 
 def list_resources():
+    """List resources pyvisa finds"""
     logging.info( "List resources called")
     return PyInstrument.singleton_rm().list_resources()
 
-def mainMenuHelpCommands( mainMenu:dict[str,List] ):
+def usageListCommands( mainMenu:dict[str,List] ):
     """Prints 'mainMenu' ()
 
     Menu item 
@@ -527,7 +555,6 @@ def usageSynopsis( cmd, mainMenu, synopsis ):
     print( "" )
     print( "Usage: {} [options] [commands and parameters] ".format(cmd))
     print( "" )
-    mainMenuHelpCommands(mainMenu)
 
 def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
     """Print 'menuText' as synopsis, followed by 'menuAction' docstring
@@ -564,18 +591,20 @@ def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
 
 
 def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):
-    """Output 'usage' text
+    """Outputs synonpsis, list of commands in 'mainMenu', followed by
+    'usageText' (if given)
 
-    :cmd:
+    :cmd: part of synosis
 
-    :mainMenu:
-    
     :synopsis: short one line documentation
 
-    :usageText: printer last 
+    :mainMenu: app commands structure, see function 'mainMenu'
+
+    :usageText: print after synopsis
 
     """
     usageSynopsis( cmd=cmd, mainMenu=mainMenu, synopsis=synopsis)
+    usageListCommands(mainMenu)
     if usageText is not None:
         print( usageText)
     
