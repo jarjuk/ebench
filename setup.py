@@ -6,7 +6,6 @@ import ebench.CMDS as CMDS
 with open("VERSION", "r") as fh:
     version = fh.read().rstrip()
 
-scripts =[ "tmp/apu.sh" ]
 name="ebench"
 
 
@@ -27,10 +26,10 @@ setuptools.setup(
     package_data={
         "ebench": ['../VERSION', '../RELEASES.md' ]
     },
-    scripts=scripts,
+    scripts=[f"{CMDS.CMD_RIGOL}", f"{CMDS.CMD_UNIT}"],
     entry_points = {
-        "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol:main"
-                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main", ],
+        # "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol:main"
+        #                      , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main", ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

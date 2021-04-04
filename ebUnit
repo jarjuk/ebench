@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import ebench
-print( ebench.version())
+import os
+print( "{} - {}".format(os.path.basename(__file__), ebench.version()))
 ebench.ebUnit.main()
 
