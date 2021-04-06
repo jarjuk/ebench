@@ -164,6 +164,39 @@ DEViation}
         cmd = ":CHAN{}:UNIT {}".format( ch,si2RigolUnit(siUnit))
         self.write(cmd)
 
+    # Timebase stuff
+    def rigolSetTimebase( self, scale ):
+        """Set or query the main timebase scale. The default unit is s/div.
+
+        When the horizontal timebase mode is YT and the horizontal
+        timebase is 200ms/div or larger (namely the "Slow Sweep"
+        mode), this command is invalid when the oscilloscope is in the
+        transition to the "Stop" state.
+
+        :scale: YT mode: 5ns/div to 50s/div in 1-2-5 step, Roll mode:
+                200ms/div to 50s/div in 1-2-5 step
+
+        """
+        cmd = ":TIMebase:MAIN:SCALe {:.9f}".format(scale)
+        self.write(cmd)
+        
+    def rigolSetTimebaseUnit( self, timebase ):
+        """Set main timebase to 'timebase'
+
+        :timebase: string with 'value' and 'unit'. Unit is one of
+        ns,us,ms,s. For example 0.1ms
+
+        """
+        valToMult = {
+            "ns": 10**-9,
+            "us": 10**-6,
+            "ms": 10**-3,
+            "s": 1,
+        }
+        (val,unit) = self.valUnit(timebase, validValues=list(valToMult.keys()))
+        self.rigolSetTimebase( scale = float(val)*valToMult[unit])
+        
+
     # Trigger stuff
 
     def rigolTriggerStatusQuery(self):

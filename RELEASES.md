@@ -1,6 +1,9 @@
 ## 0.0.9-SNAPSHOT/20210404-22:49:46
 
+- Features implementing
+  
 - Features added:
+  - ebRigol timebase
   - measurement: add automagically measurement timestamp
 
 - Known issues/missing features

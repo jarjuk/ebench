@@ -206,6 +206,15 @@ class MSO1104(RigolScope):
         self.rigolChannelOnOff( ch=channel, onOff = False )
         self.delay()
 
+    def timebase( self, timebase:str):
+        """Set scope main timebase (:TIMebase:MAIN:SCALe <scale>)
+
+        :timebase: string with 'value' and 'unit'. Unit is one of
+        ns,us,ms,s. For example 0.1ms
+        """
+        if timebase is not None and not not timebase:
+            self.rigolSetTimebaseUnit(timebase)
+
     # ------------------------------------------------------------------
     # Utitlities
 
@@ -236,6 +245,7 @@ class MSO1104(RigolScope):
 # Menu: command parameters
 
 CMD_MEASURE= "measure"
+CMD_TIMEBASE= "timebase"
 CMD_SETUP_TRIGGER= "setupTrigger"
 CMD_TRIGGER_STATUS="_triggerStatus"
 
@@ -270,6 +280,10 @@ measureDefaults = {
     "csvFile": "measurement.csv",
 }
 
+timebasePar = {
+    "timebase"       : "Y axis timebase value + unit[ns,us,ms,s]",
+}
+
 
 onOffPar = channelPar
 
@@ -302,6 +316,7 @@ podSetupPar = podPar | {
 defaults = {
     CMD_MEASURE: measureDefaults,
     CMD_SETUP_TRIGGER: { k: None for k in triggerSetupPar.keys()},
+    CMD_TIMEBASE: { k: None for k in timebasePar.keys()},
 }
 
 
@@ -320,6 +335,7 @@ def _main( _argv ):
         "general"                : ( "General setup", generalPar, gSkooppi.general),
         "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
         CMD_SETUP_TRIGGER        : ( "Setup trigger", triggerSetupPar, gSkooppi.setupTrigger ),
+        CMD_TIMEBASE             : ( "Setup timebase", timebasePar, gSkooppi.timebase ),
         "podSetup"               : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
         "podOff"                 : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
         "on"                     : ( "Open channel", onOffPar, gSkooppi.channelOn),
