@@ -1,6 +1,7 @@
 ## 0.0.9-SNAPSHOT/20210404-22:49:46
 
 - Features implementing
+  - eBench merge two commands (aka main)
   
 - Features added:
   - ebRigol measure ch USER added
