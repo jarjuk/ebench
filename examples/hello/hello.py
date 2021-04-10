@@ -17,11 +17,9 @@ helloPar = {
 
 
 mainMenu = {
-    "hello"             : ( "Say hello", helloPar, hello),
-    MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+    "hello"                 : ( "Say hello", helloPar, hello),
+    MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
 }
-
-
 
 def _main( _argv ):
     # global gSkooppi

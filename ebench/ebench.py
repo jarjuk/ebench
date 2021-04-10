@@ -39,206 +39,7 @@ class MenuNoRecording(Exception):
     pass
 
 TOOLNAME="ebench"
-class Instrument:
 
-    def __init__( self, debug = False ):
-        self.debug = debug
-
-    def close(self):
-        pass
-
-    # timestamp when measurement taken
-    MEASUREMENT_TS="timestamp"
-        
-    def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
-        if fileName is None or not fileName:
-            now = datetime.now()
-            fileName = "{}{}.{}".format( prefix, now.strftime("%Y%m%d-%H%M%S"), ext )
-        filePath = os.path.join( captureDir, fileName )
-        logging.info( "screenShot: filePath={}".format(filePath) )
-        self.screenShotImplementation(filePath=filePath)
-        return filePath
-
-    def screenShotImplementation( self, filePath):
-        """screenShotImplementation method MUST be be implemented for a concrete instrument
-        """
-        raise NotImplementedError("screenShotImplementation not implmemented for class {}".format( self.__class__.__name__))
-        
-
-    def valUnit( self, valUnitStr, validValues:List[str]=None ):
-        """Extract value and unit from 'valUnitStr' using VAL_UNIT_REGEXP
-        
-        VAL_UNIT_REGEXP=r"(?P<value>-?[0-9\.]+)(?P<unit>[a-zA-Z%]+)"
-
-        :valUnitStr: string from which to extrac valid value
-
-        :validValues: list of valid unit string
-
-        :return: (val,unit)
-        """
-
-        # Extract value/unit
-        VAL_UNIT_REGEXP=r"(?P<value>[0-9-\.]+)(?P<unit>[a-zA-Z%]+)"
-        match = re.search( VAL_UNIT_REGEXP, valUnitStr )
-        if match is None:
-            msg = "Could not extract unit value from '{}'".format( valUnitStr )
-            logging.error(msg)
-            raise MenuValueError(msg)
-        (val,unit) = ( match.group('value'), match.group('unit') )
-
-        # Validate - if validation requested
-        if validValues is not None and unit not in  validValues:
-            msg = "{} > expecting one of {} - got '{}'".format( valUnitStr, validValues, unit  )
-            logging.error( msg )
-            raise MenuValueError(msg)
-             
-        return (val,unit)
-
-    def instrumentAppendCvsFile( self, csvFile, measurementRow:dict ):
-        """
-        Append to FLAGS.csvDir/csvFile
-
-        :csvFile: name of the file (within directory FLAGS.csvDir)
-
-        :measurementRow: dict with keys in the format '<channel>:<measurement>'
-
-        """
-        filePath= os.path.join( FLAGS.csvDir, csvFile)
-
-        # Exepct columns to be the same
-        csv_columns = [Instrument.MEASUREMENT_TS ] + list(measurementRow.keys())
-        if not os.path.exists( filePath):
-            # Create CSV header
-            with open( filePath, "w") as csvfile:
-                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
-                writer.writeheader()
-            
-        with open( filePath, "a") as csvfile:
-            # Write datarow
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            measurementRow[Instrument.MEASUREMENT_TS] = datetime.now().strftime("%Y%m%d-%H%M%S")
-            writer.writerow(measurementRow)
-
-    
-
-class PyInstrument(Instrument):
-    """Instrument which can be accessed using pyvisa
-    """
-    
-    # ------------------------------------------------------------------
-    # Singleton
-
-    # ResourceManager signleton
-    _rm = None
-
-    def singleton_rm():
-        if PyInstrument._rm is None:
-            PyInstrument._rm = pyvisa.ResourceManager()
-        return PyInstrument._rm
-
-    def closetti():
-        try:
-            logging.info(  "Closing Resource manager {}".format(PyInstrument._rm))
-            PyInstrument._rm.close()
-            PyInstrument._rm = None
-        except:
-            logging.warn(  "Closing Resource manager {} - failed".format(PyInstrument._rm))
-
-
-    # ------------------------------------------------------------------
-    # construct && close
-    
-    def __init__( self, addr, debug = False ):
-        super().__init__( debug=debug)
-        logging.info( "Open PyInstrument instrument in addr {}".format(addr))
-        self.addr = addr
-        try:
-            self.instrument = PyInstrument.singleton_rm().open_resource(self.addr)
-        except pyvisa.errors.VisaIOError as err:
-                 self.instrument = None
-                 logging.error(err)
-        except ValueError as err:
-                 self.instrument = None
-                 logging.error(err)
-        
-        if debug:
-            pyvisa.log_to_screen()
-
-    def close(self):
-        super().close()
-        PyInstrument.closetti()
-
-    # ------------------------------------------------------------------
-    # properties
-    @property
-    def addr(self) -> str :
-        if not hasattr(self, "_addr"):
-             return None
-        return self._addr
-
-    @addr.setter
-    def addr( self, addr:str):
-        self._addr = addr
-
-    # ------------------------------------------------------------------
-    # Low level communication
-    def write(self, cmd ):
-        logging.info( "write: {}".format(cmd))
-        if self.instrument is not None:
-            self.instrument.write(cmd)
-        else:
-            logging.error( "write '{}' failed - self.instrument is None".format(cmd))
-
-    def read_raw(self):
-        if self.instrument is not None:
-            raw = self.instrument.read_raw()
-            logging.info( "read_raw return getsizeof(raw) {} bytes".format(sys.getsizeof(raw)))
-            return raw
-        else:
-            logging.error( "read_raw failed - self.instrument is None")
-            return None
-
-    def query(self, cmd, strip=False ):
-        logging.info( "query: {}".format(cmd))
-        if self.instrument is not None:
-            ret = self.instrument.query(cmd)
-            logging.debug( "query: {} --> {}".format(cmd,ret))
-            if strip: ret = ret.rstrip()
-            return  ret
-        else:
-            logging.error( "query '{}' failed - self.instrument is None".format(cmd))
-            return None
-
-    # ------------------------------------------------------------------
-    # Common commands to all visa instrumetn
-    
-    def pyvisaGetName(self):
-       return( self.query( "*IDN?"))
-
-    def pyvisaReset(self):
-        self.write( "*RST" )
-
-class Osciloscope(PyInstrument):
-    """Pyvisa instrument managing pyvisa resource and communicating using
-    write and query operations
-    """
-
-    def __init__( self, addr, debug = False ):
-        super().__init__( addr=addr, debug=debug)
-        
-    def close(self):
-        super().close()
-
-
-        
-
-class SignalGenerator(PyInstrument):
-    def __init__( self, addr, debug = False ):
-        super().__init__( addr=addr, debug=debug)
-
-    def close(self):
-        super().close()
-        
 class MenuCtrl:
 
     # Well knonw menu items
@@ -493,6 +294,221 @@ class MenuCtrl:
             print( "Save recordings?")
             execMenuCommand( mainMenu, MenuCtrl.MENU_REC_SAVE,defaults)
 
+# ------------------------------------------------------------------
+# Devices
+
+class Instrument:
+
+    def __init__( self, debug = False ):
+        self.debug = debug
+
+    def close(self):
+        pass
+
+    # timestamp when measurement taken
+    MEASUREMENT_TS="timestamp"
+
+    # special intrument feed 'USER' (e.g. promp askUser)
+    USER_FEED="USER"
+
+    def askUser( self, item, validValues:List[str]= None ):
+        """Prompt user a value (e.g for a measurement). If 'validValues' is
+        give accept only thos values
+
+        """
+        prompt = "Enter value for {}".format(item)
+        return MenuCtrl.promptValue( prompt = prompt, validValues=validValues, )
+        
+        
+    def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
+        if fileName is None or not fileName:
+            now = datetime.now()
+            fileName = "{}{}.{}".format( prefix, now.strftime("%Y%m%d-%H%M%S"), ext )
+        filePath = os.path.join( captureDir, fileName )
+        logging.info( "screenShot: filePath={}".format(filePath) )
+        self.screenShotImplementation(filePath=filePath)
+        return filePath
+
+    def screenShotImplementation( self, filePath):
+        """screenShotImplementation method MUST be be implemented for a concrete instrument
+        """
+        raise NotImplementedError("screenShotImplementation not implmemented for class {}".format( self.__class__.__name__))
+        
+
+    def valUnit( self, valUnitStr, validValues:List[str]=None ):
+        """Extract value and unit from 'valUnitStr' using VAL_UNIT_REGEXP
+        
+        VAL_UNIT_REGEXP=r"(?P<value>-?[0-9\.]+)(?P<unit>[a-zA-Z%]+)"
+
+        :valUnitStr: string from which to extrac valid value
+
+        :validValues: list of valid unit string
+
+        :return: (val,unit)
+        """
+
+        # Extract value/unit
+        VAL_UNIT_REGEXP=r"(?P<value>[0-9-\.]+)(?P<unit>[a-zA-Z%]+)"
+        match = re.search( VAL_UNIT_REGEXP, valUnitStr )
+        if match is None:
+            msg = "Could not extract unit value from '{}'".format( valUnitStr )
+            logging.error(msg)
+            raise MenuValueError(msg)
+        (val,unit) = ( match.group('value'), match.group('unit') )
+
+        # Validate - if validation requested
+        if validValues is not None and unit not in  validValues:
+            msg = "{} > expecting one of {} - got '{}'".format( valUnitStr, validValues, unit  )
+            logging.error( msg )
+            raise MenuValueError(msg)
+             
+        return (val,unit)
+
+    def instrumentAppendCvsFile( self, csvFile, measurementRow:dict ):
+        """
+        Append to FLAGS.csvDir/csvFile
+
+        :csvFile: name of the file (within directory FLAGS.csvDir)
+
+        :measurementRow: dict with keys in the format '<channel>:<measurement>'
+
+        """
+        filePath= os.path.join( FLAGS.csvDir, csvFile)
+
+        # Exepct columns to be the same
+        csv_columns = [Instrument.MEASUREMENT_TS ] + list(measurementRow.keys())
+        if not os.path.exists( filePath):
+            # Create CSV header
+            with open( filePath, "w") as csvfile:
+                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
+                writer.writeheader()
+            
+        with open( filePath, "a") as csvfile:
+            # Write datarow
+            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+            measurementRow[Instrument.MEASUREMENT_TS] = datetime.now().strftime("%Y%m%d-%H%M%S")
+            writer.writerow(measurementRow)
+
+    
+
+class PyInstrument(Instrument):
+    """Instrument which can be accessed using pyvisa
+    """
+    
+    # ------------------------------------------------------------------
+    # Singleton
+
+    # ResourceManager signleton
+    _rm = None
+
+    def singleton_rm():
+        if PyInstrument._rm is None:
+            PyInstrument._rm = pyvisa.ResourceManager()
+        return PyInstrument._rm
+
+    def closetti():
+        try:
+            logging.info(  "Closing Resource manager {}".format(PyInstrument._rm))
+            PyInstrument._rm.close()
+            PyInstrument._rm = None
+        except:
+            logging.warn(  "Closing Resource manager {} - failed".format(PyInstrument._rm))
+
+
+    # ------------------------------------------------------------------
+    # construct && close
+    
+    def __init__( self, addr, debug = False ):
+        super().__init__( debug=debug)
+        logging.info( "Open PyInstrument instrument in addr {}".format(addr))
+        self.addr = addr
+        try:
+            self.instrument = PyInstrument.singleton_rm().open_resource(self.addr)
+        except pyvisa.errors.VisaIOError as err:
+                 self.instrument = None
+                 logging.error(err)
+        except ValueError as err:
+                 self.instrument = None
+                 logging.error(err)
+        
+        if debug:
+            pyvisa.log_to_screen()
+
+    def close(self):
+        super().close()
+        PyInstrument.closetti()
+
+    # ------------------------------------------------------------------
+    # properties
+    @property
+    def addr(self) -> str :
+        if not hasattr(self, "_addr"):
+             return None
+        return self._addr
+
+    @addr.setter
+    def addr( self, addr:str):
+        self._addr = addr
+
+    # ------------------------------------------------------------------
+    # Low level communication
+    def write(self, cmd ):
+        logging.info( "write: {}".format(cmd))
+        if self.instrument is not None:
+            self.instrument.write(cmd)
+        else:
+            logging.error( "write '{}' failed - self.instrument is None".format(cmd))
+
+    def read_raw(self):
+        if self.instrument is not None:
+            raw = self.instrument.read_raw()
+            logging.info( "read_raw return getsizeof(raw) {} bytes".format(sys.getsizeof(raw)))
+            return raw
+        else:
+            logging.error( "read_raw failed - self.instrument is None")
+            return None
+
+    def query(self, cmd, strip=False ):
+        logging.info( "query: {}".format(cmd))
+        if self.instrument is not None:
+            ret = self.instrument.query(cmd)
+            logging.debug( "query: {} --> {}".format(cmd,ret))
+            if strip: ret = ret.rstrip()
+            return  ret
+        else:
+            logging.error( "query '{}' failed - self.instrument is None".format(cmd))
+            return None
+
+    # ------------------------------------------------------------------
+    # Common commands to all visa instrumetn
+    
+    def pyvisaGetName(self):
+       return( self.query( "*IDN?"))
+
+    def pyvisaReset(self):
+        self.write( "*RST" )
+
+class Osciloscope(PyInstrument):
+    """Pyvisa instrument managing pyvisa resource and communicating using
+    write and query operations
+    """
+
+    def __init__( self, addr, debug = False ):
+        super().__init__( addr=addr, debug=debug)
+        
+    def close(self):
+        super().close()
+
+
+        
+
+class SignalGenerator(PyInstrument):
+    def __init__( self, addr, debug = False ):
+        super().__init__( addr=addr, debug=debug)
+
+    def close(self):
+        super().close()
+        
 # ------------------------------------------------------------------
 # Common menu actions
 

@@ -1,5 +1,5 @@
 from .Rigol import RigolScope
-from .ebench import MenuCtrl, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
+from .ebench import Instrument, MenuCtrl, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
 
 # Installing this module as command
 from .CMDS import CMD_RIGOL
@@ -19,6 +19,8 @@ class MSO1104(RigolScope):
     # Construct && close
     def __init__( self, addr=None, ip=None, debug = False ):
         super().__init__( addr=addr, ip=ip, debug=debug)
+
+    
     
     # ------------------------------------------------------------------        
     # API --->
@@ -99,26 +101,61 @@ class MSO1104(RigolScope):
         self.delay()
 
 
-    def measurement( self, measurements:str, csvFile:str=None, sep=",", sep2=":"):
-        """Make AVERAGE 'measurements' (:MEASure:ITEM? {},CHAN{}') from scope and
+    def measurement( self, measurements:str, csvFile:str=None, measurementSep=",", chMeasurementSep=":"):
+        """Make AVERAGE 'measurements' (:MEASure:ITEM? <item>,CHAN<ch>') from scope and
         save result to 'csvFile'
 
-        :measurements: Comma separated list of ch:item pairs.  For
-        example, '1:Vavg,2:FREQ' measures Vrms on channel 1 and
-        frequency on channel 2.
-        
+
+        :measurements: Comma separated list of 'ch:item' pairs. 
+          Where 
+
+            ch: is channel number 1,2,3,4 or digical channel name
+            D0,..D15.  Special ch -value 'USER' promps value from user
+
+            item: is measured item, one of VMAX, VMIN, VPP, VTOP,
+               VBASe, VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea,
+               PREShoot, PERiod, FREQuency, RTIMe, FTIMe, PWIDth,
+               NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate,
+               NSLEWrate, VUPper, VMID, VLOWer, VARIance, PVRMS,
+               PPULses, NPULses, PEDGes, and NEDGes
+ 
+               For special ch 'USER' item is the name promped from
+               user
+
+        Example USER:Vdd,1:Vavg,D0:FREQ
+
         :csvFile:  name of CSV file where to append the results
 
         """
-        logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
-        measuremenList = [ chItem.split(sep2) for chItem  in measurements.split(sep) ]
-        statistic = "AVER"
-        logging.debug( "measurement: measuremenList{}".format(measuremenList))
-        
-        measurementRow =  {
-            "{}:{}".format(ch,item.upper()): self.rigolMeasurement( ch, item=item.upper(), statistic=statistic )
-            for (ch,item) in measuremenList 
+        def dispatchMeasurement( ch, item ):
+            """Dispatch measuring 'item' to different input feed. Default uses
+            'rigolMeasurement' -feed, but 'CHANNEL_USER' is dispathed to 
+            'askUser' channel.
+
+            """
+            if ch == Instrument.USER_FEED:
+                # Prompt
+                return self.askUser( item=item )
+            else:
+                # Reading measurement AVERAGE from Rigol
+                statistic = "AVER"
+                return self.rigolMeasurement( ch, item=item.upper(), statistic=statistic )
+
             
+        logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
+
+        # Expect 'measurements' to separeated by 'measurementSep'
+        # (comma). Split channen -'ch' and measurement 'item' name with
+        # chMeasurementSep (colon)
+        measuremenList = [ chItem.split(chMeasurementSep) for chItem  in measurements.split(measurementSep) ]
+
+        logging.debug( "measurement: measuremenList{}".format(measuremenList))
+
+        # Measurement row is mdict with list from
+        # 'measuremenList'.
+        measurementRow =  {
+            "{}:{}".format(ch,item.upper()): dispatchMeasurement(ch,item )
+            for (ch,item) in measuremenList 
         }
         if csvFile is not None and not not csvFile:
             self.instrumentAppendCvsFile( csvFile, measurementRow )

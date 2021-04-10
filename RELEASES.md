@@ -3,6 +3,7 @@
 - Features implementing
   
 - Features added:
+  - ebRigol measure ch USER added
   - ebRigol timebase
   - measurement: add automagically measurement timestamp
 

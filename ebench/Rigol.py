@@ -16,6 +16,12 @@ class RigolScope(Osciloscope):
         self.ip = ip
 
     # ------------------------------------------------------------------
+    # Help texts
+    MEASURE_ITEMS="""
+    """
+        
+
+    # ------------------------------------------------------------------
     # Template methods (used in base classes)
 
         
@@ -53,15 +59,13 @@ class RigolScope(Osciloscope):
                     measurement (:MEASure:STATistic:ITEM) else make
                     item measurement (:MEASure:ITEM <item>). 
 
-                    Valid values MAXimum|MINimum|CURRent|AVERages|
-DEViation}
-
+                    Valid values MAXimum|MINimum|CURRent|AVERages|DEViation
 
         :item: VMAX, VMIN, VPP, VTOP, VBASe, VAMP, VAVG, VRMS,
-        OVERshoot, MARea, MPARea, PREShoot, PERiod, FREQuency, RTIMe, FTIMe,
-        PWIDth, NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate,
-        VUPper, VMID, VLOWer, VARIance, PVRMS, PPULses, NPULses, PEDGes, and
-        NEDGes
+               OVERshoot, MARea, MPARea, PREShoot, PERiod, FREQuency,
+               RTIMe, FTIMe, PWIDth, NWIDth, PDUTy, NDUTy, TVMAX,
+               TVMIN, PSLEWrate, NSLEWrate, VUPper, VMID, VLOWer,
+               VARIance, PVRMS, PPULses, NPULses, PEDGes, and NEDGes
 
         """
         

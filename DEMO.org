@@ -1,0 +1,76 @@
+* ebRigol
+
+** Measure
+
+*** Measure help
+
+#+BEGIN_SRC bash :eval no-export :results output
+ebRigol ?? command=measure
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+measure - Measure
+
+Make AVERAGE 'measurements' (:MEASure:ITEM? <item>,CHAN<ch>') from scope and
+save result to 'csvFile'
+
+
+:measurements: Comma separated list of 'ch:item' pairs. 
+  Where 
+
+    ch: is channel number 1,2,3,4 or digical channel name
+    D0,..D15.  Special ch -value 'USER' promps value from user
+
+    item: is measured item, one of VMAX, VMIN, VPP, VTOP,
+       VBASe, VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea,
+       PREShoot, PERiod, FREQuency, RTIMe, FTIMe, PWIDth,
+       NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate,
+       NSLEWrate, VUPper, VMID, VLOWer, VARIance, PVRMS,
+       PPULses, NPULses, PEDGes, and NEDGes
+
+       For special ch 'USER' item is the name promped from
+       user
+
+Example USER:Vdd,1:Vavg,D0:FREQ
+
+:csvFile:  name of CSV file where to append the results
+
+measurements  : Comma -separated list of measurements
+   csvFile  : Name of CSV-file for appending measurements into
+
+Notice:
+- parameters MUST be given in the order listed above
+- parameters are optional and they MAY be left out
+#+end_example
+
+
+*** Simple measurement
+
+ #+BEGIN_SRC bash :eval no-export :results output
+   rm -f tmp/measurement.csv
+   ebRigol measure measurements=1:VPP csvFile=measurement.csv
+   cat tmp/measurement.csv
+ #+END_SRC
+
+ #+RESULTS:
+ : {'1:VPP': 0.16, 'timestamp': '20210410-115539'}
+ : timestamp,1:VPP
+ : 20210410-115539,0.16
+
+*** Measure channel USER
+
+ #+BEGIN_SRC bash :eval no-export :results output
+   rm -f tmp/measurement.csv
+   ebRigol _version
+   cat <<EOF  | ebRigol measure measurements=USER:Vdd csvFile=measurement.csv
+   5.21
+   EOF
+   cat tmp/measurement.csv
+ #+END_SRC
+
+ #+RESULTS:
+ : '0.0.9-SNAPSHOT'
+ : Enter value for Vdd > {'USER:VDD': '5.21', 'timestamp': '20210410-115546'}
+ : timestamp,USER:VDD
+ : 20210410-115546,5.21
