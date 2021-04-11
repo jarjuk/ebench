@@ -359,13 +359,15 @@ defaults = {
 
 # ------------------------------------------------------------------
 # Main
+def run( _argv, parentMenu:MenuCtrl=None ):
+    """
+    Api interface 
 
-def _main( _argv ):
-    # global gSkooppi
-    logging.set_verbosity(FLAGS.debug)
+    :parentMenu: is set if called from 'parentMenu'
+    """
     
     gSkooppi=MSO1104(addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl()
+    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, parentMenu=parentMenu)
 
     mainMenu = {
         "Init"                   : (None, None, None),
@@ -399,13 +401,23 @@ def _main( _argv ):
     }
 
     
-    cmdController.mainMenu( _argv, mainMenu=mainMenu
+    cmdController.mainMenu( mainMenu=mainMenu
                             , mainPrompt="[q=quit,?=commands,??=help on command]"
                             , defaults=defaults)
-    if gSkooppi is not None:
-        gSkooppi.close()
-        gSkooppi = None
 
+    if cmdController.isTopMenu:
+        # Top level closes instruments && cleanup
+        cmdController.close()
+        cmdController = None
+
+    return cmdController
+
+def _main( _argv ):
+    # Run standalone
+    # global gSkooppi
+    logging.set_verbosity(FLAGS.debug)
+    run( _argv )
+    
 def main():
     try:
         app.run(_main)
@@ -415,9 +427,5 @@ def main():
     
 if __name__ == '__main__':
     main()
-    # try:
-    #     app.run(main)
-    # except SystemExit:
-    #     pass
     
     

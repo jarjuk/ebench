@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Dict, List
+from typing import Dict, List, Callable
 
 from pprint import pformat
 from datetime import datetime
@@ -25,284 +25,13 @@ flags.DEFINE_string('recordingDir', "tmp", "Directory where command line recordi
 flags.DEFINE_string('csvDir', "tmp", "Directory where command CSV files are saved into")
 
 
-
-
-class MenuValueError(ValueError):
-    """Exception catched in inveractive mode: Instead of aborting
-    execution, user is notified of the error and operation continues
-    with promting for next action. (In non-interactive mode execution
-    is aborted)
-
-    """
-    pass
-class MenuNoRecording(Exception):
-    pass
-
-TOOLNAME="ebench"
-
-class MenuCtrl:
-
-    # Well knonw menu items
-    MENU_QUIT="q"             # quits loop
-    MENU_REC_SAVE="."         # save recording
-    MENU_REC_START="!"        # start/rerset recording
-    MENU_HELP="?"             # list commands
-    MENU_CMD_PARAM="??"       # list command paramters
-    MENU_VERSION="_version"   # output version number (hidden command)
-    MENU_SCREEN="screen"      # output screenshot
-    
-    def __init__( self):
-        self.recording = []
-
-    @property
-    def recording(self) -> List[str] :
-        if not hasattr(self, "_recording"):
-             return None
-        return self._recording
-
-    @recording.setter
-    def recording( self, recording:List[str]):
-        self._recording = recording
-
-    # Actions
-    def startRecording(self):
-        """@see module startRecording"""
-        self.recording = []
-        # Recording actions not recorded
-        raise MenuNoRecording
-
-    def appendRecording( self, menuCommand:str, commandParameters:Dict[str,str]={}):
-        """Append serialization of  'menuCommand' and 'commandParameters' to
-        'recording' -array
-        """
-        self.recording = self.recording + [menuCommand] + [ "{}={}".format(k,v) for k,v in commandParameters.items() ]
-        logging.debug( "appendRecording: {}".format(self.recording))
-
-    def anyRecordings( self ) -> bool:
-        """Recording status. True is something in recording bufffer"""
-        return len(self.recording) > 0
-        
-    def stopRecording(self, pgm, fileName =None, fileDir=None ):
-        """@see module function 'stopRecording'
-        """
-        logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
-        commandsAndParameters = " ".join( self.recording)
-        pgm_commandsAndParameters = "{} {}".format(pgm, commandsAndParameters)
-        if fileName is None or not fileName or fileName == MenuCtrl.MENU_REC_SAVE:
-            print(pgm_commandsAndParameters)
-        else:
-            if not os.path.exists( fileDir):
-                raise MenuValueError( "Non existing recording directory: {}".format(fileDir))
-            filePath= os.path.join( fileDir, fileName)
-            if os.path.isdir( filePath ):
-                raise MenuValueError( "Recording path is directory: {}".format(filePath))
-            with open( filePath, "a") as fh:
-                fh.write("{}\n".format(pgm_commandsAndParameters))
-            self.startRecording()
-        # Recording actions not recorded
-        raise MenuNoRecording
-
-
-    def promptValue( prompt:str, key:str=None, cmds:List[str]=None,
-                     validValues:List[str]=None, defaultParameters:dict={} ):
-        """Two uses 1) prompt user for menuCommand, 2) prompt user for
-        commandParameters
-
-        :key: Lookding for key-value pair for commandParameters 
-
-        :defaultParameters: >dict->value, use 'key' to check if
-        promted value has default value, if it has update prompted
-        result to 'defaultParameters'. As the result: is default value
-        is set, it used if user does not change it, default value is
-        rememebered between calls
-
-        """
-        ans = None
-        logging.debug( "promptValue: key={}, cmds={},".format(key,cmds))
-        if cmds is None:
-            # Interactive mode
-
-            # default value modifies prompt
-            if key in defaultParameters:
-                # default value defined
-                prompt = "{} ({})".format(prompt, defaultParameters[key])
-            ans = input( "{} > ".format(prompt))
-
-            # after user answer check if default accepted/default should be changed
-            if key in defaultParameters:
-                if ans is None or not ans:
-                    # Default value accepted
-                   ans = defaultParameters[key]
-                else:
-                    # Default value to rememeber changed
-                    defaultParameters[key] = ans
-
-        else:
-            # ans <- batch
-            if len(cmds) > 0:
-                # ans <- batch
-                if key is None:
-                    ans = cmds.pop(0)
-                else:
-                    # expecting key=value
-                    peek1st = cmds[0]
-                    match = re.search( r"(?P<key>.+)=(?P<value>.*)", peek1st )
-                    if match is not None:
-                        # key-value pair found
-                        if match.group('key') == key:
-                            # key matches
-                            cmds.pop(0)
-                            ans = match.group('value')
-                        else:
-                            # key does not match
-                            ans = None
-                    else:
-                        # no key-value pair (when expecting one)
-                        ans = None
-
-                        
-            if ans is None and key in defaultParameters:
-                # Batch default
-                # value not in found 
-                logging.debug( "Bathc ans for key {} defaultValue {}".format(key, defaultParameters[key]))
-                ans = defaultParameters[key]
-
-            if key in defaultParameters:
-                logging.debug( "Change key: {} defaultValue {}->{}".format(key, defaultParameters[key], ans))
-                # update default value for key
-                defaultParameters[key] = ans
-                
-
-
-
-
-        # ans found - lets check validity
-        if validValues is not None:
-            if ans not in  validValues:
-                msg = "{} > expecting one of {} - got '{}'".format( prompt, validValues, ans  )
-                logging.error(msg)
-                print(msg)
-                return None
-        logging.info( "promptValue: --> {}".format(ans))
-        return ans 
-
-    def mainMenu( self, _argv, mainMenu:Dict[str,List], mainPrompt= "Command [q=quit,?=help]", defaults:Dict[str,Dict]= None ):
-        """
-        For interactive usage, prompt user for menu command and command
-        parameters, for command line usage parse commands and
-        parameters from '_argv'. Invoke action for command.
-
-        :_argv: command line paramaters (in batch mode)
-
-        :mainMenu: dict mapping menuCommand:str -> menuSelection =
-        List[menuPrompt,parameterPrompt,menuAction], where
-        - menuPrompt: string presented to user to query for
-          'commandParameter' value
-        - parameterPrompt: dict mapping 'commandParameter' name to
-          commandParameter prompt
-        - menuAction: function to call with 'commandParameters' (as
-          **argv values prompted with parameterPrompt)
-
-        :defaults: is dictionary mapping 'menuCommand' to
-        'defaultParameters'.  If 'defaultParameters' for a
-        'menuCommand' is found, it is used to lookup 'defaultValue'
-        prompeted from user. Also, If 'defaultParameters' for a
-        'menuCommand' is found, 'defaultParameters' update with the
-        value user enters for the promt.
-
-        """
-
-        # Interactive receives only pgroramm name in _argv
-        interactive = len(_argv) == 1
-        pgm=_argv[0]
-        logging.info( "Starting pgm={}, interactive={}".format(pgm, interactive))
-
-        
-        def execMenuCommand(mainMenu,menuCommand,defaults):
-            # Extract mainMenu elements
-            menuSelection = mainMenu[menuCommand]
-
-            # 'defaultParameters' contains default values remm
-            defaultParameters = {}
-            if defaults is not None and menuCommand in defaults:
-                defaultParameters  = defaults[menuCommand]
-
-
-            # menuPrompt = menuSelection[0]
-            parameterPrompt = menuSelection[1]
-            menuAction =  menuSelection[2]
-            commandParameters = {}
-
-            if parameterPrompt is not None:
-                # Promp user/read CLI keyvalue parameters
-                commandParameters = {
-                        k: MenuCtrl.promptValue(v,key=k,cmds=cmds,defaultParameters=defaultParameters) for k,v in parameterPrompt.items()
-                }
-
-            if menuAction is not None:
-                try:
-                    # Call menu action (w. parameters)
-                    returnVal = menuAction( **commandParameters )
-                    self.appendRecording( menuCommand, commandParameters )
-                    if returnVal is not None: # and interactive:
-                        print( pformat(returnVal) )
-                except MenuValueError as err:
-                    if interactive:
-                        # Interactive error - print erros msg && continue
-                        print( "Error: {}".format(str(err)))
-                    else:
-                        raise
-                except MenuNoRecording:
-                    # Help, start/stop recording commands
-                    pass
-                except Exception as err:
-                    # In Interactive mode all errors are printed, user quits 
-                    if interactive:
-                        # Interactive error - print erros msg && continue
-                        print( "Error: {}".format(str(err)))
-                    else:
-                        raise
-                    
-            return True
-
-        
-        cmds = None
-        if not interactive:
-            # batch executes all CLI parameters
-            cmds = _argv[1:]
-
-        logging.info( "interactive: {} Starting cmds={}".format(interactive, cmds))
-        
-        goon = True
-        while goon:
-            if not interactive and len(cmds) == 0:
-                # all commands consumed - quit batch
-                break
-            menuCommand = MenuCtrl.promptValue(mainPrompt,
-                                               cmds=cmds, validValues=mainMenu.keys() )
-                
-            logging.debug( "Command '{}'".format(menuCommand))
-            if menuCommand is None:
-                continue
-            elif menuCommand == MenuCtrl.MENU_QUIT:
-                goon = False
-            else:
-                goon = execMenuCommand( mainMenu, menuCommand,defaults)
-
-        # Confirmm whether save recording
-        if self.anyRecordings() and interactive and MenuCtrl.MENU_REC_SAVE in mainMenu:
-            print( "Save recordings?")
-            execMenuCommand( mainMenu, MenuCtrl.MENU_REC_SAVE,defaults)
-
-# ------------------------------------------------------------------
-# Devices
-
 class Instrument:
 
     def __init__( self, debug = False ):
         self.debug = debug
 
     def close(self):
+        logging.info( "Instrument: close called")
         pass
 
     # timestamp when measurement taken
@@ -390,6 +119,409 @@ class Instrument:
             writer.writerow(measurementRow)
 
     
+
+class MenuValueError(ValueError):
+    """Exception catched in inveractive mode: Instead of aborting
+    execution, user is notified of the error and operation continues
+    with promting for next action. (In non-interactive mode execution
+    is aborted)
+
+    """
+    pass
+class MenuNoRecording(Exception):
+    pass
+
+TOOLNAME="ebench"
+
+class MenuCtrl:
+
+    # Well knonw menu items
+    MENU_QUIT="q"             # quits loop
+    MENU_REC_SAVE="."         # save recording
+    MENU_REC_START="!"        # start/rerset recording
+    MENU_HELP="?"             # list commands
+    MENU_CMD_PARAM="??"       # list command paramters
+    MENU_VERSION="_version"   # output version number (hidden command)
+    MENU_SCREEN="screen"      # output screenshot
+    
+    def __init__( self, args, parentMenu = None, instrument:Instrument = None ):
+        """
+
+        :args: paramerter from command line, pgm name etc
+
+        :parentMenu: hierarchical menu structure, ref. recording
+
+        :instrument: instrument managerd by this menu (optional)
+
+        """
+        self.instrument = instrument
+        self.parentMenu = parentMenu
+        if not self.isChildMenu:
+            # top level menu created - recording started
+            self.recording = []
+        logging.info( "MenuCtrl: init, isChildMenu={}".format(self.isChildMenu))
+        if self.isTopMenu:
+            self.initArgs( args=args)
+
+    def initArgs( self, args):
+        """
+        Init args (used only on top topMenu: only which receives args)
+        """
+        # Interactive receives only pgroramm name in _argv
+        self.interactive = len(args) == 1
+        self.pgm=args[0]
+        logging.info( "Starting pgm={}, interactive={}".format(self.pgm, self.interactive))
+
+        
+        if self.interactive:
+            self.cmds = None
+        else:
+            self.cmds = args[1:]
+        
+        
+
+    # ------------------------------
+    # Properties
+    @property
+    def recording(self) -> List[str] :
+        if self.parentMenu is not None:
+            return self.parentMenu.recording
+        return self._recording
+
+    @recording.setter
+    def recording( self, recording:List[str]):
+        self._recording = recording
+
+    @property
+    def parentMenu(self):
+        if not hasattr(self, "_parentMenu"):
+             return None
+        return self._parentMenu
+
+    @parentMenu.setter
+    def parentMenu( self, parentMenu):
+        self._parentMenu = parentMenu
+
+    @property        
+    def isChildMenu( self ):
+        return self.parentMenu is not None
+
+    def isTopMenu( self ):
+        return not self.isChildMenu
+
+    @property
+    def instrument(self) -> Instrument:
+        if not hasattr(self, "_instrument"):
+             return None
+        return self._instrument
+
+    @instrument.setter
+    def instrument( self, instrument:Instrument):
+        self._instrument = instrument
+
+    @property
+    def cmds(self) -> str :
+        if not hasattr(self, "_cmds"):
+             return None
+        return self._cmds
+
+    @cmds.setter
+    def cmds( self, cmds:str):
+        self._cmds = cmds
+
+
+    @property
+    def interactive(self) -> bool :
+        """Interactive: some command line parameters given?
+
+        """
+        if self.isChildMenu:
+            return self.parentMenu.interactive
+        if not hasattr(self, "_interactive"):
+             return None
+        return self._interactive
+
+    @interactive.setter
+    def interactive( self, interactive:bool):
+        self._interactive = interactive
+
+    @property
+    def pgm(self) -> str :
+        """First command line paramerter (from top-level menu)
+        """
+        if self.isChildMenu:
+            return self.parentMenu.pgm
+        if not hasattr(self, "_pgm"):
+             return None
+        return self._pgm
+
+    @pgm.setter
+    def pgm( self, pgm:str):
+        self._pgm = pgm
+
+    @property
+    def cmds(self) -> List[str] :
+        if self.isChildMenu:
+            return self.parentMenu.cmds
+        if not hasattr(self, "_cmds"):
+            return None
+        return self._cmds
+
+    @cmds.setter
+    def cmds( self, cmds:List[str]):
+        self._cmds = cmds
+
+    
+    # ------------------------------
+    # Recording actions
+    def startRecording(self):
+        """@see module startRecording"""
+        if self.isChildMenu:
+            self.parentMenu.startRecording()
+        else:
+            self.recording = []
+            # Recording actions not recorded
+            raise MenuNoRecording
+
+    def appendRecording( self, menuCommand:str, commandParameters:Dict[str,str]={}):
+        """Append serialization of  'menuCommand' and 'commandParameters' to
+        'recording' -array
+        """
+        logging.debug( "appendRecording: self.isChildMenu={}, menuCommand={}, commandParameters={}".format(self.isChildMenu, menuCommand,  commandParameters))
+        if self.isChildMenu:
+            logging.debug( "appendRecording: delegate to parentMenu, menuCommand={}".format(menuCommand))
+            self.parentMenu.appendRecording( menuCommand=menuCommand, commandParameters=commandParameters)
+        else:
+            self.recording = self.recording + [menuCommand] + [ "{}={}".format(k,v) for k,v in commandParameters.items() ]
+            logging.debug( "appendRecording: {}".format(self.recording))
+
+    def anyRecordings( self ) -> bool:
+        """Recording status. True is something in recording bufffer"""
+        if self.isChildMenu:
+            return self.parentMenu.anyRecordings()
+        else:
+            return len(self.recording) > 0
+        
+    def stopRecording(self, pgm, fileName =None, fileDir=None ):
+        """@see module function 'stopRecording'
+        """
+        if self.isChildMenu:
+            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, filedDir=fileDir)
+        else:
+            logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
+            if not self.anyRecordings():
+                print( "NO recordings to save")
+                raise MenuNoRecording                
+            commandsAndParameters = " ".join( self.recording)
+            pgm_commandsAndParameters = "{} {}".format(pgm, commandsAndParameters)
+            if fileName is None or not fileName or fileName == MenuCtrl.MENU_REC_SAVE:
+                print(pgm_commandsAndParameters)
+            else:
+                if not os.path.exists( fileDir):
+                    raise MenuValueError( "Non existing recording directory: {}".format(fileDir))
+                filePath= os.path.join( fileDir, fileName)
+                if os.path.isdir( filePath ):
+                    raise MenuValueError( "Recording path is directory: {}".format(filePath))
+                with open( filePath, "a") as fh:
+                    fh.write("{}\n".format(pgm_commandsAndParameters))
+                self.startRecording()
+            # Recording actions not recorded
+            raise MenuNoRecording
+
+    # ------------------------------
+    # menu && prompt
+    
+    def promptValue( prompt:str, key:str=None, cmds:List[str]=None,
+                     validValues:List[str]=None, defaultParameters:dict={} ):
+        """Two uses 1) prompt user for menuCommand, 2) prompt user for
+        commandParameters
+
+        :key: Lookding for key-value pair for commandParameters 
+
+        :defaultParameters: dict->value, use 'key' to check if promted
+        value has default value. If default value defined: update the
+        prompted value to 'defaultParameters' --> it is rememeber for
+        later invocations.
+
+        """
+        ans = None
+        logging.debug( "promptValue: key={}, cmds={},".format(key,cmds))
+        if cmds is None:
+            # Interactive mode
+
+            # default value modifies prompt
+            if key in defaultParameters:
+                # default value defined
+                prompt = "{} ({})".format(prompt, defaultParameters[key])
+            ans = input( "{} > ".format(prompt))
+
+            # after user answer check if default accepted/default should be changed
+            if key in defaultParameters:
+                if ans is None or not ans:
+                    # Default value accepted
+                   ans = defaultParameters[key]
+                else:
+                    # Default value to rememeber changed
+                    defaultParameters[key] = ans
+
+        else:
+            # ans <- batch
+            if len(cmds) > 0:
+                # ans <- batch
+                if key is None:
+                    ans = cmds.pop(0)
+                else:
+                    # expecting key=value
+                    peek1st = cmds[0]
+                    match = re.search( r"(?P<key>.+)=(?P<value>.*)", peek1st )
+                    if match is not None:
+                        # key-value pair found
+                        if match.group('key') == key:
+                            # key matches
+                            cmds.pop(0)
+                            ans = match.group('value')
+                        else:
+                            # key does not match
+                            ans = None
+                    else:
+                        # no key-value pair (when expecting one)
+                        ans = None
+
+                        
+            if ans is None and key in defaultParameters:
+                # Batch default
+                # value not in found 
+                logging.debug( "Bathc ans for key {} defaultValue {}".format(key, defaultParameters[key]))
+                ans = defaultParameters[key]
+
+            if key in defaultParameters:
+                logging.debug( "Change key: {} defaultValue {}->{}".format(key, defaultParameters[key], ans))
+                # update default value for key
+                defaultParameters[key] = ans
+                
+
+
+
+
+        # ans found - lets check validity
+        if validValues is not None:
+            if ans not in  validValues:
+                msg = "{} > expecting one of {} - got '{}'".format( prompt, validValues, ans  )
+                logging.error(msg)
+                print(msg)
+                return None
+        logging.info( "promptValue: --> {}".format(ans))
+        return ans 
+
+    def mainMenu( self, _argv, mainMenu:Dict[str,List], mainPrompt= "Command [q=quit,?=help]", defaults:Dict[str,Dict]= None ):
+        """For interactive usage, prompt user for menu command and command
+        parameters, for command line usage parse commands and
+        parameters from '_argv'. Invoke action for command.
+
+        :_argv: command line paramaters (in batch mode)
+
+        :mainMenu: dict mapping menuCommand:str -> menuSelection =
+        List[menuPrompt,parameterPrompt,menuAction], where
+        - menuPrompt: string presented to user to query for
+          'commandParameter' value
+        - parameterPrompt: dict mapping 'commandParameter' name to
+          commandParameter prompt
+        - menuAction: function to call with 'commandParameters' (as
+          **argv values prompted with parameterPrompt)
+
+        :defaults: is dictionary mapping 'menuCommand' to
+        'defaultParameters'.  If 'defaultParameters' for a
+        'menuCommand' is found, it is used to lookup 'defaultValue'
+        prompeted from user. Also, If 'defaultParameters' for a
+        'menuCommand' is found, 'defaultParameters' is updated with
+        the value user enters for the promt.
+
+        """
+        
+        def execMenuCommand(mainMenu,menuCommand,defaults):
+            # Extract mainMenu elements
+            menuSelection = mainMenu[menuCommand]
+
+            # 'defaultParameters' contains default values remm
+            defaultParameters = {}
+            if defaults is not None and menuCommand in defaults:
+                defaultParameters  = defaults[menuCommand]
+
+
+            # menuPrompt = menuSelection[0]
+            parameterPrompt = menuSelection[1]
+            menuAction =  menuSelection[2]
+            commandParameters = {}
+
+            if parameterPrompt is not None:
+                # Promp user/read CLI keyvalue parameters
+                commandParameters = {
+                        k: MenuCtrl.promptValue(v,key=k,cmds=cmds,defaultParameters=defaultParameters) for k,v in parameterPrompt.items()
+                }
+
+            if menuAction is not None:
+                try:
+                    # Call menu action (w. parameters)
+                    returnVal = menuAction( **commandParameters )
+                    self.appendRecording( menuCommand, commandParameters )
+                    if returnVal is not None: # and interactive:
+                        print( pformat(returnVal) )
+                except MenuValueError as err:
+                    if self.interactive:
+                        # Interactive error - print erros msg && continue
+                        print( "Error: {}".format(str(err)))
+                    else:
+                        raise
+                except MenuNoRecording:
+                    # Help, start/stop recording commands
+                    pass
+                except Exception as err:
+                    # In Interactive mode all errors are printed, user quits 
+                    if self.interactive:
+                        # Interactive error - print erros msg && continue
+                        print( "Error: {}".format(str(err)))
+                    else:
+                        raise
+                    
+            return True
+
+        
+        cmds  = self.cmds
+        logging.info( "interactive: {} Starting cmds={}".format(self.interactive, cmds))
+        goon = True
+        while goon:
+            if not self.interactive and len(cmds) == 0:
+                # all commands consumed - quit batch
+                break
+            menuCommand = MenuCtrl.promptValue(mainPrompt,
+                                               cmds=cmds, validValues=mainMenu.keys() )
+                
+            logging.debug( "Command '{}'".format(menuCommand))
+            if menuCommand is None:
+                continue
+            elif menuCommand == MenuCtrl.MENU_QUIT:
+                goon = False
+                self.appendRecording( menuCommand )
+            else:
+                goon = execMenuCommand( mainMenu, menuCommand,defaults)
+
+        # Confirmm whether save recording when exiting
+        if self.anyRecordings() and self.interactive and MenuCtrl.MENU_REC_SAVE in mainMenu:
+            print( "Save recordings?")
+            execMenuCommand( mainMenu, MenuCtrl.MENU_REC_SAVE,defaults)
+
+
+    def close(self):
+        """Close menu. Calls self.instrument.close (if instrument is not None)
+
+        """
+        logging.info( "MenuCtrl: close called")
+        if self.instrument is not None:
+            self.instrument.close()
+
+# ------------------------------------------------------------------
+# Devices
+
 
 class PyInstrument(Instrument):
     """Instrument which can be accessed using pyvisa
@@ -649,6 +781,23 @@ def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
     print( "- parameters are optional and they MAY be left out")
 
 
+def subMenu( command, parentMenu:MenuCtrl, run:Callable ) -> Callable:
+    """Create menuAction to invoke 'run' as submenu for menu 'command'
+
+    :command: Menu command invoking the menu
+
+    :parentMenu: MenuCtrl which is invoking subMenu
+    
+    :return: menuAction -callable  to put in 'mainMenu'
+
+    """
+    def startSubmenu():
+        # Record before entreing menu
+        parentMenu.appendRecording( menuCommand = command)
+        run(_argv=[command], parentMenu=parentMenu)
+        raise MenuNoRecording
+    return startSubmenu
+    
 def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):
     """Outputs synonpsis, list of commands in 'mainMenu', followed by
     'usageText' (if given)

@@ -1,5 +1,15 @@
 * enbench - Tool to control e-instruments $Release:0.0.9-SNAPSHOT$
 
+
+* Requirements
+
+- [ ]   useinta instrumettien hallinta voidaan integroida yhden komennon alle
+  - [ ] Hierarkinen menu rakenne
+    - [ ] M
+  - [ ] Eri instrumenttien mittaukset/tila/data voidaan koota yhdelle mittaustietueelle
+
+
+
 * References
 
 

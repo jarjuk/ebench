@@ -18,6 +18,7 @@ ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
 class UTG962(UnitSignalGenerator):
 
     def __init__( self, ip=None, addr=None, debug = False ):
+        logging.info( "UTG962: ip={},  addr={}".format(ip, addr))
         super().__init__( ip=ip, addr=addr, debug=debug)
     
 
@@ -276,12 +277,11 @@ Hint:
 # ------------------------------------------------------------------
 # Main
 
-def _main( _argv ):
-    logging.set_verbosity(FLAGS.debug)
+def run( _argv, parentMenu:MenuCtrl=None ):
     logging.info( "starting")
 
     sgen = UTG962( addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl()
+    cmdController = MenuCtrl( args=_argv, instrument=sgen, parentMenu=parentMenu)
 
     mainMenu = {
         "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
@@ -311,9 +311,17 @@ def _main( _argv ):
 
 
     cmdController.mainMenu(_argv, mainMenu=mainMenu, mainPrompt="[q=quit,?=commands,??=help on command]")
-    if sgen is not None:
-        sgen.close()
-        sgen = None
+    if cmdController.isTopMenu:
+        # Top level closes instruments && cleanup
+        cmdController.close()
+        cmdController = None
+
+    return cmdController
+        
+
+def _main( _argv ):
+    logging.set_verbosity(FLAGS.debug)
+    run( _argv )
 
 
 def main():
