@@ -163,6 +163,40 @@ class MSO1104(RigolScope):
 
     def clearStats( self):
         self.rigolStatClear()
+
+    def setStats(self, stats, multiline):
+        """Set measurement statistics on oscilloscope bottom row.
+
+        Uses :MEAS:STAT:ITEM {},CHAN{} api call
+        
+        :stats: comma separed list of CHAN ITEM pairs, where
+
+             ITEM is one of VMAX, VMIN, VPP, VTOP, VBASe, VAMP, VAVG,
+                  VRMS, OVERshoot, MARea, MPARea, PREShoot, PERiod,
+                  FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy,
+                  NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate, VUPper,
+                  VMID, VLOWer, VARIance, PVRMS, PPULses, NPULses,
+                  PEDGes, and NEDGes
+          
+            CHAN is one of D0|D1|D2|D3|D4|D5|D6|D7|D8|D9|
+                 D10|D11|D12|D13|D14|D15|1|2|3|4|MATH
+
+        :multiline: 0|1|ON|OFF show multi line measurement statistics
+
+        Empty list does not change measurement statistic collection
+
+        """
+        logging.info( "setStats: stats={}".format(stats))
+        if stats is not None and not not stats:
+            chanItems = stats.split(",")
+            for chanItem in chanItems:
+                (chan,item) = chanItem.split(":")
+                logging.debug( "setStats: chan={}, item={}".format(chan,item) )
+                self.rigolChannelMeasurementStat(item=item.upper(), ch=chan)
+
+        if multiline is not None and not not multiline:                
+            self.rigolStatDisplayOnOff(multiline)                
+
         
     def podSetup( self, pod, labels=None, sep="," ):
         """Put 'pod' 1/2 on display and update 8 pod digital channel labels.
@@ -328,6 +362,11 @@ stopRecordingPar = {
     "fileName" : "Filename to store recording, '.' show current playback list",
 }
 
+setStatsPar = {
+    "stats"     : "Stats to set comma separed list of ch:stats pairs",
+    "multiline" : "Show multiline statiscs (0|1)",
+}
+
 podPar ={
     "pod" : "Pod number (1,2)",
 }
@@ -354,6 +393,7 @@ defaults = {
     CMD_MEASURE: measureDefaults,
     CMD_SETUP_TRIGGER: { k: None for k in triggerSetupPar.keys()},
     CMD_TIMEBASE: { k: None for k in timebasePar.keys()},
+    "stat":  { "multiline": "OFF", "stats": None },
 }
 
 
@@ -379,6 +419,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
         "podOff"                 : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
         "on"                     : ( "Open channel", onOffPar, gSkooppi.channelOn),
         "off"                    : ( "Close channel", onOffPar, gSkooppi.channelOff),
+        "stat"                   : ( "Set statistics", setStatsPar, gSkooppi.setStats),
         "statClear"              : ( "Clear statistics", None, gSkooppi.clearStats),
         "reset"                  : ( "Send reset to Rigol", None, gSkooppi.reset),
         "clear"                  : ( "Send clear to Rigol", None, gSkooppi.clear),

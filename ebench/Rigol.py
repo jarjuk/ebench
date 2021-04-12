@@ -80,8 +80,16 @@ class RigolScope(Osciloscope):
             val = None
         return( val )
 
+    def chanStr( ch ):
+        if ch in [1,2,3,4,"1","2","3","4"]:
+            chStr = "CHAN{}".format(ch)
+        else:
+            chStr = ch
+        return chStr
+
+
     def rigolChannelMeasurementStat( self, item, ch ):
-        cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, ch)
+        cmd = ":MEAS:STAT:ITEM {},{}".format( item, RigolScope.chanStr(ch))
         self.write( cmd )
         
     def rigolChannelOnOff( self, ch, onOff:None):
@@ -107,6 +115,7 @@ class RigolScope(Osciloscope):
              self.write(":MEAS:CLE ITEM{}".format(index))
 
     def rigolChannelAmsOnOff( self, source):
+        # TODO use chanStr
         if source in [1,2,3,4,"1","2","3","4"]:
             source = "CHAN{}".format(source)
         self.write( ":MEAS:AMS {}".format(source))

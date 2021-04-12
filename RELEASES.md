@@ -4,6 +4,7 @@
   - eBench merge two commands (aka main)
   
 - Features added:
+  - ebRigol stat: added
   - ebRigol measure ch USER added
   - ebRigol timebase
   - measurement: add automagically measurement timestamp
