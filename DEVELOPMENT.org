@@ -117,9 +117,11 @@
  copying ebench/Rigol.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench/Unit.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench/__init__.py -> ebench-0.0.9-SNAPSHOT/ebench
+ copying ebench/ebMenu.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench/ebRigol.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench/ebUnit.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench/ebench.py -> ebench-0.0.9-SNAPSHOT/ebench
+ copying ebench/hello.py -> ebench-0.0.9-SNAPSHOT/ebench
  copying ebench.egg-info/PKG-INFO -> ebench-0.0.9-SNAPSHOT/ebench.egg-info
  copying ebench.egg-info/SOURCES.txt -> ebench-0.0.9-SNAPSHOT/ebench.egg-info
  copying ebench.egg-info/dependency_links.txt -> ebench-0.0.9-SNAPSHOT/ebench.egg-info
@@ -147,7 +149,9 @@
  copying build/lib/ebench/flycheck_ebench.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Rigol.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
+ copying build/lib/ebench/ebMenu.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Unit.py -> build/bdist.linux-x86_64/wheel/ebench
+ copying build/lib/ebench/hello.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebRigol.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/__init__.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebench.py -> build/bdist.linux-x86_64/wheel/ebench
@@ -166,11 +170,13 @@
  adding 'ebench/UNI-T.py'
  adding 'ebench/Unit.py'
  adding 'ebench/__init__.py'
+ adding 'ebench/ebMenu.py'
  adding 'ebench/ebRigol.py'
  adding 'ebench/ebUnit.py'
  adding 'ebench/ebench.py'
  adding 'ebench/flycheck_ebUnit.py'
  adding 'ebench/flycheck_ebench.py'
+ adding 'ebench/hello.py'
  adding 'ebench-0.0.9_SNAPSHOT.dist-info/METADATA'
  adding 'ebench-0.0.9_SNAPSHOT.dist-info/WHEEL'
  adding 'ebench-0.0.9_SNAPSHOT.dist-info/entry_points.txt'
@@ -201,7 +207,7 @@
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.9_SNAPSHOT-py3-none-any.whl size=25239 sha256=16cef8a62bea20f19b0da46e09e80f09ed66f8b018c8c2b91899ae4b1234fc88
+   Created wheel for ebench: filename=ebench-0.0.9_SNAPSHOT-py3-none-any.whl size=27686 sha256=6dda369278051e06c5a4cbac08ee3ddfd80062b796f7462ac3686bdd3df3bab1
    Stored in directory: /home/jj/.cache/pip/wheels/1b/93/17/a15c651d6c4081f02798071c24b1045f3ea15b562fbcca6e3d
  Failed to build ebench
  Installing collected packages: ebench

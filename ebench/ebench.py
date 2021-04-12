@@ -144,10 +144,12 @@ class MenuCtrl:
     MENU_VERSION="_version"   # output version number (hidden command)
     MENU_SCREEN="screen"      # output screenshot
     
-    def __init__( self, args, parentMenu = None, instrument:Instrument = None ):
+    def __init__( self, args, prompt, parentMenu = None, instrument:Instrument = None ):
         """
 
         :args: paramerter from command line, pgm name etc
+
+        :prompt: prompt presented to user
 
         :parentMenu: hierarchical menu structure, ref. recording
 
@@ -156,6 +158,7 @@ class MenuCtrl:
         """
         self.instrument = instrument
         self.parentMenu = parentMenu
+        self.prompt = prompt
         if not self.isChildMenu:
             # top level menu created - recording started
             self.recording = []
@@ -271,6 +274,18 @@ class MenuCtrl:
     def cmds( self, cmds:List[str]):
         self._cmds = cmds
 
+    @property
+    def prompt(self) -> str :
+        if not hasattr(self, "_prompt"):
+             return None
+        return self._prompt
+
+    @prompt.setter
+    def prompt( self, prompt:str):
+        self._prompt = prompt
+
+
+
     
     # ------------------------------
     # Recording actions
@@ -306,7 +321,7 @@ class MenuCtrl:
         """@see module function 'stopRecording'
         """
         if self.isChildMenu:
-            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, filedDir=fileDir)
+            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, fileDir=fileDir)
         else:
             logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
             if not self.anyRecordings():
@@ -413,7 +428,7 @@ class MenuCtrl:
         logging.info( "promptValue: --> {}".format(ans))
         return ans 
 
-    def mainMenu( self, _argv, mainMenu:Dict[str,List], mainPrompt= "Command [q=quit,?=help]", defaults:Dict[str,Dict]= None ):
+    def mainMenu( self, mainMenu:Dict[str,List], defaults:Dict[str,Dict]= None ):
         """For interactive usage, prompt user for menu command and command
         parameters, for command line usage parse commands and
         parameters from '_argv'. Invoke action for command.
@@ -465,7 +480,10 @@ class MenuCtrl:
                     returnVal = menuAction( **commandParameters )
                     self.appendRecording( menuCommand, commandParameters )
                     if returnVal is not None: # and interactive:
-                        print( pformat(returnVal) )
+                        if isinstance(returnVal, str):
+                            print(returnVal )
+                        else:
+                            print( pformat(returnVal) )
                 except MenuValueError as err:
                     if self.interactive:
                         # Interactive error - print erros msg && continue
@@ -480,6 +498,8 @@ class MenuCtrl:
                     if self.interactive:
                         # Interactive error - print erros msg && continue
                         print( "Error: {}".format(str(err)))
+                        if logging.level_debug:
+                            raise
                     else:
                         raise
                     
@@ -493,7 +513,7 @@ class MenuCtrl:
             if not self.interactive and len(cmds) == 0:
                 # all commands consumed - quit batch
                 break
-            menuCommand = MenuCtrl.promptValue(mainPrompt,
+            menuCommand = MenuCtrl.promptValue(self.prompt,
                                                cmds=cmds, validValues=mainMenu.keys() )
                 
             logging.debug( "Command '{}'".format(menuCommand))

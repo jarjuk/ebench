@@ -367,7 +367,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
     """
     
     gSkooppi=MSO1104(addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, parentMenu=parentMenu)
+    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, parentMenu=parentMenu,  prompt="[q=quit,?=commands,??=help on command]")
 
     mainMenu = {
         "Init"                   : (None, None, None),
@@ -401,9 +401,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
     }
 
     
-    cmdController.mainMenu( mainMenu=mainMenu
-                            , mainPrompt="[q=quit,?=commands,??=help on command]"
-                            , defaults=defaults)
+    cmdController.mainMenu( mainMenu=mainMenu , defaults=defaults)
 
     if cmdController.isTopMenu:
         # Top level closes instruments && cleanup

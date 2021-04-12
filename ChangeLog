@@ -1,3 +1,8 @@
+2021-04-12  jj  <jj@santtu>
+
+	* ebench/ebench.py (MenuCtrl.mainMenu.execMenuCommand): result
+	value printed normally if string (pformat if not string)
+
 2021-04-10  jj  <jj@santtu>
 
 	* examples/eBench/eBench.py (hello2): Init version

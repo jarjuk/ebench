@@ -6,6 +6,23 @@ from . import hello
 from absl import app, logging
 from absl.flags import FLAGS
 
+
+subMenuDefs = [
+    {
+        "module": "ebench.ebRigol",
+        "menu": "Rigol",
+    },
+    {
+        "module": "ebench.ebUnit",
+        "menu": "UTG962",
+    },
+    
+]
+
+import importlib
+# for menuDef in subMenuDefs:
+#     importlib.import_module( menuDef["module"] )
+
 CMD="ebMenu"
 
 # def helloMenu( parentMenu ):
@@ -17,7 +34,8 @@ def hello1( whom:str ):
     print( "Hello {}!".format(whom))
 
 MENU_HELLO1= "hello1"
-MENU_HELLO_MENU= "hello2"    
+MENU_HELLO_MENU= "hello2"
+
 helloPar = {
     "whom": "Whom to greet?",
 }
@@ -41,10 +59,18 @@ defaults = {
 
 def run( _argv, parentMenu:MenuCtrl=None):
 
-    cmdController = MenuCtrl( args=_argv)
+    cmdController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]" )
 
+    subMenus =  {
+        menuDef["menu"] :
+           ( "Submenu {}".format(menuDef["menu"])
+             , None
+             , subMenu( command=menuDef["menu"], parentMenu=cmdController, run=importlib.import_module( menuDef["module"] ).run)
+           )
+        for menuDef in subMenuDefs
+    }
 
-    mainMenu = {
+    mainMenu = subMenus | {
         MENU_HELLO1              : ( "Start hello1", helloPar, hello1),
         MENU_HELLO_MENU          : ( "Start sub menu", None, subMenu( command=MENU_HELLO_MENU, parentMenu=cmdController, run=hello.run ) ),
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
@@ -58,7 +84,7 @@ def run( _argv, parentMenu:MenuCtrl=None):
         
     }
 
-    cmdController.mainMenu( _argv, mainMenu=mainMenu, mainPrompt="[?=help, q=quit]", defaults=defaults)
+    cmdController.mainMenu( mainMenu=mainMenu, defaults=defaults)
     if cmdController.isTopMenu:
         # Top level closes instruments && cleanup
         cmdController.close()

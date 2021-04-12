@@ -31,10 +31,10 @@ def run( _argv, parentMenu:MenuCtrl = None ):
         "hello"                 : ( "Say hello", helloPar, hello.greet),
         MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
     }
-    cmdController = MenuCtrl(args=_argv, instrument=hello, parentMenu=parentMenu)
+    cmdController = MenuCtrl(args=_argv, instrument=hello
+                             , parentMenu=parentMenu, prompt="[hello, q=quit]")
 
-    logging.info( "Prome")    
-    cmdController.mainMenu( _argv, mainMenu=mainMenu, mainPrompt="[hello, q=quit]")
+    cmdController.mainMenu( mainMenu=mainMenu)
     return cmdController
 
 def _main( _argv ):

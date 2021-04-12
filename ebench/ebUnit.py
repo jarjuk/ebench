@@ -281,7 +281,8 @@ def run( _argv, parentMenu:MenuCtrl=None ):
     logging.info( "starting")
 
     sgen = UTG962( addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl( args=_argv, instrument=sgen, parentMenu=parentMenu)
+    cmdController = MenuCtrl( args=_argv, instrument=sgen, parentMenu=parentMenu
+                              , prompt = "[q=quit,?=commands,??=help on command]")
 
     mainMenu = {
         "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
@@ -310,7 +311,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
     }
 
 
-    cmdController.mainMenu(_argv, mainMenu=mainMenu, mainPrompt="[q=quit,?=commands,??=help on command]")
+    cmdController.mainMenu( mainMenu=mainMenu )
     if cmdController.isTopMenu:
         # Top level closes instruments && cleanup
         cmdController.close()
