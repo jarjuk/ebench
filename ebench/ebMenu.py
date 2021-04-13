@@ -40,9 +40,9 @@ helloPar = {
     "whom": "Whom to greet?",
 }
 
-helpPar = {
-      "command": "Command to give help on (None: help on main menu)"
-}
+# helpPar = {
+#       "command": "Command to give help on (None: help on main menu)"
+# }
 
 
 stopRecordingPar = {
@@ -76,7 +76,7 @@ def run( _argv, parentMenu:MenuCtrl=None):
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
         MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control Rigol MSO1104Z osciloscope")),
-        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+        MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),

@@ -139,10 +139,21 @@ class MenuCtrl:
     MENU_QUIT="q"             # quits loop
     MENU_REC_SAVE="."         # save recording
     MENU_REC_START="!"        # start/rerset recording
-    MENU_HELP="?"             # list commands
-    MENU_CMD_PARAM="??"       # list command paramters
     MENU_VERSION="_version"   # output version number (hidden command)
     MENU_SCREEN="screen"      # output screenshot
+    MENU_HELP="?"             # list commands
+    MENU_CMD_PARAM="??"       # DEPRACTED --> MENU_HELP_CMD
+    MENU_HELP_CMD="??"        # help on command
+
+    # Parameters
+    MENU_HELP_CMD_PARAM={
+      "command": "Command to give help on (None: help on main menu)"
+    }
+
+    MENU_REC_SAVE_PARAM = {
+         "fileName" : "Filename to save recording (.= show current recording)",
+    }
+    
     
     def __init__( self, args, prompt, parentMenu = None, instrument:Instrument = None ):
         """
@@ -378,6 +389,7 @@ class MenuCtrl:
                 else:
                     # Default value to rememeber changed
                     defaultParameters[key] = ans
+            ans = str(ans).strip()
 
         else:
             # ans <- batch
@@ -521,7 +533,9 @@ class MenuCtrl:
                 continue
             elif menuCommand == MenuCtrl.MENU_QUIT:
                 goon = False
-                self.appendRecording( menuCommand )
+                if self.isChildMenu:
+                    # Quitting main menu not save (to avoid anoying promt to save only quit cmd)
+                    self.appendRecording( menuCommand )
             else:
                 goon = execMenuCommand( mainMenu, menuCommand,defaults)
 

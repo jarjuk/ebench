@@ -207,7 +207,7 @@
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.9_SNAPSHOT-py3-none-any.whl size=27686 sha256=6dda369278051e06c5a4cbac08ee3ddfd80062b796f7462ac3686bdd3df3bab1
+   Created wheel for ebench: filename=ebench-0.0.9_SNAPSHOT-py3-none-any.whl size=28360 sha256=2613610e4619f9f531737cac1f35db1a29a5792c1100d98676598ffcd60cdf33
    Stored in directory: /home/jj/.cache/pip/wheels/1b/93/17/a15c651d6c4081f02798071c24b1045f3ea15b562fbcca6e3d
  Failed to build ebench
  Installing collected packages: ebench

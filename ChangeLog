@@ -1,3 +1,9 @@
+2021-04-13  jj  <jj@santtu>
+
+	* ebench/ebench.py (MenuCtrl): Depreacted
+	MENU_CMD_PARAM->MENU_HELP_CMD, new MENU_HELP_CMD_PARAM, added
+	MENU_REC_SAVE_PARAM
+
 2021-04-12  jj  <jj@santtu>
 
 	* ebench/ebench.py (MenuCtrl.mainMenu.execMenuCommand): result

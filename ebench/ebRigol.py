@@ -320,9 +320,9 @@ CMD_TIMEBASE= "timebase"
 CMD_SETUP_TRIGGER= "setupTrigger"
 CMD_TRIGGER_STATUS="_triggerStatus"
 
-helpPar = {
-      "command": "Command to give help on (None: help on main menu)"
-}
+# helpPar = {
+#       "command": "Command to give help on (None: help on main menu)"
+# }
 
 channelPar = {
     "channel"  : "Channel 1-4 to act upon"
@@ -358,9 +358,9 @@ timebasePar = {
 
 onOffPar = channelPar
 
-stopRecordingPar = {
-    "fileName" : "Filename to store recording, '.' show current playback list",
-}
+# stopRecordingPar = {
+#     "fileName" : "Filename to store recording, '.' show current playback list",
+# }
 
 setStatsPar = {
     "stats"     : "Stats to set comma separed list of ch:stats pairs",
@@ -428,7 +428,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
         CMD_TRIGGER_STATUS       : ("Trigger status", None, gSkooppi.triggerStatus),
         "Record"                 : (None, None, None),
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
                                      menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
         "Misc"                   : (None, None, None),        
@@ -437,7 +437,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
         MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control Rigol MSO1104Z osciloscope")),
-        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+        MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
     }
 

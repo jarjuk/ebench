@@ -4,6 +4,8 @@
   - eBench merge two commands (aka main)
   
 - Features added:
+  - Depreacted `MENU_CMD_PARAM` -> `MENU_HELP_CMD`, 
+  - added `MENU_HELP_CMD_PARAM`, `MENU_REC_SAVE_PARAM`
   - ebRigol stat: added
   - ebRigol measure ch USER added
   - ebRigol timebase

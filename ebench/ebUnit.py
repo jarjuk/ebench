@@ -222,9 +222,9 @@ screenCapturePar  = {
     'fileName'   :   "Screen capture file name (optional)",    
 }
 
-stopRecordingPar = {
-    "fileName" : "Filename to store recording, '.' show current playback list",
-}
+# stopRecordingPar = {
+#     "fileName" : "Filename to store recording, '.' show current playback list",
+# }
 
 sinePar = onOffProps | {
     'freq'  :   "Frequency [uHz|mHz|Hz|kHz|MHz]",
@@ -246,9 +246,9 @@ pulsePar = squarePar | {
     'fall'  :     "Fall [ns,us,ms,s,ks]",
 }
 
-helpPar = {
-      "command": "Command to give help on (None: help on main menu)"
-}
+# helpPar = {
+#       "command": "Command to give help on (None: help on main menu)"
+# }
 
 
 # ------------------------------------------------------------------
@@ -294,7 +294,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
         "reset"                  : ( "Send reset to UTG900 signal generator", None, sgen.reset),
         "Record"                 : (None, None, None),
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar,
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
                                      menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
                                      menuScreenShot(instrument=sgen,captureDir=FLAGS.captureDir,prefix="UTG-" )),
@@ -305,7 +305,7 @@ def run( _argv, parentMenu:MenuCtrl=None ):
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
         MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, usageText=usageText )),
-        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
+        MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                   lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
     }
