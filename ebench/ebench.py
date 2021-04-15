@@ -20,8 +20,6 @@ import pyvisa
 
 
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
-flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
-flags.DEFINE_string('addr', None, "pyvisa instrument address")
 flags.DEFINE_string('captureDir', "pics", "Screen capture directory")
 flags.DEFINE_string('recordingDir', "tmp", "Directory where command line recordings are saved into")
 flags.DEFINE_string('csvDir', "tmp", "Directory where command CSV files are saved into")

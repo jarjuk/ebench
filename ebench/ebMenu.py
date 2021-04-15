@@ -6,8 +6,13 @@ from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording
 
 from . import hello
 
-from absl import app, logging
+import yaml
+import os
+from absl import app, flags, logging
 from absl.flags import FLAGS
+
+flags.DEFINE_string('config', None, "Path configuration yaml file")
+
 
 # ------------------------------------------------------------------
 # Load dynamically 
@@ -42,13 +47,18 @@ defaults = {
 }
 
 # ------------------------------------------------------------------
-subMenuDefs = [
-    {
-        MenuCtrl.SUB_MENU_MODULE: "ebench.hello",
-        MenuCtrl.SUB_MENU_NAME: MENU_HELLO_MENU,
-        MenuCtrl.SUB_MENU_PARAMS: { "initCount": "62"},
+# with open( "demo.yaml", "r") as y:
+#    subMenuDefs = yaml.safe_load(y)
+       
+       
+       
+#subMenuDefs = [
+    # {
+    #     MenuCtrl.SUB_MENU_MODULE: "ebench.hello",
+    #     MenuCtrl.SUB_MENU_NAME: MENU_HELLO_MENU,
+    #     MenuCtrl.SUB_MENU_PARAMS: { "initCount": "62"},
         
-    },
+    # },
     # {
     #     MenuCtrl.SUB_MENU_MODULE: "ebench.ebRigol",
     #     MenuCtrl.SUB_MENU_NAME: "Rigol",
@@ -60,7 +70,7 @@ subMenuDefs = [
     #     MenuCtrl.SUB_MENU_PARAMS: { "addr": "USB0::0x6656::0x0834::1485061822::INSTR"},
     # },
     
-]
+# ]
 
 
 
@@ -75,9 +85,25 @@ def hello1( whom:str ):
 # ------------------------------------------------------------------
 # Main && run 
 
-def run( _argv, parentMenu:MenuCtrl=None):
+def run( _argv, parentMenu:MenuCtrl=None, config=None):
+
+    def loadsubMenuDefs(config):
+        subMenuDefs = []
+        if config is not None:
+            with open( config, "r") as y:
+                subMenuDefs = yaml.safe_load(y)
+        else:
+            pkgDefault = os.path.join( os.path.dirname(__file__), "ebMenu.yaml")
+            if os.path.exists( pkgDefault ):
+               with open( pkgDefault, "r") as y:
+                   subMenuDefs = yaml.safe_load(y)
+        return subMenuDefs
 
     cmdController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]" )
+
+    # Load submenus con ebMenu.yaml?
+
+    subMenuDefs = loadsubMenuDefs(config=config)
 
     subMenus = cmdController.registerSubMenus(subMenuDefs=subMenuDefs)
 
@@ -114,7 +140,7 @@ def run( _argv, parentMenu:MenuCtrl=None):
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    run( _argv)
+    run( _argv, config=FLAGS.config)
     
 
 

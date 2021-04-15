@@ -1,0 +1,16 @@
+# - module: ebench.hello
+#   menu: hello
+#   kwargs:
+#       initCount: 62
+
+- module: ebench.ebRigol
+  menu: Rigol
+  kwargs:
+      ip: skooppi
+
+- module: ebench.ebUnit
+  menu: UTG962
+  kwargs:
+      addr: USB0::0x6656::0x0834::1485061822::INSTR
+
+      

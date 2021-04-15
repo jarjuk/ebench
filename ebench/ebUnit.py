@@ -10,10 +10,12 @@ from .ebench import list_resources, MenuValueError
 from .CMDS import CMD_UNIT
 CMD=CMD_UNIT
 
-from absl import app, logging
+from absl import app, flags, logging
 from absl.flags import FLAGS
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
+flags.DEFINE_string('addr', ADDR, "pyvisa instrument address")
+
 
 class UTG962(UnitSignalGenerator):
 
@@ -319,18 +321,19 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None ):
 
     cmdController.setMenu( menu = mainMenu, defaults = defaults)
     
-    if runMenu: cmdController.mainMenu()
-    # if cmdController.isTopMenu:
-    #     # Top level closes instruments && cleanup
-    #     cmdController.close()
-    #     cmdController = None
+    if runMenu:
+        cmdController.mainMenu()
+        if cmdController.isTopMenu:
+            # Top level closes instruments && cleanup
+            cmdController.close()
+            cmdController = None
 
     return cmdController
         
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    run( _argv, addr=FLAGS.addr, ip=FLAGS.ip  )
+    run( _argv, addr=FLAGS.addr  )
 
 
 def main():

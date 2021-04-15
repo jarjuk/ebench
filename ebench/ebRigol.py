@@ -5,10 +5,12 @@ from .ebench import Instrument, MenuCtrl, usage, usageCommand, menuStartRecordin
 from .CMDS import CMD_RIGOL
 CMD=CMD_RIGOL
 
-from absl import app, logging
+from absl import app, flags, logging
 from absl.flags import FLAGS
 from time import sleep
 
+
+flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
 
 
 class MSO1104(RigolScope):
@@ -448,12 +450,12 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
 
     cmdController.setMenu( menu = mainMenu, defaults = defaults)
     
-    if runMenu: cmdController.mainMenu()
-
-    # if cmdController.isTopMenu:
-    #     # Top level closes instruments && cleanup
-    #     cmdController.close()
-    #     cmdController = None
+    if runMenu:
+        cmdController.mainMenu()
+        if cmdController.isTopMenu:
+            # Top level closes instruments && cleanup
+            cmdController.close()
+            cmdController = None
 
     return cmdController
 
