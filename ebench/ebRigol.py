@@ -135,7 +135,7 @@ class MSO1104(RigolScope):
             """
             if ch == Instrument.USER_FEED:
                 # Prompt
-                return self.askUser( item=item )
+                return self.askUser(item=item)
             else:
                 # Reading measurement AVERAGE from Rigol
                 statistic = "AVER"
@@ -399,15 +399,19 @@ defaults = {
 
 # ------------------------------------------------------------------
 # Main
-def run( _argv, parentMenu:MenuCtrl=None ):
+def run( _argv, runMenu:bool = True, ip=None, addr=None ):
     """
     Api interface 
 
     :parentMenu: is set if called from 'parentMenu'
+
+    :runMenu: call MenuCtrl.mainMenu if True, default True
+
+    :return: MenuCtrl (wrapping MSO1104 instrument )
     """
     
-    gSkooppi=MSO1104(addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, parentMenu=parentMenu,  prompt="[q=quit,?=commands,??=help on command]")
+    gSkooppi=MSO1104(addr=addr, ip=ip)
+    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, prompt="[q=quit,?=commands,??=help on command]")
 
     mainMenu = {
         "Init"                   : (None, None, None),
@@ -441,13 +445,15 @@ def run( _argv, parentMenu:MenuCtrl=None ):
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
     }
 
-    
-    cmdController.mainMenu( mainMenu=mainMenu , defaults=defaults)
 
-    if cmdController.isTopMenu:
-        # Top level closes instruments && cleanup
-        cmdController.close()
-        cmdController = None
+    cmdController.setMenu( menu = mainMenu, defaults = defaults)
+    
+    if runMenu: cmdController.mainMenu()
+
+    # if cmdController.isTopMenu:
+    #     # Top level closes instruments && cleanup
+    #     cmdController.close()
+    #     cmdController = None
 
     return cmdController
 
@@ -455,7 +461,7 @@ def _main( _argv ):
     # Run standalone
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
-    run( _argv )
+    run( _argv, ip=FLAGS.ip )
     
 def main():
     try:

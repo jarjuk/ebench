@@ -246,9 +246,9 @@ pulsePar = squarePar | {
     'fall'  :     "Fall [ns,us,ms,s,ks]",
 }
 
-# helpPar = {
-#       "command": "Command to give help on (None: help on main menu)"
-# }
+defaults = {
+}
+
 
 
 # ------------------------------------------------------------------
@@ -277,13 +277,20 @@ Hint:
 # ------------------------------------------------------------------
 # Main
 
-def run( _argv, parentMenu:MenuCtrl=None ):
+def run( _argv, runMenu:bool =True, addr=None, ip=None ):
+    """Construct UTG962 -instrument and wrap it to MenuCtrl object. Call
+     MenuCtrl.mainMenu if 'runMenu' True (default).
+
+    :runMenu: call MenuCtrl.mainMenu if True, default True
+
+    :return: MenuCtrl (wrapping MSO1104 instrument )
+
+    """
     logging.info( "starting")
 
-    sgen = UTG962( addr=FLAGS.addr, ip=FLAGS.ip)
-    cmdController = MenuCtrl( args=_argv, instrument=sgen, parentMenu=parentMenu
-                              , prompt = "[q=quit,?=commands,??=help on command]")
-
+    sgen = UTG962( addr=addr, ip=ip)
+    
+    cmdController = MenuCtrl( args=_argv, instrument=sgen, prompt = "[q=quit,?=commands,??=help on command]")
     mainMenu = {
         "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
         "square"                 : ( "Generate square -wave on channel 1|2", squarePar, sgen.square  ),
@@ -310,19 +317,20 @@ def run( _argv, parentMenu:MenuCtrl=None ):
 
     }
 
-
-    cmdController.mainMenu( mainMenu=mainMenu )
-    if cmdController.isTopMenu:
-        # Top level closes instruments && cleanup
-        cmdController.close()
-        cmdController = None
+    cmdController.setMenu( menu = mainMenu, defaults = defaults)
+    
+    if runMenu: cmdController.mainMenu()
+    # if cmdController.isTopMenu:
+    #     # Top level closes instruments && cleanup
+    #     cmdController.close()
+    #     cmdController = None
 
     return cmdController
         
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    run( _argv )
+    run( _argv, addr=FLAGS.addr, ip=FLAGS.ip  )
 
 
 def main():

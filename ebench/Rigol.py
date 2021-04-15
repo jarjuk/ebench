@@ -42,22 +42,27 @@ class RigolScope(Osciloscope):
         self.write(":CLEAR")
         
     def rigolChannelStatMeasure( self, item, ch, statistic):
-         cmd = ":MEASure:STAT:ITEM? {},{},CHAN{}".format(statistic, item, ch)
-         return( float(self.query(cmd)))
+        """Send :MEASure:STAT:ITEM?  <statistic>, <item>,<chan>
+        """
+        cmd = ":MEASure:STAT:ITEM? {},{},{}".format(statistic, item, RigolScope.chanStr(ch))
+        return( float(self.query(cmd)))
 
     def rigolChannelMeasure( self, item, ch):
-         cmd = ":MEASure:ITEM? {},CHAN{}".format(item, ch)
-         logging.info( "rigolChannelMeasure: cmd={}".format(cmd))
-         return( float(self.query(cmd)))
+        """
+        Send ":MEASure:ITEM? {},CHAN{}".format(item, ch)
+        """
+        cmd = ":MEASure:ITEM? {},{}".format(item, RigolScope.chanStr(ch))
+        logging.info( "rigolChannelMeasure: cmd={}".format(cmd))
+        return( float(self.query(cmd)))
 
     def rigolMeasurement(self, ch, item, statistic=None):
         """Single channel item (statics) measurement . 
 
         :ch: channel to measure
 
-        :statistic: If 'statistic' given make statistic item
-                    measurement (:MEASure:STATistic:ITEM) else make
-                    item measurement (:MEASure:ITEM <item>). 
+        :statistic: If 'statistic' given measure statistic item
+                     (:MEASure:STATistic:ITEM) else measure item
+                     (:MEASure:ITEM <item>).
 
                     Valid values MAXimum|MINimum|CURRent|AVERages|DEViation
 

@@ -2,6 +2,7 @@
 
 - Features implementing
   - eBench merge two commands (aka main)
+  - eMenu measure (call by name)
   
 - Features added:
   - Depreacted `MENU_CMD_PARAM` -> `MENU_HELP_CMD`, 

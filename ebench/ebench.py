@@ -9,9 +9,11 @@ import textwrap
 
 import os
 import sys
+import json
 from absl import flags, logging
 from absl.flags import FLAGS
 import re
+import importlib
 
 import csv
 import pyvisa
@@ -40,9 +42,21 @@ class Instrument:
     # special intrument feed 'USER' (e.g. promp askUser)
     USER_FEED="USER"
 
+    def callByName( self, _name, *args, **kwargs ):
+        """
+        Call method 'name' and pass arguments
+        
+        :name: method to call
+
+        :return: value returned by 'name' -method
+        """
+        logging.debug( "callByName: _name={}, *args={}, **kwargs={}.".format(_name, args, kwargs))
+        return getattr( self, _name )( *args,  **kwargs )
+        
+
     def askUser( self, item, validValues:List[str]= None ):
         """Prompt user a value (e.g for a measurement). If 'validValues' is
-        give accept only thos values
+        given accept one the given values
 
         """
         prompt = "Enter value for {}".format(item)
@@ -153,22 +167,29 @@ class MenuCtrl:
     MENU_REC_SAVE_PARAM = {
          "fileName" : "Filename to save recording (.= show current recording)",
     }
+
+    MENU_INSTRUMENT_ACCESS_PARAMS = {
+        "accessJson" : "JSON string { \"key\": \"instrument.method(commaSepListOfArgs)\"} "
+    }
+
+    # Prorites in subMenu dictionaries
+    SUB_MENU_MODULE="module"       # Python module name
+    SUB_MENU_NAME="menu"           # name to present in menu -structure
+    SUB_MENU_PARAMS="kwargs"       # params passed to run
     
     
-    def __init__( self, args, prompt, parentMenu = None, instrument:Instrument = None ):
+    def __init__( self, args, prompt, instrument:Instrument = None ):
         """
 
         :args: paramerter from command line, pgm name etc
 
         :prompt: prompt presented to user
 
-        :parentMenu: hierarchical menu structure, ref. recording
-
         :instrument: instrument managerd by this menu (optional)
 
         """
+        self.subMenuCtrls = {}
         self.instrument = instrument
-        self.parentMenu = parentMenu
         self.prompt = prompt
         if not self.isChildMenu:
             # top level menu created - recording started
@@ -196,6 +217,23 @@ class MenuCtrl:
 
     # ------------------------------
     # Properties
+
+    @property
+    def subMenuCtrls(self) -> dict :
+        if not hasattr(self, "_subMenuCtrls"):
+             return None
+        return self._subMenuCtrls
+
+    @subMenuCtrls.setter
+    def subMenuCtrls( self, subMenuCtrls:dict):
+        self._subMenuCtrls = subMenuCtrls
+
+    def subMenuCtrl(self, name) -> "__class__" :
+        return self.subMenuCtrls[name]
+    
+    def addsubMenuCtrl(self, name, subMenuCtrl:'__class__') :
+        self.subMenuCtrls[name] = subMenuCtrl
+    
     @property
     def recording(self) -> List[str] :
         if self.parentMenu is not None:
@@ -208,6 +246,8 @@ class MenuCtrl:
 
     @property
     def parentMenu(self):
+        """hierarchical menu structure, ref. recording
+        """
         if not hasattr(self, "_parentMenu"):
              return None
         return self._parentMenu
@@ -220,6 +260,7 @@ class MenuCtrl:
     def isChildMenu( self ):
         return self.parentMenu is not None
 
+    @property        
     def isTopMenu( self ):
         return not self.isChildMenu
 
@@ -296,6 +337,37 @@ class MenuCtrl:
         self._prompt = prompt
 
 
+    @property
+    def menu(self) -> Dict[str,List] :
+        if not hasattr(self, "_menu"):
+             return None
+        return self._menu
+
+    @menu.setter
+    def menu( self, menu:Dict[str,List]):
+        self._menu = menu
+
+
+    @property
+    def defaults(self) -> Dict[str,dict] :
+        """Dictionary mappping menuCommand to
+        menuCommandDefault. menuCommandDefault is a dict
+        mapping. Parameter name to default value
+
+        """
+        if not hasattr(self, "_defaults"):
+             return None
+        return self._defaults
+
+    @defaults.setter
+    def defaults( self, defaults:Dict[str,dict]):
+        self._defaults = defaults
+
+
+    def setMenu( self, menu, defaults={}):
+        self.menu = menu
+        self.defaults = defaults
+
 
     
     # ------------------------------
@@ -355,19 +427,168 @@ class MenuCtrl:
             raise MenuNoRecording
 
     # ------------------------------
-    # menu && prompt
+    # Construct submenu and use it 
+
+    def registerSubMenus( self, subMenuDefs:List[Dict] ) -> Dict:
+        """Create dictionary for defining 'subMenuDefs' in MenuCtr menu.
+        regiterter . Register each entries 'subMenuDefs' so that they
+        can be later called, when user chooses 'menuCommand' and
+        return a
+        
+
+        :subMenuDefs: list of dicts with keys SUB_MENU_MODULE,
+        SUB_MENU_NAME
+
+        :self.subMenuCtrls: update dict mapping 'SUB_MENU_NAME' -> MenuCtrl
+        
+        :return: dict mapping 'SUB_MENU_NAME' -> (menuPrompt,
+        menuParameters, menuAction), @see mainMenu
+
+        """
+
+        def createMenuAction( menuCommand, subMenuCtrl:"__class__" ) -> Callable:
+            """Create lambda for 'menuAction'. Basically binds 'run' to co-operate
+            with 'parentMenu'
+
+            :menuCommand: Menu command invoking 'menuAction'
+
+            :parentMenu: run co-operatater with 
+
+            :return: menuAction -callable  to put into 'menuDict'
+
+            """
+            def subMenuAction():
+                # Record before entring menu
+                subMenuCtrl.parentMenu.appendRecording( menuCommand = menuCommand)
+                subMenuCtrl.mainMenu()
+                # Action is not recorded (recording was done before run)
+                raise MenuNoRecording
+            return subMenuAction
+
+        # This is constructed
+        menuDict = {}
+        
+        for menuDef in subMenuDefs:
+            # Extract from menuDef
+            menuCommand = menuDef[MenuCtrl.SUB_MENU_NAME]
+            menuPrompt = "Submenu {}".format(menuDef[MenuCtrl.SUB_MENU_NAME])
+            kwArgs = {}
+            if MenuCtrl.SUB_MENU_PARAMS in menuDef:
+                kwArgs = menuDef[MenuCtrl.SUB_MENU_PARAMS]
+            # Resolve dynamically
+            subMenuModule = menuDef[MenuCtrl.SUB_MENU_MODULE]
+
+            # Construct MenuCtrl for subemu
+            run = importlib.import_module( subMenuModule ).run
+            subMenuCtrl = run( [menuCommand], runMenu=False, **kwArgs )
+            # Create menu hierarchy
+            subMenuCtrl.parentMenu = self
+            if subMenuCtrl is None:
+                raise MenuValueError( "Submene {} in module {} does not return MenuCtrl object ".format( menuCommand, subMenuModule))
+
+            # Register subMenuCtrl for later use
+            self.addsubMenuCtrl( menuCommand, subMenuCtrl )
+
+            # and create menuAction to for the subMenu
+            menuAction = createMenuAction( menuCommand=menuCommand, subMenuCtrl=subMenuCtrl )
+            menuParameters  = None
+            menuDict[menuCommand] = (menuPrompt, menuParameters, menuAction)
+            
+        return menuDict
+
+    def intrumentAccessMenuAction( self ):
+        """Create menuAction -lambda for dispatching 'instrumentAccesses' on
+        instruments wrapped by 'self.subMenuCtrls'. Lambda parameters
+        given in 'MENU_INSTRUMENT_ACCESS_PARAMS'
+
+        """
+        def parseInstrumentAccess(accessDef):
+            INSTRUMENT_ACCESS_REGEXP =r"(?P<subMenuName>[^\.]+)\.(?P<methodName>[^\(]+)\((?P<commaSepList>.*)\)"
+            match = re.search( INSTRUMENT_ACCESS_REGEXP, accessDef )
+            if match is None:
+                msg = "Could not parse accessDef='{}'".format( accessDef )
+                logging.error(msg)
+                raise MenuValueError(msg)
+            logging.debug( "match['subMenuName']={}".format(match['subMenuName']))
+            logging.debug( "match['methodName']={}".format(match['methodName']))
+            logging.debug( "match['commaSepList']={}.".format(match['commaSepList']))
+            (subMenuName, methodName) = (match['subMenuName'], match["methodName"] )
+            commaSepList =  match["commaSepList"].strip()
+            methodArgs = [] if len(commaSepList) == 0 else commaSepList.split(",")
+            return (subMenuName, methodName, methodArgs)
+
+        def instrumentAccess( accessDef):
+            (subMenuName, methodName, methodArgs) = parseInstrumentAccess(accessDef)
+            logging.debug( "subMenuName={}, methodName={}, methodArgs={}/{}.".format(subMenuName, methodName, len(methodArgs), methodArgs))
+            subMenuCtrl = self.subMenuCtrl(subMenuName)
+            retVal = subMenuCtrl.callIntrumentMethodByName( methodName, *methodArgs )
+            return retVal
+
+        def measurementLambda( accessJson=None ):
+            """Parse comma separated entries from :accessJson: and invoke
+            'methodName' on instrument wrapped in SUB_MENU_NAME
+            -MenuCtr
+
+             'instrumentAccess' json string { key: subMenuName.methodName(args) }
+
+             - subMenuName (SUB_MENU_NAME) to access self.subMenuCtrl -dict
+
+             - methodName is name of method to invoke in 'subMenuCtrl'
+
+             - params is colon (:) sepated parameters to method
+
+             :subMenus: Dictionary mapping menuCommmand (string presentend to
+             user) -> menuSelection. Menu selection is a list, where third
+             element is lambda for 'menuAction'.
+
+            """
+            logging.info( "measurementLambda: accessJson={}".format(accessJson))
+            # split first by comma (,) and then by colon (:)
+            accessMap = json.loads(accessJson)
+            logging.debug( "accessMap: {}".format(accessMap))
+            acessesResult = { k: instrumentAccess(accessDef) for k,accessDef in accessMap.items() }
+            logging.info( "acessesResult:".format(acessesResult))
+            return acessesResult
+
+
+            
+            
+            # for instrumentAccess in instrumentAccesses.split(","):
+            #     # parse instrumentAccess 
+            #     # invokeList = instrumentAccess.split( ":")
+            #     # subMenuName = invokeList[0]
+            #     # methodName = invokeList[1]
+            #     # methodArgs = invokeList[2:]
+            #     logging.info( "--> subMenuName={}, MethodName={}, args={}".format(subMenuName,methodName, methodArgs ))
+            #     # locate menu 'menuSelection' corresponding to  'instrumentAccessObjectName'
+            #     subMenuCtrl = self.subMenuCtrl(subMenuName)
+            #     # 'subMenuCtrl' wraps 'Instrument' with 'methodName'
+            #     retVal = subMenuCtrl.callIntrumentMethodByName( methodName, *methodArgs )
+            #     logging.info( "{} -> {}".format(methodName, retVal))
+
+        return measurementLambda
+
+
+     
+    # ------------------------------
+    # executuing menu && prompt
     
     def promptValue( prompt:str, key:str=None, cmds:List[str]=None,
-                     validValues:List[str]=None, defaultParameters:dict={} ):
-        """Two uses 1) prompt user for menuCommand, 2) prompt user for
-        commandParameters
+                     validValues:List[str]=None, defaultParameters:dict={}, promptIndentation="" ):
+        """Three uses 1) prompt user for menuCommand, 2) prompt user for
+        commandParameters, 3) ask user for measurement value
 
         :key: Lookding for key-value pair for commandParameters 
+
+        :cmds: Command line parameters (in batch mode), which give
+        values to promts (instead of asking user)
 
         :defaultParameters: dict->value, use 'key' to check if promted
         value has default value. If default value defined: update the
         prompted value to 'defaultParameters' --> it is rememeber for
         later invocations.
+
+        :promptIndentation: sub menus prompts are intended
 
         """
         ans = None
@@ -379,7 +600,7 @@ class MenuCtrl:
             if key in defaultParameters:
                 # default value defined
                 prompt = "{} ({})".format(prompt, defaultParameters[key])
-            ans = input( "{} > ".format(prompt))
+            ans = input( "{}{} > ".format(promptIndentation,prompt))
 
             # after user answer check if default accepted/default should be changed
             if key in defaultParameters:
@@ -438,16 +659,16 @@ class MenuCtrl:
                 print(msg)
                 return None
         logging.info( "promptValue: --> {}".format(ans))
-        return ans 
+        return ans
 
-    def mainMenu( self, mainMenu:Dict[str,List], defaults:Dict[str,Dict]= None ):
+    def mainMenu( self ):
         """For interactive usage, prompt user for menu command and command
         parameters, for command line usage parse commands and
         parameters from '_argv'. Invoke action for command.
 
-        :_argv: command line paramaters (in batch mode)
+        :self.cmds: command line paramaters (in batch mode)
 
-        :mainMenu: dict mapping menuCommand:str -> menuSelection =
+        :self.menu: dict mapping menuCommand:str -> menuSelection =
         List[menuPrompt,parameterPrompt,menuAction], where
         - menuPrompt: string presented to user to query for
           'commandParameter' value
@@ -456,7 +677,7 @@ class MenuCtrl:
         - menuAction: function to call with 'commandParameters' (as
           **argv values prompted with parameterPrompt)
 
-        :defaults: is dictionary mapping 'menuCommand' to
+        :self.defaults: is dictionary mapping 'menuCommand' to
         'defaultParameters'.  If 'defaultParameters' for a
         'menuCommand' is found, it is used to lookup 'defaultValue'
         prompeted from user. Also, If 'defaultParameters' for a
@@ -465,11 +686,11 @@ class MenuCtrl:
 
         """
         
-        def execMenuCommand(mainMenu,menuCommand,defaults):
+        def execMenuCommand(mainMenu,menuCommand,defaults, promptIndentation):
             # Extract mainMenu elements
             menuSelection = mainMenu[menuCommand]
 
-            # 'defaultParameters' contains default values remm
+            # 'defaultParameters' may provide initial value 
             defaultParameters = {}
             if defaults is not None and menuCommand in defaults:
                 defaultParameters  = defaults[menuCommand]
@@ -483,7 +704,12 @@ class MenuCtrl:
             if parameterPrompt is not None:
                 # Promp user/read CLI keyvalue parameters
                 commandParameters = {
-                        k: MenuCtrl.promptValue(v,key=k,cmds=cmds,defaultParameters=defaultParameters) for k,v in parameterPrompt.items()
+                    k: MenuCtrl.promptValue(
+                            v,key=k,
+                            cmds=cmds,
+                            defaultParameters=defaultParameters,
+                            promptIndentation=promptIndentation)
+                    for k,v in parameterPrompt.items()
                 }
 
             if menuAction is not None:
@@ -505,28 +731,33 @@ class MenuCtrl:
                 except MenuNoRecording:
                     # Help, start/stop recording commands
                     pass
-                except Exception as err:
+                except: #  Exception as err:
+                    err = sys.exc_info()[0]
                     # In Interactive mode all errors are printed, user quits 
                     if self.interactive:
-                        # Interactive error - print erros msg && continue
+                        # Interactive error - print erros msg &&
+                        # continue (debug print stacktrace)
                         print( "Error: {}".format(str(err)))
-                        if logging.level_debug:
-                            raise
+                        if logging.level_debug():
+                            raise err
                     else:
-                        raise
+                        raise err
                     
             return True
 
-        
+        promptIndentation = "" if self.isTopMenu else " "
         cmds  = self.cmds
-        logging.info( "interactive: {} Starting cmds={}".format(self.interactive, cmds))
+        menu = self.menu
+        defaults = self.defaults
+        
+        logging.info( "interactive: {} Starting cmds={}, isTopMenu={}".format(self.interactive, cmds, self.isTopMenu ))
         goon = True
         while goon:
             if not self.interactive and len(cmds) == 0:
                 # all commands consumed - quit batch
                 break
             menuCommand = MenuCtrl.promptValue(self.prompt,
-                                               cmds=cmds, validValues=mainMenu.keys() )
+                                               cmds=cmds, validValues=menu.keys(), promptIndentation=promptIndentation )
                 
             logging.debug( "Command '{}'".format(menuCommand))
             if menuCommand is None:
@@ -534,16 +765,26 @@ class MenuCtrl:
             elif menuCommand == MenuCtrl.MENU_QUIT:
                 goon = False
                 if self.isChildMenu:
-                    # Quitting main menu not save (to avoid anoying promt to save only quit cmd)
+                    # Main menu quit is not recorded (batch mode ends
+                    # automagically when all input consume)
                     self.appendRecording( menuCommand )
             else:
-                goon = execMenuCommand( mainMenu, menuCommand,defaults)
+                goon = execMenuCommand( menu, menuCommand,defaults, promptIndentation=promptIndentation)
 
         # Confirmm whether save recording when exiting
-        if self.anyRecordings() and self.interactive and MenuCtrl.MENU_REC_SAVE in mainMenu:
+        if self.anyRecordings() and self.interactive and MenuCtrl.MENU_REC_SAVE in menu and self.isTopMenu:
             print( "Save recordings?")
-            execMenuCommand( mainMenu, MenuCtrl.MENU_REC_SAVE,defaults)
+            execMenuCommand( menu, MenuCtrl.MENU_REC_SAVE,defaults,promptIndentation=promptIndentation)
 
+    def callIntrumentMethodByName( self, name, *args, **kwargs):
+        """Dispatch 'name' method on 'self.instrument' and pass to it
+        arguments
+
+        :return: value returned by 'name' -method
+
+        """
+        logging.info( "Dispach {}-method with args={}, kwargs={})".format(name, args, kwargs))
+        return self.instrument.callByName( name, *args, **kwargs)
 
     def close(self):
         """Close menu. Calls self.instrument.close (if instrument is not None)
@@ -814,24 +1055,6 @@ def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
     print( "- parameters MUST be given in the order listed above")
     print( "- parameters are optional and they MAY be left out")
 
-
-def subMenu( command, parentMenu:MenuCtrl, run:Callable ) -> Callable:
-    """Create menuAction to invoke 'run' as submenu for menu 'command'
-
-    :command: Menu command invoking the menu
-
-    :parentMenu: MenuCtrl which is invoking subMenu
-    
-    :return: menuAction -callable  to put in 'mainMenu'
-
-    """
-    def startSubmenu():
-        # Record before entreing menu
-        parentMenu.appendRecording( menuCommand = command)
-        run(_argv=[command], parentMenu=parentMenu)
-        raise MenuNoRecording
-    return startSubmenu
-    
 def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):
     """Outputs synonpsis, list of commands in 'mainMenu', followed by
     'usageText' (if given)
