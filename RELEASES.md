@@ -2,7 +2,7 @@
 ## 0.0.9/20210415-14:55:29
 
 - Features implementing
-  - eBench merge two commands (aka main)
+  - --config option loads API-menu
   
 - Features added:
   - --config option  && yaml load

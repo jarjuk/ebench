@@ -94,7 +94,7 @@
 
  #+RESULTS:
  #+begin_example
- version 0.0.9 , packages ['ebench']
+ version 0.0.10-SNAPSHOT , packages ['ebench']
  running sdist
  running egg_info
  writing ebench.egg-info/PKG-INFO
@@ -105,47 +105,48 @@
  reading manifest file 'ebench.egg-info/SOURCES.txt'
  writing manifest file 'ebench.egg-info/SOURCES.txt'
  running check
- creating ebench-0.0.9
- creating ebench-0.0.9/ebench
- creating ebench-0.0.9/ebench.egg-info
- creating ebench-0.0.9/tmp
- copying files to ebench-0.0.9...
- copying ebRigol -> ebench-0.0.9
- copying ebUnit -> ebench-0.0.9
- copying setup.py -> ebench-0.0.9
- copying ebench/CMDS.py -> ebench-0.0.9/ebench
- copying ebench/Rigol.py -> ebench-0.0.9/ebench
- copying ebench/Unit.py -> ebench-0.0.9/ebench
- copying ebench/__init__.py -> ebench-0.0.9/ebench
- copying ebench/ebMenu.py -> ebench-0.0.9/ebench
- copying ebench/ebRigol.py -> ebench-0.0.9/ebench
- copying ebench/ebUnit.py -> ebench-0.0.9/ebench
- copying ebench/ebench.py -> ebench-0.0.9/ebench
- copying ebench/hello.py -> ebench-0.0.9/ebench
- copying ebench.egg-info/PKG-INFO -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/SOURCES.txt -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/dependency_links.txt -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/entry_points.txt -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/requires.txt -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/top_level.txt -> ebench-0.0.9/ebench.egg-info
- copying ebench.egg-info/zip-safe -> ebench-0.0.9/ebench.egg-info
- copying ebench/../RELEASES.md -> ebench-0.0.9/ebench/..
- copying ebench/../VERSION -> ebench-0.0.9/ebench/..
- copying tmp/apu.sh -> ebench-0.0.9/tmp
- Writing ebench-0.0.9/setup.cfg
+ creating ebench-0.0.10-SNAPSHOT
+ creating ebench-0.0.10-SNAPSHOT/ebench
+ creating ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ creating ebench-0.0.10-SNAPSHOT/examples
+ creating ebench-0.0.10-SNAPSHOT/examples/hello
+ creating ebench-0.0.10-SNAPSHOT/tmp
+ copying files to ebench-0.0.10-SNAPSHOT...
+ copying ebRigol -> ebench-0.0.10-SNAPSHOT
+ copying ebUnit -> ebench-0.0.10-SNAPSHOT
+ copying setup.py -> ebench-0.0.10-SNAPSHOT
+ copying ebench/CMDS.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/Rigol.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/Unit.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/__init__.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/ebMenu.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/ebMenu.yaml -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/ebRigol.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/ebUnit.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/ebench.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench/hello.py -> ebench-0.0.10-SNAPSHOT/ebench
+ copying ebench.egg-info/PKG-INFO -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/SOURCES.txt -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/dependency_links.txt -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/entry_points.txt -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/requires.txt -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/top_level.txt -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench.egg-info/zip-safe -> ebench-0.0.10-SNAPSHOT/ebench.egg-info
+ copying ebench/../RELEASES.md -> ebench-0.0.10-SNAPSHOT/ebench/..
+ copying ebench/../VERSION -> ebench-0.0.10-SNAPSHOT/ebench/..
+ copying examples/hello/hello.py -> ebench-0.0.10-SNAPSHOT/examples/hello
+ copying examples/hello/hello2.py -> ebench-0.0.10-SNAPSHOT/examples/hello
+ copying tmp/apu.sh -> ebench-0.0.10-SNAPSHOT/tmp
+ Writing ebench-0.0.10-SNAPSHOT/setup.cfg
  Creating tar archive
- removing 'ebench-0.0.9' (and everything under it)
+ removing 'ebench-0.0.10-SNAPSHOT' (and everything under it)
  running bdist_wheel
  running build
  running build_py
- copying ebench/Rigol.py -> build/lib/ebench
- copying ebench/ebUnit.py -> build/lib/ebench
  copying ebench/ebMenu.py -> build/lib/ebench
  copying ebench/hello.py -> build/lib/ebench
  copying ebench/ebRigol.py -> build/lib/ebench
  copying ebench/ebench.py -> build/lib/ebench
- copying ebench/../VERSION -> build/lib/ebench/..
- copying ebench/../RELEASES.md -> build/lib/ebench/..
  installing to build/bdist.linux-x86_64/wheel
  running install
  running install_lib
@@ -155,6 +156,7 @@
  copying build/lib/ebench/CMDS.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/flycheck_ebench.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Rigol.py -> build/bdist.linux-x86_64/wheel/ebench
+ copying build/lib/ebench/ebMenu.yaml -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebMenu.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/Unit.py -> build/bdist.linux-x86_64/wheel/ebench
@@ -163,13 +165,19 @@
  copying build/lib/ebench/__init__.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/ebench.py -> build/bdist.linux-x86_64/wheel/ebench
  copying build/lib/ebench/flycheck_ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
+ creating build/bdist.linux-x86_64/wheel/examples
+ copying build/lib/examples/__init__.py -> build/bdist.linux-x86_64/wheel/examples
+ creating build/bdist.linux-x86_64/wheel/examples/hello
+ copying build/lib/examples/hello/hello2.py -> build/bdist.linux-x86_64/wheel/examples/hello
+ copying build/lib/examples/hello/hello.py -> build/bdist.linux-x86_64/wheel/examples/hello
+ copying build/lib/examples/hello/__init__.py -> build/bdist.linux-x86_64/wheel/examples/hello
  copying build/lib/VERSION -> build/bdist.linux-x86_64/wheel
  copying build/lib/RELEASES.md -> build/bdist.linux-x86_64/wheel
  running install_egg_info
- Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.9-py3.9.egg-info
+ Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.10_SNAPSHOT-py3.9.egg-info
  running install_scripts
- creating build/bdist.linux-x86_64/wheel/ebench-0.0.9.dist-info/WHEEL
- creating 'dist/ebench-0.0.9-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+ creating build/bdist.linux-x86_64/wheel/ebench-0.0.10_SNAPSHOT.dist-info/WHEEL
+ creating 'dist/ebench-0.0.10_SNAPSHOT-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
  adding 'RELEASES.md'
  adding 'VERSION'
  adding 'ebench/CMDS.py'
@@ -178,18 +186,23 @@
  adding 'ebench/Unit.py'
  adding 'ebench/__init__.py'
  adding 'ebench/ebMenu.py'
+ adding 'ebench/ebMenu.yaml'
  adding 'ebench/ebRigol.py'
  adding 'ebench/ebUnit.py'
  adding 'ebench/ebench.py'
  adding 'ebench/flycheck_ebUnit.py'
  adding 'ebench/flycheck_ebench.py'
  adding 'ebench/hello.py'
- adding 'ebench-0.0.9.dist-info/METADATA'
- adding 'ebench-0.0.9.dist-info/WHEEL'
- adding 'ebench-0.0.9.dist-info/entry_points.txt'
- adding 'ebench-0.0.9.dist-info/top_level.txt'
- adding 'ebench-0.0.9.dist-info/zip-safe'
- adding 'ebench-0.0.9.dist-info/RECORD'
+ adding 'examples/__init__.py'
+ adding 'examples/hello/__init__.py'
+ adding 'examples/hello/hello.py'
+ adding 'examples/hello/hello2.py'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/METADATA'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/WHEEL'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/entry_points.txt'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/top_level.txt'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/zip-safe'
+ adding 'ebench-0.0.10_SNAPSHOT.dist-info/RECORD'
  removing build/bdist.linux-x86_64/wheel
  #+end_example
 
@@ -204,28 +217,28 @@
 
  #+RESULTS:
  #+begin_example
- VERSION_FILE=dist/ebench-0.0.9-SNAPSHOT.tar.gz
- Processing ./dist/ebench-0.0.9-SNAPSHOT.tar.gz
- Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.9-SNAPSHOT) (0.5.2)
- Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.9-SNAPSHOT) (0.12.0)
- Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench===0.0.9-SNAPSHOT) (1.15.0)
- Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.9-SNAPSHOT) (3.7.4.3)
- Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.9-SNAPSHOT) (1.11.3)
+ VERSION_FILE=dist/ebench-0.0.10-SNAPSHOT.tar.gz
+ Processing ./dist/ebench-0.0.10-SNAPSHOT.tar.gz
+ Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.10-SNAPSHOT) (0.5.2)
+ Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench===0.0.10-SNAPSHOT) (0.12.0)
+ Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench===0.0.10-SNAPSHOT) (1.15.0)
+ Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.10-SNAPSHOT) (3.7.4.3)
+ Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench===0.0.10-SNAPSHOT) (1.11.3)
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.9_SNAPSHOT-py3-none-any.whl size=28360 sha256=2613610e4619f9f531737cac1f35db1a29a5792c1100d98676598ffcd60cdf33
-   Stored in directory: /home/jj/.cache/pip/wheels/1b/93/17/a15c651d6c4081f02798071c24b1045f3ea15b562fbcca6e3d
+   Created wheel for ebench: filename=ebench-0.0.10_SNAPSHOT-py3-none-any.whl size=32925 sha256=42d909e1c501b5cb9dad6a2e5a4875d3ab6dc0862a6d9618c8e9305a46ddf431
+   Stored in directory: /home/jj/.cache/pip/wheels/3d/9a/e7/e5c3d9111c245b94d63eb270aba7e0284c671dcd241f5cc0fe
  Failed to build ebench
  Installing collected packages: ebench
    Attempting uninstall: ebench
-     Found existing installation: ebench 0.0.9-SNAPSHOT
-     Uninstalling ebench-0.0.9-SNAPSHOT:
-       Successfully uninstalled ebench-0.0.9-SNAPSHOT
+     Found existing installation: ebench 0.0.10-SNAPSHOT
+     Uninstalling ebench-0.0.10-SNAPSHOT:
+       Successfully uninstalled ebench-0.0.10-SNAPSHOT
      Running setup.py install for ebench: started
      Running setup.py install for ebench: finished with status 'done'
- Successfully installed ebench-0.0.9-SNAPSHOT
- installed dist/ebench-0.0.9-SNAPSHOT.tar.gz
+ Successfully installed ebench-0.0.10-SNAPSHOT
+ installed dist/ebench-0.0.10-SNAPSHOT.tar.gz
  #+end_example
 
 
@@ -254,8 +267,8 @@ ebUnit _version
  #+END_SRC
 
  #+RESULTS:
- : [master 9dc4a9d] ## 0.0.9-SNAPSHOT/20210404-22:49:46
- :  4 files changed, 71 insertions(+), 69 deletions(-)
+ : [master c002493] ## 0.0.10-SNAPSHOT/20210415-14:55:49
+ :  4 files changed, 52 insertions(+), 44 deletions(-)
 
 
 

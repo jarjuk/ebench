@@ -413,7 +413,7 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
     """
     
     gSkooppi=MSO1104(addr=addr, ip=ip)
-    cmdController = MenuCtrl(args=_argv,instrument=gSkooppi, prompt="[q=quit,?=commands,??=help on command]")
+    menuController = MenuCtrl(args=_argv,instrument=gSkooppi, prompt="[q=quit,?=commands,??=help on command]")
 
     mainMenu = {
         "Init"                   : (None, None, None),
@@ -433,8 +433,8 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
         CMD_MEASURE              : ("Measure", measurePar, gSkooppi.measurement),
         CMD_TRIGGER_STATUS       : ("Trigger status", None, gSkooppi.triggerStatus),
         "Record"                 : (None, None, None),
-        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
                                      menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
         "Misc"                   : (None, None, None),        
@@ -448,22 +448,20 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
     }
 
 
-    cmdController.setMenu( menu = mainMenu, defaults = defaults)
+    menuController.setMenu( menu = mainMenu, defaults = defaults)
     
     if runMenu:
-        cmdController.mainMenu()
-        if cmdController.isTopMenu:
-            # Top level closes instruments && cleanup
-            cmdController.close()
-            cmdController = None
+        menuController.mainMenu()
 
-    return cmdController
+    return menuController
 
 def _main( _argv ):
     # Run standalone
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
-    run( _argv, ip=FLAGS.ip )
+    menuController = run( _argv, ip=FLAGS.ip )
+    menuController.close()
+
     
 def main():
     try:

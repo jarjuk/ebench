@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 import ebench
 from ebench import MenuCtrl
-
-
+from ebench import Instrument
 
 from ebench import usage, usageCommand
 
@@ -10,21 +9,45 @@ import os
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
-def hello( whom:str, who:str ):
-    """Hello -command just demonstrates simple menu action.
+# --------------------------------------
+# Example instrument "HelloInstrument"
 
-    It receives to parameters 'whom' and 'who' and prints
-    greeting. Defaulta value of 'who' parameter is logged user,
-    and its value is remembered between hello commands
+class HelloInstrument(Instrument):
 
-    Returns greeted 'whom' if greeter/who is not the same as
-    greeted/whom.
+  def __init__(self, greetCount=0):
+      self._greetCount = greetCount
 
-    Notice, how
+  def greetCount(self, fake=0 ):
+      """Access object state variable with API twist
 
-    """
-    print( "Hello {} from {}".format(whom, who))
-    return whom if who != whom else None
+      :fake: parameter used to demonstrate passing named parameter
+      value in API call
+
+      :return: current 'greetCount' + 'fake'
+
+      """
+
+      return self._greetCount + int(fake)
+
+  def sayHello( self, whom:str, who:str ):
+      """Hello -command just demonstrates simple menu action.
+
+      It receives to parameters 'whom' and 'who' and prints
+      greeting. Defaulta value of 'who' parameter is logged user, and
+      its value is remembered between hello commands
+
+      Returns greeted 'whom' if greeter/who is not the same as
+      greeted/whom.
+
+      Incrementing greetCount demonstrates that Intrument MAY
+      maintain internal state.
+
+      """
+      self._greetCount = self._greetCount + 1
+      print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
+
+# --------------------------------------
+# Menu interagration
 
 helloPar = {
    "whom": "Whom to greet?",
@@ -40,66 +63,72 @@ defaults = {
 
 
 
-helpPar = {
-      "command": "Command to give help on (None: help on main menu)"
-}
-
-
 
 usageText = """
 
 This demo presents:
 
-- command 'hello'  acceting two parameters, one of the parameters (whom) is
-  prompted for every command call, the other paremeter (who) defaults to 
-  to login-name, and its value is rememebered from previous call
+- command 'hello' accepting two parameters, one of the parameters
+  (whom) is prompted for every command call, the other paremeter (who)
+  defaults to to login-name, and its value is rememebered from
+  previous call
 
 - menu separator
 
-- help to list command
+- help to list command (and to show this text)
 
-- help on command parameters
+- more detailed help on menu commands
 
 - hidden command: _version
-
 
 """
 
 
 
+# --------------------------------------
+# Application main && ebMenu integration
 
-mainMenu = {
 
-    # First section: application commands
-    "Commands:"              : ( None, None, None),
-    "hello"                  : ( "Say hello", helloPar, hello),
+def run( _argv, runMenu:bool = True, greetCount = 0  ):
+     hello = HelloInstrument( greetCount = greetCount )
 
-    # Second section: getting help
-    "Help:"                  : ( None, None, None),
-    MenuCtrl.MENU_HELP       : ( "List commands", None,
-                               lambda **argV: usage(cmd=os.path.basename(__file__)
-                                                    , mainMenu=mainMenu
-                                                    , synopsis="Demo hello v2"
-                                                    , usageText=usageText )),
-    MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", helpPar,
-                               lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-    "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+     mainMenu = {
+     
+         # First section: application commands
+         "Commands:"              : ( None, None, None),
+         "hello"                  : ( "Say hello", helloPar, hello.sayHello ),
+     
+         # Second section: getting help
+         "Help:"                  : ( None, None, None),
+         MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda : usage(cmd=os.path.basename(__file__)
+                                                         , mainMenu=mainMenu
+                                                         , synopsis="Demo hello v2"
+                                                         , usageText=usageText )),
+         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+         "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+     
+         # Third section: exiting
+         "Exit:"                  : ( None, None, None),
+         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+     
+     }
+     
 
-    # Third section: exiting
-    "Exit:"                  : ( None, None, None),
-    MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=hello )
+     menuController.setMenu(menu=mainMenu, defaults=defaults)
+     if runMenu: menuController.mainMenu()
 
-}
-
+     return menuController
 
 
 def _main( _argv ):
-    # global gSkooppi
+     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
+    menuController = run( _argv )
+    menuController.close()
 
-    cmdController = MenuCtrl()
-
-    cmdController.mainMenu( _argv, mainMenu=mainMenu, mainPrompt="[hello, q=quit]", defaults=defaults)
 
 
 

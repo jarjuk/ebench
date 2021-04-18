@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-from typing import Dict, List, Callable
+from typing import Dict, List, Callable, Tuple, Union
 
 from pprint import pformat
 from datetime import datetime
 import inspect
 import textwrap
 
+import ast
 import os
 import sys
 import json
@@ -57,7 +58,8 @@ class Instrument:
         given accept one the given values
 
         """
-        prompt = "Enter value for {}".format(item)
+        validPrompt = "" if validValues is None else " ({})".format(" ".join(validValues))
+        prompt = "Enter value for {}{}".format(item, validPrompt )
         return MenuCtrl.promptValue( prompt = prompt, validValues=validValues, )
         
         
@@ -114,22 +116,7 @@ class Instrument:
         :measurementRow: dict with keys in the format '<channel>:<measurement>'
 
         """
-        filePath= os.path.join( FLAGS.csvDir, csvFile)
-
-        # Exepct columns to be the same
-        csv_columns = [Instrument.MEASUREMENT_TS ] + list(measurementRow.keys())
-        if not os.path.exists( filePath):
-            # Create CSV header
-            with open( filePath, "w") as csvfile:
-                writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
-                writer.writeheader()
-            
-        with open( filePath, "a") as csvfile:
-            # Write datarow
-            writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
-            measurementRow[Instrument.MEASUREMENT_TS] = datetime.now().strftime("%Y%m%d-%H%M%S")
-            writer.writerow(measurementRow)
-
+        appendCvsFile( csvFile=csvFile, measurementRow=measurementRow)
     
 
 class MenuValueError(ValueError):
@@ -167,13 +154,19 @@ class MenuCtrl:
     }
 
     MENU_INSTRUMENT_ACCESS_PARAMS = {
-        "accessJson" : "JSON string { \"key\": \"instrument.method(commaSepListOfArgs)\"} "
+        "apiCalls" : "JSON string { \"key\": \"instrument.method(commaSepListOfArgs)\"} "
     }
 
     # Prorites in subMenu dictionaries
-    SUB_MENU_MODULE="module"       # Python module name
-    SUB_MENU_NAME="menu"           # name to present in menu -structure
-    SUB_MENU_PARAMS="kwargs"       # params passed to run
+    SUB_MENU_TYPE="type"                 # menu types (instrumentAccess, )
+    SUB_MENU_PROMPT="prompt"             # Text to sub menu propmpt
+    SUB_MENU_TYPE_SUB="subMenu"          # value in SUB_MENU_TYPE domain defining submenu
+    SUB_MENU_TYPE_API="apiCall"          # value in SUB_MENU_TYPE domain defining API call
+    SUB_MENU_MODULE="module"             # Python module name
+    SUB_MENU_NAME="menu"                 # name to present in menu -structure
+    SUB_MENU_PARAMS="kwargs"             # params passed to run
+    SUB_MENU_API_CALLS="apiCalls"        # configure SUB_MENU_TYPE_API 
+    SUB_MENU_MEASUREMENT="csvFile"       # configure SUB_MENU_TYPE_API, save to csvFile
     
     
     def __init__( self, args, prompt, instrument:Instrument = None ):
@@ -427,7 +420,7 @@ class MenuCtrl:
     # ------------------------------
     # Construct submenu and use it 
 
-    def registerSubMenus( self, subMenuDefs:List[Dict] ) -> Dict:
+    def registerSubMenus( self, subMenuDefs:List[Dict], defaults:dict={} ) -> Dict:
         """Create dictionary for defining 'subMenuDefs' in MenuCtr menu.
         regiterter . Register each entries 'subMenuDefs' so that they
         can be later called, when user chooses 'menuCommand' and
@@ -438,13 +431,16 @@ class MenuCtrl:
         SUB_MENU_NAME
 
         :self.subMenuCtrls: update dict mapping 'SUB_MENU_NAME' -> MenuCtrl
+
+        :defaults: dictionary update if any of subMenuDefs use default
+        parameters
         
         :return: dict mapping 'SUB_MENU_NAME' -> (menuPrompt,
         menuParameters, menuAction), @see mainMenu
 
         """
 
-        def createMenuAction( menuCommand, subMenuCtrl:"__class__" ) -> Callable:
+        def menuActionInvokeSubmenu( menuCommand, subMenuCtrl:"__class__" ) -> Callable:
             """Create lambda for 'menuAction'. Basically binds 'run' to co-operate
             with 'parentMenu'
 
@@ -463,113 +459,168 @@ class MenuCtrl:
                 raise MenuNoRecording
             return subMenuAction
 
-        # This is constructed
-        menuDict = {}
-        
-        for menuDef in subMenuDefs:
-            # Extract from menuDef
+
+        def typeSubMenu( menuDict, menuDef, defaults):
+            """Construct subMenu -type menu entry into 'menuDict' for 'menuDef'
+
+            :return: updated menuDict
+
+            """
+            logging.debug( "typeSubMenu: menuDef={}".format(menuDef))
+            
             menuCommand = menuDef[MenuCtrl.SUB_MENU_NAME]
-            menuPrompt = "Submenu {}".format(menuDef[MenuCtrl.SUB_MENU_NAME])
+            menuPrompt = menuDef[MenuCtrl.SUB_MENU_PROMPT]
+            # optional kwargs
             kwArgs = {}
             if MenuCtrl.SUB_MENU_PARAMS in menuDef:
                 kwArgs = menuDef[MenuCtrl.SUB_MENU_PARAMS]
-            # Resolve dynamically
-            subMenuModule = menuDef[MenuCtrl.SUB_MENU_MODULE]
 
-            # Construct MenuCtrl for subemu
+            # Resolve module implementing subMenu
+            subMenuModule = menuDef[MenuCtrl.SUB_MENU_MODULE]
             run = importlib.import_module( subMenuModule ).run
+
+            # Construct hierarchical 'MenuCtrl' for sub-menu
             subMenuCtrl = run( [menuCommand], runMenu=False, **kwArgs )
-            # Create menu hierarchy
             subMenuCtrl.parentMenu = self
             if subMenuCtrl is None:
-                raise MenuValueError( "Submene {} in module {} does not return MenuCtrl object ".format( menuCommand, subMenuModule))
+                raise MenuValueError( "Submenu {} in module {} does not return MenuCtrl object ".format( menuCommand, subMenuModule))
 
             # Register subMenuCtrl for later use
             self.addsubMenuCtrl( menuCommand, subMenuCtrl )
 
             # and create menuAction to for the subMenu
-            menuAction = createMenuAction( menuCommand=menuCommand, subMenuCtrl=subMenuCtrl )
+            menuAction = menuActionInvokeSubmenu( menuCommand=menuCommand, subMenuCtrl=subMenuCtrl )
             menuParameters  = None
             menuDict[menuCommand] = (menuPrompt, menuParameters, menuAction)
+
+            return menuDict
+
+        def typeApi( menuDict, menuDef, defaults):
+            """Construct menu entry for API calls 'menuDef' into 'menuDict'
+            
+            :menuDef: Prorperties SUB_MENU_NAME, SUB_MENU_API_CALLS,
+            SUB_MENU_MEASUREMENT (optional)
+
+            """
+            logging.debug( "typeApi: menuDef={}".format(menuDef))
+            menuCommand = menuDef[MenuCtrl.SUB_MENU_NAME]
+            menuPrompt = menuDef[MenuCtrl.SUB_MENU_PROMPT]
+            apiCalls = menuDef[MenuCtrl.SUB_MENU_API_CALLS]
+            csvFile =  menuDef[MenuCtrl.SUB_MENU_MEASUREMENT] if MenuCtrl.SUB_MENU_MEASUREMENT in menuDef else None
+
+            # menuAction lambda requiring parameters apiCalls and
+            # csvFile (optional)
+            menuActionRequiringParams = self.apiCallMenuAction()
+
+            # bind parameters to values resolved here
+            menuActionWithoutParams = lambda : menuActionRequiringParams(apiCalls=apiCalls, csvFile=csvFile)
+            
+            # Finally: create menuEntry
+            menuDict[menuCommand] = (menuPrompt,None,menuActionWithoutParams)
+            return menuDict
+
+        # This is constructed
+        menuDict = {}
+        menuTypeDispatcher = {
+            MenuCtrl.SUB_MENU_TYPE_API: typeApi,
+            MenuCtrl.SUB_MENU_TYPE_SUB: typeSubMenu,
+        }
+
+        # Dispatch applicable method for each entry in 'subMenuDefs'
+        for menuDef in subMenuDefs:
+            # Extract from menuDef
+            menuType  = menuDef[MenuCtrl.SUB_MENU_TYPE]
+            try:
+                menuTypeLambda = menuTypeDispatcher[menuType]
+            except KeyError as err:
+                msg = "Invalid 'type' {} in {}, valid types: {}. Error: {}".format(
+                    menuType, menuDef, menuTypeDispatcher.keys(), str(err) )
+                logging.error( msg )
+                raise KeyError( msg )
+            # Constructing 'menuDict'
+            menuDict = menuTypeLambda(menuDict=menuDict, menuDef=menuDef, defaults=defaults)    
+
             
         return menuDict
 
-    def intrumentAccessMenuAction( self ):
-        """Create menuAction -lambda for dispatching 'instrumentAccesses' on
+    def apiCallMenuAction( self ):
+        """Create menuAction -lambda for dispatching 'apiAccesses' on
         instruments wrapped by 'self.subMenuCtrls'. Lambda parameters
         given in 'MENU_INSTRUMENT_ACCESS_PARAMS'
 
         """
-        def parseInstrumentAccess(accessDef):
-            INSTRUMENT_ACCESS_REGEXP =r"(?P<subMenuName>[^\.]+)\.(?P<methodName>[^\(]+)\((?P<commaSepList>.*)\)"
-            match = re.search( INSTRUMENT_ACCESS_REGEXP, accessDef )
+        def parseApiAccess(apiDef:str) -> Tuple[str,str,List[str]]:
+            """Extract parts subMenuName.methodName(args) from apiDef:str
+
+            :return: tuple (subMenuName, methodName, methodArgs)
+            """
+            INSTRUMENT_ACCESS_REGEXP =r"(?P<subMenuName>[^\.]+)\.(?P<methodName>[^\(]+)\((?P<args>.*)\)"
+            match = re.search( INSTRUMENT_ACCESS_REGEXP, apiDef )
             if match is None:
-                msg = "Could not parse accessDef='{}'".format( accessDef )
+                msg = "Could not extract subMenuName, methodName, methodArgs from '{}'".format( apiDef )
                 logging.error(msg)
                 raise MenuValueError(msg)
             logging.debug( "match['subMenuName']={}".format(match['subMenuName']))
             logging.debug( "match['methodName']={}".format(match['methodName']))
-            logging.debug( "match['commaSepList']={}.".format(match['commaSepList']))
+            logging.debug( "match['args']={}.".format(match['args']))
             (subMenuName, methodName) = (match['subMenuName'], match["methodName"] )
-            commaSepList =  match["commaSepList"].strip()
-            methodArgs = [] if len(commaSepList) == 0 else commaSepList.split(",")
-            return (subMenuName, methodName, methodArgs)
+            argsStr =  match["args"].strip()
+            # methodArgs = [] if len(commaSepList) == 0 else commaSepList.split(",")
+            (args,kwargs) = parse_args( argsStr)
+            logging.debug( "parse_args.args={}, parse_args..kwargs={}".format(args,kwargs))
+            return (subMenuName, methodName, args, kwargs)
 
-        def instrumentAccess( accessDef):
-            (subMenuName, methodName, methodArgs) = parseInstrumentAccess(accessDef)
-            logging.debug( "subMenuName={}, methodName={}, methodArgs={}/{}.".format(subMenuName, methodName, len(methodArgs), methodArgs))
-            subMenuCtrl = self.subMenuCtrl(subMenuName)
-            retVal = subMenuCtrl.callIntrumentMethodByName( methodName, *methodArgs )
-            return retVal
+        def apiAccess(apiDef):
+            """Dispatch API call in 'apiDef' using
+            subMenuCtrl.callIntrumentMethodByName
 
-        def measurementLambda( accessJson=None ):
-            """Parse comma separated entries from :accessJson: and invoke
-            'methodName' on instrument wrapped in SUB_MENU_NAME
-            -MenuCtr
-
-             'instrumentAccess' json string { key: subMenuName.methodName(args) }
-
-             - subMenuName (SUB_MENU_NAME) to access self.subMenuCtrl -dict
-
-             - methodName is name of method to invoke in 'subMenuCtrl'
-
-             - params is colon (:) sepated parameters to method
-
-             :subMenus: Dictionary mapping menuCommmand (string presentend to
-             user) -> menuSelection. Menu selection is a list, where third
-             element is lambda for 'menuAction'.
+            :return: value returned from the dispatched API
 
             """
-            logging.info( "measurementLambda: accessJson={}".format(accessJson))
-            # split first by comma (,) and then by colon (:)
-            accessMap = json.loads(accessJson)
-            logging.debug( "accessMap: {}".format(accessMap))
-            acessesResult = { k: instrumentAccess(accessDef) for k,accessDef in accessMap.items() }
-            logging.info( "acessesResult:".format(acessesResult))
-            return acessesResult
+            (subMenuName, methodName, methodArgs, methodKwargs) = parseApiAccess(apiDef)
+            logging.debug( "subMenuName={}, methodName={}, methodArgs={}/{},methodKwargs={}".format(
+                subMenuName, methodName, len(methodArgs), methodArgs, methodKwargs))
+            retVal = self.subMenuCtrl(subMenuName).callIntrumentMethodByName(methodName, *methodArgs, **methodKwargs )
+            return retVal
+
+        def menuActionLambda( apiCalls:Union[str,dict]=None, csvFile:str = None ):
+            """Parse json string :apiCalls: (unless it is already a dict mapping
+            key 'apiDef'), parse API call in 'apiDef' and dispatch API
+            call them using 'callIntrumentMethodByName'.
 
 
-            
-            
-            # for instrumentAccess in instrumentAccesses.split(","):
-            #     # parse instrumentAccess 
-            #     # invokeList = instrumentAccess.split( ":")
-            #     # subMenuName = invokeList[0]
-            #     # methodName = invokeList[1]
-            #     # methodArgs = invokeList[2:]
-            #     logging.info( "--> subMenuName={}, MethodName={}, args={}".format(subMenuName,methodName, methodArgs ))
-            #     # locate menu 'menuSelection' corresponding to  'instrumentAccessObjectName'
-            #     subMenuCtrl = self.subMenuCtrl(subMenuName)
-            #     # 'subMenuCtrl' wraps 'Instrument' with 'methodName'
-            #     retVal = subMenuCtrl.callIntrumentMethodByName( methodName, *methodArgs )
-            #     logging.info( "{} -> {}".format(methodName, retVal))
+             'apiAccess' json string "{ key: subMenuName.methodName(args) }" OR dict
+             { key: subMenuName.methodName(args) }
 
-        return measurementLambda
+             - subMenuName (SUB_MENU_NAME) to locate subMenuCtrl
+
+             - methodName is name of API method to invoke in
+               'subMenuCtrl'
+
+             - params is colon (:) sepated parameters to API method
+
+            :return: csvPath (if csvFile given), apiResults (if
+            csvFile not given)
+
+            """
+            logging.info( "menuActionLambda: apiCalls={}".format(apiCalls))
+            if isinstance(apiCalls,str):
+                apiCalls = json.loads(apiCalls)
+            logging.debug( "apiCallMap: {}".format(apiCalls))
+            apiResults = { k: apiAccess(apiDef) for k,apiDef in apiCalls.items() }
+            logging.info( "apiResults:".format(apiResults))
+            if csvFile is not None:
+                csvPath = appendCvsFile( csvFile, apiResults )
+                return csvPath
+            else:
+                return apiResults
+
+        return menuActionLambda
 
 
      
     # ------------------------------
-    # executuing menu && prompt
+    # executing menu
     
     def promptValue( prompt:str, key:str=None, cmds:List[str]=None,
                      validValues:List[str]=None, defaultParameters:dict={}, promptIndentation="" ):
@@ -747,6 +798,7 @@ class MenuCtrl:
         cmds  = self.cmds
         menu = self.menu
         defaults = self.defaults
+        validMenuSelections = [ k for k in  menu.keys() if menu[k][0] is not None ]
         
         logging.info( "interactive: {} Starting cmds={}, isTopMenu={}".format(self.interactive, cmds, self.isTopMenu ))
         goon = True
@@ -754,8 +806,11 @@ class MenuCtrl:
             if not self.interactive and len(cmds) == 0:
                 # all commands consumed - quit batch
                 break
-            menuCommand = MenuCtrl.promptValue(self.prompt,
-                                               cmds=cmds, validValues=menu.keys(), promptIndentation=promptIndentation )
+            menuCommand = MenuCtrl.promptValue(
+                self.prompt
+                , cmds=cmds
+                , validValues=validMenuSelections
+                , promptIndentation=promptIndentation )
                 
             logging.debug( "Command '{}'".format(menuCommand))
             if menuCommand is None:
@@ -917,6 +972,35 @@ class SignalGenerator(PyInstrument):
 # ------------------------------------------------------------------
 # Common menu actions
 
+def appendCvsFile( csvFile, measurementRow:dict):
+    """
+    Append to FLAGS.csvDir/csvFile
+
+    :csvFile: name of the file (within directory FLAGS.csvDir)
+
+    :measurementRow: dict with keys in the format '<channel>:<measurement>'
+
+    """
+    csvDir = FLAGS.csvDir 
+    filePath= os.path.join( csvDir, csvFile)
+
+    # Exepct columns to be the same
+    csv_columns = [Instrument.MEASUREMENT_TS ] + list(measurementRow.keys())
+    if not os.path.exists( filePath):
+        # Create CSV header
+        with open( filePath, "w") as csvfile:
+            writer = csv.DictWriter( csvfile, fieldnames=csv_columns)
+            writer.writeheader()
+
+    with open( filePath, "a") as csvfile:
+        # Write datarow
+        writer = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        measurementRow[Instrument.MEASUREMENT_TS] = datetime.now().strftime("%Y%m%d-%H%M%S")
+        writer.writerow(measurementRow)
+
+    return filePath
+
+
 
 def menuScreenShot( instrument:Instrument, captureDir, prefix ):
     """Lambda function to use in mainMenu construct
@@ -1075,6 +1159,7 @@ def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):
     # Help actions not recorded
     raise MenuNoRecording()
 
+
 def usageCommand( command, mainMenu ):
     """
     Document 'command' in 'mainMenu'
@@ -1091,6 +1176,13 @@ def usageCommand( command, mainMenu ):
     raise MenuNoRecording()
 
 
+# https://stackoverflow.com/questions/49723047/parsing-a-string-as-a-python-argument-list
+def parse_args(args):
+    args = 'f({})'.format(args)
+    tree = ast.parse(args)
+    funccall = tree.body[0].value
 
-
+    args = [ast.literal_eval(arg) for arg in funccall.args]
+    kwargs = {arg.arg: ast.literal_eval(arg.value) for arg in funccall.keywords}
+    return args, kwargs    
 

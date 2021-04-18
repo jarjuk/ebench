@@ -3,10 +3,69 @@
 
 * Requirements
 
-- [ ]   useinta instrumettien hallinta voidaan integroida yhden komennon alle
-  - [ ] Hierarkinen menu rakenne
-    - [ ] M
-  - [ ] Eri instrumenttien mittaukset/tila/data voidaan koota yhdelle mittaustietueelle
+- [X] Scriptaus helppoa
+  - [X] Sovelluksen käyttö interatiivisesti
+  - [X] Interatiivinen sessio voidaan tallentaa scriptiin
+    - [X] Start recording toiminto
+    - [X] Stop recording (=save) toiminto
+  - [X] Scriptiin talletettu sessio voidaan ajaa  (CLI)  komentorivikomentona
+- [X] Interatiiviinen käyttö työkalujen kehotteiden ohjaamaa
+  - [X] Hallintatyökalun valikko
+  - [X] Valikkotoiminnon parametrien oletusarvo
+  - [X] Valikkotoiminnon parametrien kehote ja syötteen lukeminen
+  - [X] Valikkotoiminnon syötteen tallennus seuraavaa kutsukertaa varten
+  - [X] Valikkotoiminnon suoritus ja vastauksen esittäminen käyttäjälle
+- [X] Interatiiviista käyttöä helpotetaan työkalun tarjoamien ohjeiden avulla
+  - [X] Valikkokehote
+    - [X] Valikon konfigurointi: komento -> (kehote, valikkotoiminnon parametri, toiminnon käynnistys)
+    - [X] Valikon konfigurointi: ryhmäerotin
+  - [X] Valikkkotoimintojen listaus (?-komento)
+  - [X] Valikkotoiminnon ohje (??-komento)
+    - [X] Valikkokehote
+    - [X] Valikkotoiminnon synopsis = Python doc-string:stä
+    - [X] Valikkotoiminnon parametrit automaattisesti konfiguraation perusteella
+- [X] Eri instrumenttien hallintatyökalujen integrointi yhteen
+  - [X] Perusyksikkönä yhden instrumentin hallinta yhdellä työkalulla
+    - [X] Python moduli
+    - [X] run( argv, runMenu:bool=True, **kwargs ) (**kwargs =alustus)
+    - [X] MenuCtrl ja Instrument -luokat (ks. arkkitehtuuri)
+  - [X] Eri instrumenttien hallintatöykalujen valikkojen yhdistäminen yhden valikon alle
+    - [X] YAML määritys: Python moduli ja **kwargs  parametrit
+  - [X] Eri instrumenttien API rajapintojen yhdistäminen yhdeksi valikkokomennoksi
+    - [X] JSON tietueen avain-arvoparit
+    - [X] JSON tietueen arvo `instrument.metodi(parametrit)`
+- [X] Instrumenttien hallintatyökalujen toteutukseen infrastruktuuripalveluja
+  - [X] Valikkorakenne
+  - [X] Valikkkotoimintojen listaus
+  - [X] Valikkotoiminnon ohje
+  - [X] Start and stop recording toiminto
+    - [X] suoritettujen komentojen lisääminen komentorivitiedostoon
+    - [X] hierarkisen menurakenteen huomioiminen suoritettujen komentojen tallennuksessa
+  - [X] CSV-tiedostoon kirjoitus
+    - [X] JSON tietueesta otsikko ja arvot
+  - [X] Konfiguroitava API -rajapinta (dataframe row)
+    - [X] YAML API -määritys: `valikkotoiminto.API-metodi.(parametrit)`
+    - [X] YAML CSV tiedoston nimi
+  - [X] Tiedon kysyminen käyttäjältä
+    - [X] Input kanava USER
+  - [X] Screenshot 
+    - [X] Screenshot lxi toteutus/instrumentti kohtainen toteutus
+    - [X] Screenshot hakemisto ja tiedostonimi
+- [X] Arkkitehtuuri
+  - [X] Instrument (infra) <|-- xxInstrument (API-action) <|-- ebXXX (setup)
+  - [X] MenuCtrl *-- Instrument
+- [-] Ohjeistus (ja BDD-testaus)
+  - [X] HELLO.org
+  - [ ] EBMENU.org
+  - [ ] EBRIGOL.org
+  - [ ] EBUNIT.org
+  - [ ] idea (käyttöliittymä, ei integraatiota) https://github.com/jarjuk/UTG900
+
+- [X] Current status
+  - [X] ebRigol
+  - [X] ebUTG962 (Unit-T UTG962 signaaligeneraattori)
+  - [X] ebMenu integroityökalu (YAML-konfiguraatio)
+  - [X] STM32 RS323 menu-komentointeraatio
 
 
 

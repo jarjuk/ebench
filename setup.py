@@ -24,12 +24,14 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jarjuk/ebench",
     package_data={
-        "ebench": ['../VERSION', '../RELEASES.md' ]
+        "ebench": ['../VERSION', '../RELEASES.md', "ebMenu.yaml" ]
     },
     #  scripts=[f"{CMDS.CMD_RIGOL}", f"{CMDS.CMD_UNIT}"],
     entry_points = {
         "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol:main"
-                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main", ],
+                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main"
+                             , f"{CMDS.CMD_MENU}=ebench.ebMenu:main"
+        ],
     },
     classifiers=[
         "Programming Language :: Python :: 3",

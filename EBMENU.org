@@ -1,0 +1,465 @@
+
+* Merging hello2.py to =ebMenu= 
+
+** Create hello.yaml
+
+*** Configure  ~subMenu~ menu commands
+
+Following YAML snippet adds two sub menu entries, =instance1= and
+=instance2=, to =ebMenu= menu commands. These menu commands
+instantiate Python module =examples.hello.hello2= presented in
+[[file:HELLO.org]]
+
+ #+BEGIN_SRC yaml :tangle examples/hello/hello.yaml :exports code
+   # hello.yaml - tangled from EBMENU.org
+   # 
+   # Do not edit!! Changes will be overridden
+
+   # Define subMenu -entry 'instance1 for controlling instrument in
+   # Python module 'examples.hello.hello2'. 
+
+   - 
+     type: subMenu
+     menu: instance1
+     prompt: Start example Hello (instance 1)
+     module: examples.hello.hello2
+
+   # Define subMenu -entry 'instance2' for controlling instrument in
+   # Python module 'examples.hello.hello2'. Instrument constructor receives
+   # parameter 'greetCount= 100'
+
+   - 
+     type: subMenu
+     menu: instance2
+     prompt: Start example Hello (instance 2)
+     module: examples.hello.hello2
+     kwargs:
+         greetCount: 100
+
+ #+END_SRC
+
+
+*** Configure ~apiCall~ menu commands
+
+ Following two YAML configuration elements invoke API -methods on
+ ~HelloInstrument~ object created for sub menus defined in the previous
+ chapter. The second configuration appends row to CSV -file for the API
+ call result.
+
+ #+BEGIN_SRC yaml :tangle examples/hello/hello.yaml
+
+   # Define 'apiCall' menu-entry 'showCounters' This menu entry dispatches
+   # two apiCalls: "instance1.greetCount()" and
+   # "instance2.greetCount(fake=42)". The second API call demostrated
+   # passing named paramter `fake` to an API -method.
+
+   - 
+     type: apiCall
+     menu: showCounters
+     prompt: Show instance1 and instance2 counters
+     apiCalls:
+       "count1": "instance1.greetCount()"
+       "count2": "instance2.greetCount(fake=42)"
+
+   # Define 'apiCall' menu-entry 'csvCounters'.  This menu entry
+   # dispatches two apiCalls: "instance1.greetCount()" and
+   # "instance2.greetCount()". The result is saved into CSV -file
+   # hello-counters.csv
+
+   - 
+     type: apiCall
+     menu: csvCounters
+     prompt: Save  instance1 and instance2 counters to CSV-file 'hello-counters.csv'
+     apiCalls:
+       "count1": "instance1.greetCount()"
+       "count2": "instance2.greetCount()"
+     csvFile: hello-counters.csv
+
+ #+END_SRC
+
+
+** Run ebMenu with --config pointing to ~examples/hello/hello.yaml~
+
+*** List application commands and usage
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ ebMenu --syspath $(pwd)  --config examples/hello/hello.yaml ?
+ #+END_SRC
+
+ #+RESULTS:
+ #+begin_example
+ ebMenu: Menu controller
+
+ Usage: ebMenu [options] [commands and parameters] 
+
+ Commands:
+
+       instance1  : Start example Hello (instance 1)
+       instance2  : Start example Hello (instance 2)
+    showCounters  : Show instance1 and instance2 counters
+     csvCounters  : Save  instance1 and instance2 counters to CSV-file 'hello-counters.csv'
+               q  : Exit
+ ----------   Other    ----------
+               ?  : List commands
+              ??  : List command parameters
+               !  : Start recording
+               .  : Stop recording
+ #+end_example
+
+
+*** yaml -configuration used in object initalization
+
+ The example below calls 'instance1' in ebMenu. Output prints greeting
+ count from /me/ to /You/. In this example, greeting count is 1.
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ ebMenu --syspath $(pwd)  --config examples/hello/hello.yaml 'instance1' hello  whom='You' who=me q  q
+ #+END_SRC
+
+ #+RESULTS:
+ : Hello #1 to You from me
+
+ The example below calls 'instance2' in ebMenu. Output prints greeting
+ count from /Earth/ to /Moon/. In this example, greeting count print
+ *101* (=100 passed in intialization plus 1 for the first greeting).
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ ebMenu --syspath $(pwd)  --config examples/hello/hello.yaml 'instance2' hello  whom=Moon who=Earth q  q
+ #+END_SRC
+
+ #+RESULTS:
+ : Hello #101 to Moon from Earth
+
+
+*** API calls
+
+ Start hello /instance1/ and make three greeting, resume to main menu
+ and call 'showCounters' API-call. Notice, how /count1/ counts the
+ three greetings made using /instance1/. /count2/ shows 142 = 100
+ (passed to constructor as inital value) plus 42 (value of /fake/
+ parameter defined in YAML -configuration)
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ ./ebMenu --syspath $(pwd) --config examples/hello/hello.yaml instance1 hello whom=test1  hello whom=test2 hello whom=test3  q showCounters
+ #+END_SRC
+
+ #+RESULTS:
+ : Hello #1 to test1 from jj
+ : Hello #2 to test2 from jj
+ : Hello #3 to test3 from jj
+ : {'count1': 3, 'count2': 142}
+
+
+*** Counters saved to csv-file
+
+ The example makes first three test calls to /instance1/ and saves
+ ebMenu counter state to CSV -file using ~csvCounters~ command. The
+ second line invokes greeting two times on =instance2= and appends to
+ CSV -file.
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ rm -f tmp/hello-counters.csv 
+ ./ebMenu --syspath $(pwd) --config examples/hello/hello.yaml instance1 hello whom=test1  hello whom=test2 hello whom=test3  q csvCounters
+ ./ebMenu --syspath $(pwd) --config examples/hello/hello.yaml instance2 hello whom=Demo1  hello whom=demo2  q csvCounters
+ #+END_SRC
+
+ #+RESULTS:
+ : Hello 1 test1 from jj
+ : Hello 2 test2 from jj
+ : Hello 3 test3 from jj
+ : tmp/hello-counters.csv
+ : Hello 101 Demo1 from jj
+ : Hello 102 demo2 from jj
+ : tmp/hello-counters.csv
+
+ CSV file created in in directory poinsted by  option
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports results
+ ebMenu --helpfull 2>&1 | grep -e '--csvDir'
+ #+END_SRC
+
+ #+RESULTS:
+ :   --csvDir: Directory where command CSV files are saved into
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports none
+ ls -ltr tmp/hello-counters.csv 
+ #+END_SRC
+
+ #+RESULTS:
+ : -rw-rw-r-- 1 jj jj 71 huhti 18 20:11 tmp/hello-counters.csv
+
+ and it shows CSV header line and two data lines for the two example
+ calls made above.
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports results
+ cat tmp/hello-counters.csv 
+ #+END_SRC
+
+ #+RESULTS:
+ : timestamp,count1,count2
+ : 20210418-201118,3,100
+ : 20210418-201119,0,102
+
+
+
+* Source code and configurations
+
+** Source code and configurations files 
+
+This example uses following source and configuration files
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+ls -ltr examples/hello | grep -v __pycache__ | grep -v hello.py
+#+END_SRC
+
+#+RESULTS:
+: total 16
+: -rwxr-xr-x 1 jj jj 3367 huhti 18 19:46 hello2.py
+: -rw-rw-r-- 1 jj jj  857 huhti 18 19:56 hello.yaml
+
+
+** Example application =hello2.py= integrated to =ebMenu=
+
+Source code of the application, =hello2.py=, integrated to =ebMenu= is
+shown below:
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+#!/usr/bin/env python3
+import ebench
+from ebench import MenuCtrl
+from ebench import Instrument
+
+from ebench import usage, usageCommand
+
+import os
+from absl import app, flags, logging
+from absl.flags import FLAGS
+
+# --------------------------------------
+# Example instrument "HelloInstrument"
+
+class HelloInstrument(Instrument):
+
+  def __init__(self, greetCount=0):
+      self._greetCount = greetCount
+
+  def greetCount(self, fake=0 ):
+      """Access object state variable with API twist
+
+      :fake: parameter used to demonstrate passing named parameter
+      value in API call
+
+      :return: current 'greetCount' + 'fake'
+
+      """
+
+      return self._greetCount + int(fake)
+
+  def sayHello( self, whom:str, who:str ):
+      """Hello -command just demonstrates simple menu action.
+
+      It receives to parameters 'whom' and 'who' and prints
+      greeting. Defaulta value of 'who' parameter is logged user, and
+      its value is remembered between hello commands
+
+      Returns greeted 'whom' if greeter/who is not the same as
+      greeted/whom.
+
+      Incrementing greetCount demonstrates that Intrument MAY
+      maintain internal state.
+
+      """
+      self._greetCount = self._greetCount + 1
+      print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
+
+# --------------------------------------
+# Menu interagration
+
+helloPar = {
+   "whom": "Whom to greet?",
+   "who":  "Who is the greeter? Ret accepts default value: ",
+}
+
+
+defaults = {
+"hello" : {
+             "who": os.environ['USER']
+          }
+}
+
+
+
+
+usageText = """
+
+This demo presents:
+
+- command 'hello' accepting two parameters, one of the parameters
+  (whom) is prompted for every command call, the other paremeter (who)
+  defaults to to login-name, and its value is rememebered from
+  previous call
+
+- menu separator
+
+- help to list command (and to show this text)
+
+- more detailed help on menu commands
+
+- hidden command: _version
+
+"""
+
+
+
+# --------------------------------------
+# Application main && ebMenu integration
+
+
+def run( _argv, runMenu:bool = True, greetCount = 0  ):
+     hello = HelloInstrument( greetCount = greetCount )
+
+     mainMenu = {
+     
+         # First section: application commands
+         "Commands:"              : ( None, None, None),
+         "hello"                  : ( "Say hello", helloPar, hello.sayHello ),
+     
+         # Second section: getting help
+         "Help:"                  : ( None, None, None),
+         MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda : usage(cmd=os.path.basename(__file__)
+                                                         , mainMenu=mainMenu
+                                                         , synopsis="Demo hello v2"
+                                                         , usageText=usageText )),
+         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+         "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+     
+         # Third section: exiting
+         "Exit:"                  : ( None, None, None),
+         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+     
+     }
+     
+
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=hello )
+     menuController.setMenu(menu=mainMenu, defaults=defaults)
+     if runMenu: menuController.mainMenu()
+
+     return menuController
+
+
+def _main( _argv ):
+     # global gSkooppi
+    logging.set_verbosity(FLAGS.debug)
+    menuController = run( _argv )
+    menuController.close()
+
+
+
+
+
+
+def main():
+    try:
+        app.run(_main)
+    except SystemExit:
+        pass
+
+
+if __name__ == '__main__':
+    main()
+#+end_example
+
+
+** Example configuration defining integration =hello.yaml=
+
+Configuration intergrating =hello2.py= to =ebMenu= is shown below:
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat examples/hello/hello.yaml
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+# hello.yaml - tangled from EBMENU.org
+# 
+# Do not edit!! Changes will be overridden
+
+# Define subMenu -entry 'instance1 for controlling instrument in
+# Python module 'examples.hello.hello2'. 
+
+- 
+  type: subMenu
+  menu: instance1
+  prompt: Start example Hello (instance 1)
+  module: examples.hello.hello2
+
+# Define subMenu -entry 'instance2' for controlling instrument in
+# Python module 'examples.hello.hello2'. Instrument constructor receives
+# parameter 'greetCount= 100'
+
+- 
+  type: subMenu
+  menu: instance2
+  prompt: Start example Hello (instance 2)
+  module: examples.hello.hello2
+  kwargs:
+      greetCount: 100
+
+# Define 'apiCall' menu-entry 'counters' This menu entry dispatches
+# two apiCalls: "instance1.greetCount()" and "instance1.greetCount()"
+
+- 
+  type: apiCall
+  menu: showCounters
+  prompt: Show instance1 and instance2 counters
+  apiCalls:
+    "count1": "instance1.greetCount()"
+    "count2": "instance2.greetCount(fake=42)"
+
+- 
+  type: apiCall
+  menu: csvCounters
+  prompt: Save  instance1 and instance2 counters to CSV-file 'hello-counters.csv'
+  apiCalls:
+    "count1": "instance1.greetCount()"
+    "count2": "instance2.greetCount()"
+  csvFile: hello-counters.csv
+#+end_example
+
+
+
+* Fin                                                              :noexport:
+
+** Emacs variables
+
+   #+RESULTS:
+
+   # Local Variables:
+   # org-confirm-babel-evaluate: nil
+   # End:
+   #
+   # Muuta 
+   # eval: (cdlatex-mode)
+   #
+   # Local ebib:
+   # org-ref-default-bibliography: "./HELLO.bib"
+   # org-ref-bibliography-notes: "./HELLO-notes.org"
+   # org-ref-pdf-directory: "./pdf/"
+   # org-ref-notes-directory: "."
+   # bibtex-completion-notes-path: "./HELLO-notes.org"
+   # ebib-preload-bib-files: ("./HELLO.bib")
+   # ebib-notes-file: ("./HELLO-notes.org")
+   # reftex-default-bibliography: ("./HELLO.bib")
+
+
+

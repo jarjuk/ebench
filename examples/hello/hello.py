@@ -2,8 +2,6 @@
 import ebench
 from ebench import MenuCtrl
 
-
-
 import os
 from absl import app, flags, logging
 from absl.flags import FLAGS
@@ -25,10 +23,10 @@ def _main( _argv ):
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
 
-    cmdController = MenuCtrl()
+    cmdController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
+    cmdController.setMenu(mainMenu)
 
-    cmdController.mainMenu( _argv, mainMenu=mainMenu, mainPrompt="[hello, q=quit]")
-
+    cmdController.mainMenu()
 
 
 

@@ -1,16 +1,63 @@
-# - module: ebench.hello
-#   menu: hello
+# ebMenu.yaml - example configuration file for ebMenu
+#
+#
+# Define 'subMenu' menu-entry 'hello' 'prompt'. The entry creates sub
+# menu from python module 'ebench.hello'. Sub menu controller is
+# created using run -method in ebench.hello -module. 'run' - method is
+# passed 'kwargs' -dictonary to allow configuration of the sub menu
+# controller created.
+
+- 
+  type: subMenu
+  menu: hello
+  prompt: Start sub menu for hello.py
+  module: ebench.hello
+  kwargs:
+      initCount: 3
+
+# Two more 'subMenu' entries creating sub menus for 'ebench.ebRigol'
+# and 'ebench.ebUnit' instruments. kwargs define configuration
+# parameters needed to access these instruments
+
+# -
+#   type: subMenu
+#   module: ebench.ebRigol
+#   menu: Rigol
 #   kwargs:
-#       initCount: 62
+#       ip: skooppi
 
-- module: ebench.ebRigol
-  menu: Rigol
-  kwargs:
-      ip: skooppi
+# -
+#   type: subMenu
+#   menu: UTG962
+#   module: ebench.ebUnit
+#   kwargs:
+#       addr: USB0::0x6656::0x0834::1485061822::INSTR
 
-- module: ebench.ebUnit
-  menu: UTG962
-  kwargs:
-      addr: USB0::0x6656::0x0834::1485061822::INSTR
 
+# Define 'apiCall' menu-entry 'counters' This menu entry dispatches
+# two apiCalls: "hello.greetCount()" and "hello.greetCount2(42)"
+#
+# Both of these apiCalls access instrument wrapped under sub menu
+# 'hello' The api methods called are 'greetCount' and 'greetCount2'.
+# Parameter value (string!) 42 is passed to greetCount2 method.
+#
+
+
+- 
+  type: apiCall
+  menu: counters
+  prompt: Read hello.py counters
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(added=42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
       
+- 
+  type: apiCall
+  menu: counters2csv
+  prompt: Save hello.py counters to example.csv
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+  measurements: example.csv

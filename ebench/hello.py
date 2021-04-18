@@ -7,45 +7,33 @@ from absl.flags import FLAGS
 
 class HelloIntrument(Instrument):
 
-    def __init__( self):
-        self.cnt=0
-
-    @property
-    def cnt(self) -> int :
-        if not hasattr(self, "_cnt"):
-             return None
-        return self._cnt
-
-    @cnt.setter
-    def cnt( self, cnt:int):
-        self._cnt = cnt
-
-
+    def __init__( self, greetCount=0):
+        self.greetCnt=greetCount
 
 
     def greet( self, whom:str ):
-        self.cnt = self.cnt + 1
-        print( "Hello {}".format(whom, self.cnt))
+        self.greetCnt = self.greetCnt + 1
+        print( "Hello  {} {}".format(self.greetCnt, whom ))
 
     def greetCount(self) -> int:
-        return self.cnt
+        return self.greetCnt
     
     def greetCount2(self, added) -> int:
-        return self.cnt + int(added)
+        return self.greetCnt + int(added)
 
             
     def close( self ):
         super().close()
-        self.cnt = 0
+        self.greetCnt = 0
 
 helloPar = {
     "whom" : "ketä moikataa?",
 }
         
-def run( _argv, runMenu:bool= True, initCount = None ):
+def run( _argv, runMenu:bool= True, greetCount = 0 ):
 
     logging.info( "create hello")
-    hello = HelloIntrument()
+    hello = HelloIntrument( )
     if initCount is not None:
         hello.cnt = int(initCount)
     
