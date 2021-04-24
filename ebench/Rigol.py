@@ -50,6 +50,9 @@ class RigolScope(Osciloscope):
     def rigolChannelMeasure( self, item, ch):
         """
         Send ":MEASure:ITEM? {},CHAN{}".format(item, ch)
+        
+        :ch: Number 1,2,3,4, D0, ... D15, AC
+
         """
         cmd = ":MEASure:ITEM? {},{}".format(item, RigolScope.chanStr(ch))
         logging.info( "rigolChannelMeasure: cmd={}".format(cmd))
@@ -108,6 +111,20 @@ class RigolScope(Osciloscope):
     def rigolChannelProbe( self, ch, probe ):
         (val,unit) = self.valUnit(probe, validValues=["x"])
         cmd = ":CHAN{}:PROB {}".format( ch, probe)
+        self.write( cmd )
+
+    def rigolChannelBwLimit( self, ch, type ):
+        """Set th bandwidth limit parameter of the specified channel.
+        
+        :CHANnel<n>:BWLimit <type>
+        
+        :ch: 1,2,3,4
+        
+        :type: 20M|OFF
+
+        """
+        self.validate( value=type, validValues = ["OFF", "20M" ], context="Channel {} bandwidth {}".format(ch,type))
+        cmd = ":CHAN{}:BWLimit {}".format( ch, type)
         self.write( cmd )
 
     def rigolStatDisplayOnOff( self, statsOnOff):

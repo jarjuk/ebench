@@ -42,11 +42,11 @@ def run( _argv, runMenu:bool= True, greetCount = 0 ):
         MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
     }
 
-    cmdController = MenuCtrl(args=_argv, instrument=hello, prompt="[hello, q=quit]")
-    cmdController.setMenu( menu = mainMenu )
+    menuController = MenuCtrl(args=_argv, instrument=hello, prompt="[hello, q=quit]")
+    menuController.setMenu( menu = mainMenu )
 
-    if runMenu: cmdController.mainMenu()
-    return cmdController
+    if runMenu: menuController.mainMenu()
+    return menuController
 
 def _main( _argv ):
     # global gSkooppi

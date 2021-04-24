@@ -6,10 +6,10 @@
    :header-args:bash: :dir  examples/hello
    :END:
 
+Hello -example uses ~MenuCtrl~ class from ~ebench~ module
 
  #+name: import
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
- import ebench
  from ebench import MenuCtrl
  #+END_SRC
 
@@ -17,6 +17,9 @@
  : Python 3.9.1 | packaged by conda-forge | (default, Jan 10 2021, 02:55:42) 
  : [GCC 9.3.0] on linux
  : Type "help", "copyright", "credits" or "license" for more information.
+
+and some basic infrastructure services from ~os~ module and command
+line options from ~absl~
 
  #+name: import-env
  #+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*
@@ -30,8 +33,8 @@
 
 ** Define hello
 
-Define Python function hello, which accepts parameter, whom is being
-greeted.
+Define Python function ~ hello~ accepts parameter ~whom~ to be
+greeted:
 
  #+name: hello
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -39,10 +42,8 @@ greeted.
      print( "Hello {}".format(whom))
  #+END_SRC
 
-
-Define dictionary, which maps function parameters to promts. In this
-case, ~hello~ -function has one parameter ~whom~, which needs to be
-prompted.
+For prompting ~"Whom to greet?"~ define a dictionary, which map ~whom~
+parameter to the promp:
 
  #+name: helloPar
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -54,9 +55,15 @@ prompted.
 
 ** Define menu
 
-Define a menu strcuture, which maps command "hello" to a 3-tuple of
-consisinting proproment, name parameter prompts dictionanary, and
-function pointer.
+Define a menu strcuture for invoking ~hello~ function and allowing
+user to quit the appplication with menu command ~q~ (which
+~MenuCtrl.MENU_QUIT~ map to.
+
+Menu is defined as dictionary mapping menu command to a 3-tuple. The
+tuple elements are 0: prompt presented to user, 1: menu action
+parameters (for the hello example using ~helloPar~ defined above), and
+2: function to execute the menu action.
+
 
  #+name: menu
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -67,66 +74,37 @@ function pointer.
      }
  #+END_SRC
 
-#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-import ebench
-import textwrap
+** Wrap hello to an executable script
 
-# print(textwrap.dedent(ebench.MenuCtrl.mainMenu.__doc__))
-print(ebench.MenuCtrl.mainMenu.__doc__)
-#+END_SRC
-
-#+RESULTS:
-#+begin_example
-For interactive usage, prompt user for menu command and command
-        paramaters, for command line usage parse commands and
-        parameters from '_argv'. Invoke action for command.
-
-        :_argv: command line paramaters (in batch mode)
-
-        :mainMenu: dict mapping menuCommand:str -> menuSelection =
-        List[menuPrompt,parameterPrompt,menuAction], where
-        - menuPrompt: string presented to user to query for
-          'commandParameter' value
-        - parameterPrompt: dict mapping 'commandParameter' name to
-          commandParameter prompt
-        - menuAction: function to call with 'commandParameters' (as
-          ,**argv values prompted with parameterPrompt)
-
-        :defaults: is dictionary mapping 'menuCommand' to
-        'defaultParameters'.  If 'defaultParameters' for a
-        'menuCommand' is found, it is used to lookup 'defaultValue'
-        prompeted from user. Also, If 'defaultParameters' for a
-        'menuCommand' is found, 'defaultParameters' update with the
-        value user enters for the promt.
-#+end_example
-
-
-
-** define =_main=
+To create an executable script first define function ~_main~, which
+constructs ~MenuCtrl~ object and configures main prompt presented to
+user. Passing ~_arvg~ parameter to constructor allows application
+interactive and CLI usage.  Method ~setMenu~ configures menu presented
+user and application REPL cycle is executed within ~mainMenu()~
+-method.
 
  #+name: _main
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
  def _main( _argv ):
-     # global gSkooppi
+     # configure logger
      logging.set_verbosity(FLAGS.debug)
 
-     cmdController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
-     cmdController.setMenu(mainMenu)
+     # Construct 'menuController' 
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
+     
+     # and configure menu
+     menuController.setMenu(mainMenu)
 
-     cmdController.mainMenu()
-
-    
+     # start executing
+     menuController.mainMenu()
 
  #+END_SRC
 
- #+RESULTS: _main
-
-
-** define script ~main~
+Finalize application with following code, which basically calls
+~_main~ after absl context is setup correctly.
 
  #+name: main
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-
  def main():
      try:
          app.run(_main)
@@ -139,11 +117,10 @@ For interactive usage, prompt user for menu command and command
 
  #+END_SRC
 
-
 ** Hello.py
 
 
- #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello.py :noweb yes :shebang "#!/usr/bin/env python3"
+ #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello.py :noweb yes :shebang "#!/usr/bin/env python3" :export none
  <<import>>
 
  <<import-env>>
@@ -160,7 +137,9 @@ For interactive usage, prompt user for menu command and command
 
  #+END_SRC
 
-#+BEGIN_SRC bash :eval no :results output
+Complete ~hello~ example is shown below:
+
+#+BEGIN_SRC bash :eval no :results output :exports results
 cat examples/hello/hello.py
 #+END_SRC
 
@@ -216,9 +195,11 @@ if __name__ == '__main__':
 
 ** =hello= interctive usage
 
-Interactive usage demonstraded using HERE-document. 
+Interactive usage demonstrated using HERE-document. The following
+example prompts user whom to greet, and after the answer, ~moon~,
+greets the moon.
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports both
   cat <<EOF | examples/hello/hello.py
   hello
   moon
@@ -233,7 +214,8 @@ Interactive usage demonstraded using HERE-document.
 
 ** =hello= CLI usage
 
-Pass parameters on command line
+for Command line usage, menu command 'hello' is followed by key-value
+pair ~whom=World~. The result greets the world.
 
 #+BEGIN_SRC bash :eval no-export :results output :exports both
 examples/hello/hello.py hello whom=World
@@ -247,16 +229,19 @@ examples/hello/hello.py hello whom=World
 * Hello extended 
 
 Second hello version, ~hello2~ presents:
-- help to list commands and to present usage help
+- maintaining instrument state (in this example count number of greets
+  made)
+- help to list commands 
 - more detailed help on menu commands
 - menu structuring using menu separator
 - hiding menu command from menu command list
 - default value for menu command parameter
-- proviso to integrate ~hello2~ to menu system
+- proviso to integrate ~hello2~ to menu system ~ebMenu~ (to be
+  document separately)
 
 ** Hello2
 
-Import ~Instrument~ class from ~ebench~
+Add import for  ~Instrument~ class from ~ebench~:
 
  #+name: import2a
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -264,8 +249,9 @@ Import ~Instrument~ class from ~ebench~
  #+END_SRC
 
 and use it to derive ~HelloInstrument~ class. ~HelloInstrument~ counts
-number of greets made in variable ~greetCount~.  Method ~sayHello~
-prints out greeting and increments ~greetCount~.
+number of greets made in variable ~greetCount~. Its initial value can
+be set in constructor.  Method ~sayHello~ prints out greeting and
+increments number of greets made in ~greetCount~.
 
  #+name: hello2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -277,7 +263,7 @@ prints out greeting and increments ~greetCount~.
      def greetCount(self, fake=0 ):
          """Access object state variable with API twist
 
-         :fake: parameter used to demonstrate passing named parameter
+         :fake: parameter used to demonstrate passing literal parameter
          value in API call
 
          :return: current 'greetCount' + 'fake'
@@ -321,7 +307,7 @@ user.
 
 
 Dictionary ~defaults~ is used to provide default values to menu
-paramters. In this example, hello menu selection parameter ~who~ gets
+parameters. In this example, hello menu selection parameter ~who~ gets
 default value from environment variable ~$USER~.
 
 #+name: defaults
@@ -337,17 +323,17 @@ defaults = {
 
 ** List commands and help commands 
 
-Import ~usage~ and ~usageCommand~ for presenting usage insrtuctions
+Import ~usage~ and ~usageCommand~ for presenting usage instructions
 and help on menu selections.
 
  #+name: import2b
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
- from ebench import usage, usageCommand
+ from ebench import usage, usageCommand, version
  #+END_SRC
 
 
 Define application usage text. For this example we will define
-variable ~usageText~
+variable ~usageText~ with the following content
 
 #+name:usageText
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -355,6 +341,8 @@ variable ~usageText~
   usageText = """
 
   This demo presents:
+
+  - maintaining instrument state: counting number of greetings made
 
   - command 'hello' accepting two parameters, one of the parameters
     (whom) is prompted for every command call, the other paremeter (who)
@@ -377,7 +365,7 @@ variable ~usageText~
 
 ** Define application menu
 
-Hello menu2 is presented in three sections:
+Hello menu2 is presented in three sections,
 
  #+name: menu2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -396,7 +384,7 @@ Hello menu2 is presented in three sections:
                                                        , usageText=usageText )),
        MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                   lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-       "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+       "_version"               : ("Version number", None, lambda **argv: print(version())),
 
        # Third section: exiting
        "Exit:"                  : ( None, None, None),
@@ -414,11 +402,13 @@ Application ~_main~ calls ~run~ method, which instantiates
 which executes application REPL (red-eval-print) -loop
 
 *Note*: proviso for intergrating ~hello2~ to ~ebMenu~ application
-- ~run~ method will be called by ~ebMenu~ application to contruct menu
-  controller for application being integrated
+- ~run~ method constructs ~hello~ object for ~HelloInstrument~ and
+  passes it to ~menuController~ object created for ~MenuCtrl~ class
+- ~run~ -method returns ~menuController~ object it has constructed
 - ~run~ -method uses boolean parameter ~runMenu~ guarding
-  ~menuController.mainMenu()~ statement
-- closing menu ~menuController~ is done in ~_main~
+  ~menuController.mainMenu()~ which executes application REPL -loop
+- closing menu ~menuController~ is done in ~_main~ after returning
+  from ~run~ method
 
 
 #+name: _main2
@@ -435,15 +425,11 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
 
      return menuController
 
-
 def _main( _argv ):
      # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
     menuController = run( _argv )
     menuController.close()
-
-
-
 
  #+END_SRC
 
@@ -452,7 +438,7 @@ def _main( _argv ):
 
 ** hello2 application 
 
- #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello2.py :noweb yes :shebang "#!/usr/bin/env python3"
+ #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello2.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
  <<import>>
  <<import2a>>
 
@@ -485,6 +471,156 @@ def _main( _argv ):
 
  #+END_SRC
 
+Complete hello2 -example is shown below
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+#!/usr/bin/env python3
+from ebench import MenuCtrl
+from ebench import Instrument
+
+from ebench import usage, usageCommand
+
+import os
+from absl import app, flags, logging
+from absl.flags import FLAGS
+
+# --------------------------------------
+# Example instrument "HelloInstrument"
+
+class HelloInstrument(Instrument):
+
+  def __init__(self, greetCount=0):
+      self._greetCount = greetCount
+
+  def greetCount(self, fake=0 ):
+      """Access object state variable with API twist
+
+      :fake: parameter used to demonstrate passing literal parameter
+      value in API call
+
+      :return: current 'greetCount' + 'fake'
+
+      """
+
+      return self._greetCount + int(fake)
+
+  def sayHello( self, whom:str, who:str ):
+      """Hello -command just demonstrates simple menu action.
+
+      It receives to parameters 'whom' and 'who' and prints
+      greeting. Defaulta value of 'who' parameter is logged user, and
+      its value is remembered between hello commands
+
+      Returns greeted 'whom' if greeter/who is not the same as
+      greeted/whom.
+
+      Incrementing greetCount demonstrates that Intrument MAY
+      maintain internal state.
+
+      """
+      self._greetCount = self._greetCount + 1
+      print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
+
+# --------------------------------------
+# Menu interagration
+
+helloPar = {
+   "whom": "Whom to greet?",
+   "who":  "Who is the greeter? Ret accepts default value: ",
+}
+
+
+defaults = {
+"hello" : {
+             "who": os.environ['USER']
+          }
+}
+
+
+
+
+usageText = """
+
+This demo presents:
+
+- maintaining instrument state: counting number of greetings made
+
+- command 'hello' accepting two parameters, one of the parameters
+  (whom) is prompted for every command call, the other paremeter (who)
+  defaults to to login-name, and its value is rememebered from
+  previous call
+
+- menu separator
+
+- help to list command (and to show this text)
+
+- more detailed help on menu commands
+
+- hidden command: _version
+
+"""
+
+
+
+# --------------------------------------
+# Application main && ebMenu integration
+
+
+def run( _argv, runMenu:bool = True, greetCount = 0  ):
+     hello = HelloInstrument( greetCount = greetCount )
+
+     mainMenu = {
+     
+         # First section: application commands
+         "Commands:"              : ( None, None, None),
+         "hello"                  : ( "Say hello", helloPar, hello.sayHello ),
+     
+         # Second section: getting help
+         "Help:"                  : ( None, None, None),
+         MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda : usage(cmd=os.path.basename(__file__)
+                                                         , mainMenu=mainMenu
+                                                         , synopsis="Demo hello v2"
+                                                         , usageText=usageText )),
+         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+         "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+     
+         # Third section: exiting
+         "Exit:"                  : ( None, None, None),
+         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+     
+     }
+     
+
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=hello )
+     menuController.setMenu(menu=mainMenu, defaults=defaults)
+     if runMenu: menuController.mainMenu()
+
+     return menuController
+
+def _main( _argv ):
+     # global gSkooppi
+    logging.set_verbosity(FLAGS.debug)
+    menuController = run( _argv )
+    menuController.close()
+
+
+def main():
+    try:
+        app.run(_main)
+    except SystemExit:
+        pass
+
+
+if __name__ == '__main__':
+    main()
+#+end_example
 
 
 ** Running it
@@ -513,20 +649,24 @@ Commands:
 
 This demo presents:
 
-- command 'hello'  acceting two parameters, one of the parameters (whom) is
-  prompted for every command call, the other paremeter (who) defaults to 
-  to login-name, and its value is rememebered from previous call
+- maintaining instrument state: counting number of greetings made
+
+- command 'hello' accepting two parameters, one of the parameters
+  (whom) is prompted for every command call, the other paremeter (who)
+  defaults to to login-name, and its value is rememebered from
+  previous call
 
 - menu separator
 
-- help to list command
+- help to list command (and to show this text)
 
-- help on command parameters
+- more detailed help on menu commands
 
 - hidden command: _version
 
 
 #+end_example
+
 
 *** Hidden commands
 
@@ -541,7 +681,7 @@ examples/hello/hello2.py _version
 outputs version number of ebench -application
 
 #+RESULTS: hello2-version
-: 0.0.10-SNAPSHOT
+: 0.0.10-pre2
 
 
 
@@ -576,7 +716,7 @@ Notice:
 #+end_example
 
 
-*** Default value of a parater
+*** Default value of a parameter
 
 Expect to see 'Hello world from $USER', where user gets default value
 from environment variable.
@@ -588,7 +728,7 @@ examples/hello/hello2.py hello whom="world"
 
 #+RESULTS:
 : USER=jj
-: Hello 1 world from jj
+: Hello #1 to world from jj
 
 Expect to see 'Hello world from moon', where default value is
 overridden on command line.
@@ -598,7 +738,7 @@ examples/hello/hello2.py hello whom="world" who="moon"
 #+END_SRC
 
 #+RESULTS:
-: Hello 1 world from moon
+: Hello #1 to world from moon
 
 
 *** Object state is managed and parameter values are remembered
@@ -613,8 +753,8 @@ examples/hello/hello2.py hello whom="world" who="earth" hello whom="sun"
 #+END_SRC
 
 #+RESULTS:
-: Hello 1 world from earth
-: Hello 2 sun from earth
+: Hello #1 to world from earth
+: Hello #2 to sun from earth
 
 
 * Fin                                                              :noexport:

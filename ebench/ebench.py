@@ -78,6 +78,17 @@ class Instrument:
         raise NotImplementedError("screenShotImplementation not implmemented for class {}".format( self.__class__.__name__))
         
 
+    def validate(self, value, validValues, context=None):
+        """
+        Validate 'value' is in 'validValues'
+
+        :validValues: List or None
+        """
+        if validValues is not None and value not in validValues:
+            msg = "{} > expecting one of {} - got '{}'".format( context, validValues, value  )
+            logging.error( msg )
+            raise MenuValueError(msg)
+    
     def valUnit( self, valUnitStr, validValues:List[str]=None ):
         """Extract value and unit from 'valUnitStr' using VAL_UNIT_REGEXP
         
@@ -100,10 +111,11 @@ class Instrument:
         (val,unit) = ( match.group('value'), match.group('unit') )
 
         # Validate - if validation requested
-        if validValues is not None and unit not in  validValues:
-            msg = "{} > expecting one of {} - got '{}'".format( valUnitStr, validValues, unit  )
-            logging.error( msg )
-            raise MenuValueError(msg)
+        self.validate( value=unit, validValues=validValues, context=valUnitStr)
+        # if validValues is not None and unit not in  validValues:
+        #     msg = "{} > expecting one of {} - got '{}'".format( valUnitStr, validValues, unit  )
+        #     logging.error( msg )
+        #     raise MenuValueError(msg)
              
         return (val,unit)
 
@@ -204,7 +216,18 @@ class MenuCtrl:
         else:
             self.cmds = args[1:]
         
-        
+    def close(self):
+        """Close menu. Calls self.instrument.close (if instrument is
+        not None)
+        """
+        logging.info( "MenuCtrl: close called")
+        if self.instrument is not None:
+            self.instrument.close()
+        # Close also sub menus
+        for menu,menuCtrl in self.subMenuCtrls.items():
+            logging.debug( "MenuCtrl: close subMenu={}".format(menu))
+            if menuCtrl is not None: menuCtrl.close()
+        self.subMenuCtrls = {}
 
     # ------------------------------
     # Properties
@@ -764,6 +787,7 @@ class MenuCtrl:
             if menuAction is not None:
                 try:
                     # Call menu action (w. parameters)
+                    logging.debug( "call menuAction={}, with commandParameters={}".format( menuAction, commandParameters))
                     returnVal = menuAction( **commandParameters )
                     self.appendRecording( menuCommand, commandParameters )
                     if returnVal is not None: # and interactive:
@@ -839,13 +863,6 @@ class MenuCtrl:
         logging.info( "Dispach {}-method with args={}, kwargs={})".format(name, args, kwargs))
         return self.instrument.callByName( name, *args, **kwargs)
 
-    def close(self):
-        """Close menu. Calls self.instrument.close (if instrument is not None)
-
-        """
-        logging.info( "MenuCtrl: close called")
-        if self.instrument is not None:
-            self.instrument.close()
 
 # ------------------------------------------------------------------
 # Devices
@@ -1158,7 +1175,6 @@ def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):
 
     # Help actions not recorded
     raise MenuNoRecording()
-
 
 def usageCommand( command, mainMenu ):
     """

@@ -3,58 +3,65 @@
 
 * Requirements
 
-- [X] Scriptaus helppoa
-  - [X] Sovelluksen käyttö interatiivisesti
-  - [X] Interatiivinen sessio voidaan tallentaa scriptiin
-    - [X] Start recording toiminto
-    - [X] Stop recording (=save) toiminto
-  - [X] Scriptiin talletettu sessio voidaan ajaa  (CLI)  komentorivikomentona
-- [X] Interatiiviinen käyttö työkalujen kehotteiden ohjaamaa
-  - [X] Hallintatyökalun valikko
-  - [X] Valikkotoiminnon parametrien oletusarvo
-  - [X] Valikkotoiminnon parametrien kehote ja syötteen lukeminen
-  - [X] Valikkotoiminnon syötteen tallennus seuraavaa kutsukertaa varten
-  - [X] Valikkotoiminnon suoritus ja vastauksen esittäminen käyttäjälle
-- [X] Interatiiviista käyttöä helpotetaan työkalun tarjoamien ohjeiden avulla
-  - [X] Valikkokehote
-    - [X] Valikon konfigurointi: komento -> (kehote, valikkotoiminnon parametri, toiminnon käynnistys)
-    - [X] Valikon konfigurointi: ryhmäerotin
-  - [X] Valikkkotoimintojen listaus (?-komento)
-  - [X] Valikkotoiminnon ohje (??-komento)
-    - [X] Valikkokehote
-    - [X] Valikkotoiminnon synopsis = Python doc-string:stä
-    - [X] Valikkotoiminnon parametrit automaattisesti konfiguraation perusteella
-- [X] Eri instrumenttien hallintatyökalujen integrointi yhteen
-  - [X] Perusyksikkönä yhden instrumentin hallinta yhdellä työkalulla
-    - [X] Python moduli
-    - [X] run( argv, runMenu:bool=True, **kwargs ) (**kwargs =alustus)
-    - [X] MenuCtrl ja Instrument -luokat (ks. arkkitehtuuri)
-  - [X] Eri instrumenttien hallintatöykalujen valikkojen yhdistäminen yhden valikon alle
-    - [X] YAML määritys: Python moduli ja **kwargs  parametrit
-  - [X] Eri instrumenttien API rajapintojen yhdistäminen yhdeksi valikkokomennoksi
-    - [X] JSON tietueen avain-arvoparit
-    - [X] JSON tietueen arvo `instrument.metodi(parametrit)`
-- [X] Instrumenttien hallintatyökalujen toteutukseen infrastruktuuripalveluja
-  - [X] Valikkorakenne
-  - [X] Valikkkotoimintojen listaus
-  - [X] Valikkotoiminnon ohje
-  - [X] Start and stop recording toiminto
-    - [X] suoritettujen komentojen lisääminen komentorivitiedostoon
-    - [X] hierarkisen menurakenteen huomioiminen suoritettujen komentojen tallennuksessa
-  - [X] CSV-tiedostoon kirjoitus
-    - [X] JSON tietueesta otsikko ja arvot
-  - [X] Konfiguroitava API -rajapinta (dataframe row)
-    - [X] YAML API -määritys: `valikkotoiminto.API-metodi.(parametrit)`
-    - [X] YAML CSV tiedoston nimi
-  - [X] Tiedon kysyminen käyttäjältä
-    - [X] Input kanava USER
+- [X] Simple scripting
+  - [X] Use the tool interactively
+  - [X] Save interactive session to script file
+    - [X] Start recording function
+    - [X] Stop recording (=save) function
+  - [X] Possible to execute saved script from CLI
+- [X] Interactive use guided by prompts REPL cycle
+  - [X] Menu commands 
+  - [X] Default value for menu command parameters
+  - [X] Prompt for menu  command parameters and input
+  - [X] Update default value for menu command parameter
+  - [X] Execute menu command and present result to user
+- [X] Help for interactive usage 
+  - [X] Menu commant prompts
+    - [X] Menu configuration: dict mapping  menu command: -> (prompt, menu command parameters, menu action)
+    - [X] Menu configuration: group separator 
+  - [X] List of menu commands (?-menu selection)
+  - [X] Document menu command  (??-menu selection)
+    - [X] Topic: menu command prompt
+    - [X] Menu command synopsis take from Python doc-string
+    - [X] Menu command parameters 
+- [X] Merge individual instrument management scripts together
+  - [X] Define  instrument management scripts as a submenu (YAML configuration)
+    - [X] Define menu command for instrument management script
+    - [X] Define menu command prompt for instrument management script
+    - [X] Define Python module providing entry point for instrument management script
+    - [X] Call /run( argv, runMenu:bool=True, **kwargs )/ to construct instrument management script instance
+    - [X] Expect instrument management to implment /MenuCtrl/ ja /Instrument/ -classes (ref architecture)
+  - [X] Merge individual instrument management API interfaces together
+    - [X] Define menu action for API calls (YAML configuration)
+      - [X] Define menu command for API call
+      - [X] Define menu command prompt for API call
+      - [X] Define API calls
+        - [X] Name instrument menu command
+        - [X] Name api method to invoke
+        - [X] Define API literal parameters
+      - [X] Optional CSV file to append API call result into
+- [X] infrastructure services for Instrument management scripts
+  - [X] Menu structure
+  - [X] List of menu commands in menu structure  (help-?)
+  - [X] Document menu command (help-??)
+  - [X] Start and stop recording 
+    - [X] Append menu commands into script file
+    - [X] Merge menu commands of separate Instrument management scripts together
+  - [X] CSV-file write
+    - [X] JSON record defines header and values
+  - [X] Configurable composition (--config YAML-file)
+    - [X] Instrument management scripts as a sub menu
+    - [X] Merge instrument management script API together into JSON record
+  - [X] Ask user to provide data
+    - [X] Input channel USER
   - [X] Screenshot 
-    - [X] Screenshot lxi toteutus/instrumentti kohtainen toteutus
-    - [X] Screenshot hakemisto ja tiedostonimi
-- [X] Arkkitehtuuri
+    - [X] Screenshot implementation using  lxi interface
+    - [X] Extension point for implementing instrument specific screen shot
+    - [X] Common interface for defining screenshot directory/generating file name
+- [X] Arkkitecture
   - [X] Instrument (infra) <|-- xxInstrument (API-action) <|-- ebXXX (setup)
   - [X] MenuCtrl *-- Instrument
-- [-] Ohjeistus (ja BDD-testaus)
+- [-] Examples (ja BDD-testaus)
   - [X] HELLO.org
   - [ ] EBMENU.org
   - [ ] EBRIGOL.org

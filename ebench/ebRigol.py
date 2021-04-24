@@ -61,7 +61,7 @@ class MSO1104(RigolScope):
         self.rigolClear()
         self.delay()
 
-    def setup(self, channel, probe="10x", scale=None, offset=None, stats=None):
+    def setup(self, channel, probe="10x", scale=None, offset=None, stats=None, bwlimit="OFF"):
         """Setup osciloscope 'channel' probe attenuation, scale and offset, and
         statistic measurement collection.
 
@@ -76,6 +76,9 @@ class MSO1104(RigolScope):
         collecting in scope bottom row. Empty list does not change
         measurement statistic collection
 
+        :bwlimit: Set the bandwidth limit parameter of the specified
+            'channel'. Valid values OFF,20M (default OFF)
+
         Valid measument identifiers: MAX, VMIN, VPP, VTOP, VBASe,
         VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea, PREShoot, PERiod,
         FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy, NDUTy, TVMAX,
@@ -83,7 +86,7 @@ class MSO1104(RigolScope):
         PVRMS, PPULses, NPULses, PEDGes, and NEDGes
 
         """
-        logging.info( "Setup channel: {}, stats='{}'".format(channel, stats))
+        logging.info( "Setup channel: {}, stats='{}', bwlimit='{}'".format(channel, stats, bwlimit))
         self.rigolChannelOnOff( ch=channel, onOff = True )
         if probe is None or not probe:
             probe = "10x"
@@ -96,6 +99,9 @@ class MSO1104(RigolScope):
             (val,siUnit) = self.valUnit(offset)
             self.rigolChannelOffset(channel,val)
             self.rigolChannelDisplayUnit(channel,siUnit)
+        if bwlimit is None or not bwlimit: bwlimit = "OFF"
+        if bwlimit is not None and not not bwlimit:
+            self.rigolChannelBwLimit(ch=channel, type=bwlimit)
         if stats is not None and not not stats:
             items = stats.split(",")
             for item in items:
@@ -140,7 +146,8 @@ class MSO1104(RigolScope):
                 return self.askUser(item=item)
             else:
                 # Reading measurement AVERAGE from Rigol
-                statistic = "AVER"
+                # statistic = "AVER"
+                statistic = None
                 return self.rigolMeasurement( ch, item=item.upper(), statistic=statistic )
 
             
@@ -331,8 +338,9 @@ channelPar = {
 }
 setupPar = channelPar | {
     "probe"    : "Probe value (default 10x) [x]",
-    "offset"   : "Channel offset, value + unit[V,A,W]",
+    "bwlimit"  : "Bandwidth limit of channel (OFF|20M, default OFF)",    
     "scale"    : "Channel scale, value + unit[V,A,W]",
+    "offset"   : "Channel offset, value + unit[V,A,W]",
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 

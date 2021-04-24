@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import ebench
 from ebench import MenuCtrl
 from ebench import Instrument
 
-from ebench import usage, usageCommand
+from ebench import usage, usageCommand, version
 
 import os
 from absl import app, flags, logging
@@ -20,7 +19,7 @@ class HelloInstrument(Instrument):
   def greetCount(self, fake=0 ):
       """Access object state variable with API twist
 
-      :fake: parameter used to demonstrate passing named parameter
+      :fake: parameter used to demonstrate passing literal parameter
       value in API call
 
       :return: current 'greetCount' + 'fake'
@@ -68,6 +67,8 @@ usageText = """
 
 This demo presents:
 
+- maintaining instrument state: counting number of greetings made
+
 - command 'hello' accepting two parameters, one of the parameters
   (whom) is prompted for every command call, the other paremeter (who)
   defaults to to login-name, and its value is rememebered from
@@ -107,7 +108,7 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
                                                          , usageText=usageText )),
          MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                     lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-         "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
+         "_version"               : ("Version number", None, lambda **argv: print(version())),
      
          # Third section: exiting
          "Exit:"                  : ( None, None, None),
@@ -122,16 +123,11 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
 
      return menuController
 
-
 def _main( _argv ):
      # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
     menuController = run( _argv )
     menuController.close()
-
-
-
-
 
 
 def main():

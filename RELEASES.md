@@ -4,6 +4,9 @@
 - Features implementing
   - --config option loads API-menu
   
+- Features fixed
+  - --ebRigol: mesaurenmet Statiscits not used
+  
 - Features added:
   - --config option  && yaml load
   - eMenu measure (call by name)

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import ebench
 from ebench import MenuCtrl
 
 import os
@@ -20,16 +19,17 @@ mainMenu = {
 }
 
 def _main( _argv ):
-    # global gSkooppi
+    # configure logger
     logging.set_verbosity(FLAGS.debug)
 
-    cmdController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
-    cmdController.setMenu(mainMenu)
+    # Construct 'menuController' 
+    menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
 
-    cmdController.mainMenu()
+    # and configure menu
+    menuController.setMenu(mainMenu)
 
-
-
+    # start executing
+    menuController.mainMenu()
 
 
 def main():

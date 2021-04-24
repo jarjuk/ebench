@@ -1,3 +1,12 @@
+2021-04-20  jj  <jj@santtu>
+
+	* ebench/hello.py (run): cmdController -> menuController
+
+2021-04-19  jj  <jj@santtu>
+
+	* ebench/ebRigol.py (MSO1104.measurement.dispatchMeasurement):
+	statistic = "AVER" --> statistic = None
+
 2021-04-13  jj  <jj@santtu>
 
 	* ebench/ebench.py (MenuCtrl): Depreacted
