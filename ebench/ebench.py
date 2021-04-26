@@ -36,6 +36,12 @@ def printExampleYaml():
     with open(os.path.join( os.path.dirname(__file__), "ebMenu.yaml"), "r") as f:
         print( f.read())
 
+def list_resources():
+    """List resources pyvisa finds"""
+    logging.info( "List resources called")
+    return PyInstrument.singleton_rm().list_resources()
+
+        
 class Instrument:
 
     def __init__( self, debug = False ):
@@ -62,7 +68,6 @@ class Instrument:
         logging.debug( "callByName: _name={}, *args={}, **kwargs={}.".format(_name, args, kwargs))
         return getattr( self, _name )( *args,  **kwargs )
         
-
     def askUser( self, item, validValues:List[str]= None ):
         """Prompt user a value (e.g for a measurement). If 'validValues' is
         given accept one the given values
@@ -175,18 +180,23 @@ class MenuCtrl:
     MENU_QUIT="q"             # quits loop
     MENU_REC_SAVE="."         # save recording
     MENU_REC_START="!"        # start/rerset recording
-    MENU_VERSION="_version"   # output version number (hidden command)
-    MENU_YAML="_yaml"         # output exxample _yaml
     MENU_SCREEN="screen"      # output screenshot
     MENU_HELP="?"             # list commands
     MENU_CMD_PARAM="??"       # DEPRACTED --> MENU_HELP_CMD
     MENU_HELP_CMD="??"        # help on command
+    # Hidden commands
+    MENU_VERSION="_version"   # output version number (hidden command)
+    MENU_YAML="_yaml"         # output exxample _yaml
+    MENU_LIST_RES="_list_resources" 
+
+    
 
     # Menu tuples
     MENU_QUIT_TUPLE        = ( "Exit", None, None)
     MENU_VERSION_TUPLE     = ( "Output version number", None, version )
     MENU_YAML_TUPLE        = ( "Exaxample yaml", None, printExampleYaml)
     MENU_SEPATOR_TUPLE     = ( None, None, None)
+    MENU_LIST_RES_TUPLE    = ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources )
 
 
     # Parameters
@@ -1155,11 +1165,6 @@ def menuStopRecording( cmdController:MenuCtrl, pgm, recordingDir ):
         """
         return cmdController.stopRecording(pgm=pgm, recordingDir=recordingDir, **argv )
     return f
-
-def list_resources():
-    """List resources pyvisa finds"""
-    logging.info( "List resources called")
-    return PyInstrument.singleton_rm().list_resources()
 
 def usageListCommands( mainMenu:dict[str,List] ):
     """Prints 'mainMenu' ()

@@ -1,97 +1,321 @@
-* enbench - Tool to control e-instruments $Release:0.0.10-SNAPSHOT$
+* ebench - An extensible toolset to control e-instruments $Release:0.0.10-SNAPSHOT$
+:PROPERTIES:
+:TOC:      :include all
+:END:
+
+:CONTENTS:
+- [[#ebench---an-extensible-toolset-to-control-e-instruments-release0010-snapshot][ebench - An extensible toolset to control e-instruments $Release:0.0.10-SNAPSHOT$]]
+  - [[#problem-statement][Problem Statement]]
+  - [[#study-of-viability-ebench--tools][Study of viability ebench -Tools]]
+    - [[#ebmenu][ebMenu]]
+    - [[#ebunit][ebUnit]]
+    - [[#ebrigol][ebRigol]]
+  - [[#architecture][Architecture]]
+  - [[#documentation-references][Documentation references]]
+  - [[#installation][Installation]]
+    - [[#clone-repo-httpsgithubcomjarjukebench][Clone repo https://github.com/jarjuk/ebench]]
+    - [[#show-version][Show version]]
+    - [[#show-releases-notes][Show releases notes]]
+    - [[#install][Install]]
+    - [[#check-installation][Check installation]]
+    - [[#check-list-resources][Check list resources]]
+    - [[#use-it][Use it]]
+  - [[#usage][Usage]]
+    - [[#interactive-usage][Interactive usage]]
+    - [[#command-line-usage][Command line usage]]
+    - [[#api-usage][API usage]]
+:END:
+
+** Problem Statement
+
+- As a hobby electronics need to control diverse electronic instruments
+  - to set up instruments in various configurations
+  - to collect data in projects for further processing and
+    documentation
+
+- with gently sloping adoption curve
+  - including one instrument at the time, when need arises
+  - without the need of upfront investments in infrastructure 
+
+- with the objective to be able to integrate  tools created by 
+  - fellow hobbyists
+  - future me
+
+- into an all-encompassing electronic instrumentation system with characteristics of
+  - ease of use 
+  - low maintenance
+  - high flexibility
+  - and high service value
+
+** Study of viability ~ebench~ -Tools
+
+   The problem statement in the previous chapter is obviously quite
+   bold. However, one can argue:
+   - vision should be clear before starting any endeavour
+   - a study of viability should be considered before investing too
+     much
+   - each investment step shoud be justified by itself
+
+   Meet ~ebench~, at this time, comprising following three tools:
+
+   - ~ebMenu~ : Menu of ebench toolset
+   - ~ebUnit~ : Tool to control UNIT-T UTG962/932 Waveform generator
+   - ~ebRigol~ : Tool to control Rigol MSO1104Z osciloscope
 
 
-* Requirements
+*** ~ebMenu~
 
-- [X] Simple scripting
-  - [X] Use the tool interactively
-  - [X] Save interactive session to script file
-    - [X] Start recording function
-    - [X] Stop recording (=save) function
-  - [X] Possible to execute saved script from CLI
-- [X] Interactive use guided by prompts REPL cycle
-  - [X] Menu commands 
-  - [X] Default value for menu command parameters
-  - [X] Prompt for menu  command parameters and input
-  - [X] Update default value for menu command parameter
-  - [X] Execute menu command and present result to user
-- [X] Help for interactive usage 
-  - [X] Menu commant prompts
-    - [X] Menu configuration: dict mapping  menu command: -> (prompt, menu command parameters, menu action)
-    - [X] Menu configuration: group separator 
-  - [X] List of menu commands (?-menu selection)
-  - [X] Document menu command  (??-menu selection)
-    - [X] Topic: menu command prompt
-    - [X] Menu command synopsis take from Python doc-string
-    - [X] Menu command parameters 
-- [X] Merge individual instrument management scripts together
-  - [X] Define  instrument management scripts as a submenu (YAML configuration)
-    - [X] Define menu command for instrument management script
-    - [X] Define menu command prompt for instrument management script
-    - [X] Define Python module providing entry point for instrument management script
-    - [X] Call /run( argv, runMenu:bool=True, **kwargs )/ to construct instrument management script instance
-    - [X] Expect instrument management to implment /MenuCtrl/ ja /Instrument/ -classes (ref architecture)
-  - [X] Merge individual instrument management API interfaces together
-    - [X] Define menu action for API calls (YAML configuration)
-      - [X] Define menu command for API call
-      - [X] Define menu command prompt for API call
-      - [X] Define API calls
-        - [X] Name instrument menu command
-        - [X] Name api method to invoke
-        - [X] Define API literal parameters
-      - [X] Optional CSV file to append API call result into
-- [X] infrastructure services for Instrument management scripts
-  - [X] Menu structure
-  - [X] List of menu commands in menu structure  (help-?)
-  - [X] Document menu command (help-??)
-  - [X] Start and stop recording 
-    - [X] Append menu commands into script file
-    - [X] Merge menu commands of separate Instrument management scripts together
-  - [X] CSV-file write
-    - [X] JSON record defines header and values
-  - [X] Configurable composition (--config YAML-file)
-    - [X] Instrument management scripts as a sub menu
-    - [X] Merge instrument management script API together into JSON record
-  - [X] Ask user to provide data
-    - [X] Input channel USER
-  - [X] Screenshot 
-    - [X] Screenshot implementation using  lxi interface
-    - [X] Extension point for implementing instrument specific screen shot
-    - [X] Common interface for defining screenshot directory/generating file name
-- [X] Arkkitecture
-  - [X] Instrument (infra) <|-- xxInstrument (API-action) <|-- ebXXX (setup)
-  - [X] MenuCtrl *-- Instrument
-- [-] Examples (ja BDD-testaus)
-  - [X] HELLO.org
-  - [ ] EBMENU.org
-  - [ ] EBRIGOL.org
-  - [ ] EBUNIT.org
-  - [ ] idea (käyttöliittymä, ei integraatiota) https://github.com/jarjuk/UTG900
+#+name: ebMenu
+#+BEGIN_SRC cpp :exports none
+./ebMenu
+#+END_SRC
 
-- [X] Current status
-  - [X] ebRigol
-  - [X] ebUTG962 (Unit-T UTG962 signaaligeneraattori)
-  - [X] ebMenu integroityökalu (YAML-konfiguraatio)
-  - [X] STM32 RS323 menu-komentointeraatio
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+<<ebMenu>> ?
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+ebMenu: Menu to Integrate ebench -tools
+
+Usage: ebMenu [options] [commands and parameters] 
+
+Commands:
+
+        skooppi  : Rigol osciloscope control
+           sgen  : UNIT-T UTG962 signal generator control
+       counters  : Read hello.py counters
+   counters2csv  : Save hello.py counters to example.csv
+              q  : Exit
+----------   Other    ----------
+              ?  : List commands
+             ??  : List command parameters
+              !  : Start recording
+              .  : Stop recording
+#+end_example
 
 
+*** ~ebUnit~
 
-* References
+#+name: ebUnit
+#+BEGIN_SRC cpp :exports none
+./ebUnit
+#+END_SRC
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+<<ebUnit>> ?
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+ebUnit - 0.0.10-pre2
+ebUnit: Tool to control UNIT-T UTG962/932 Waveform generator
+
+Usage: ebUnit [options] [commands and parameters] 
+
+Commands:
+
+           sine  : Generate sine -wave on channel 1|2
+         square  : Generate square -wave on channel 1|2
+          pulse  : Generate pulse -wave on channel 1|2
+           ramp  : Generate ramp -wave on channel 1|2
+            arb  : Upload wave file and use it to generate wave on channel 1|2
+             on  : Switch on channel 1|2
+            off  : Switch off channel 1|2
+          reset  : Send reset to UTG900 signal generator
+----------   Record   ----------
+              !  : Start recording
+              .  : Stop recording
+         screen  : Take screenshot
+ list_resources  : List pyvisa resources (=pyvisa list_resources() wrapper)'
+----------    Help    ----------
+              q  : Exit
+              ?  : List commands
+             ??  : List command parameters
+
+More help:
+  ebUnit --help                          : to list options
+  ebUnit ? command=<command>             : to get help on command <command> parameters
+
+Examples:
+  ebUnit ? command=sine                  : help on sine command parameters
+  ebUnit list_resources                  : Identify --addr option parameter
+  ebUnit --addr 'USB0::1::2::3::0::INSTR': Run interactively on device found in --addr 'USB0::1::2::3::0::INSTR'
+  ebUnit --captureDir=pics screen        : Take screenshot to pics directory (form device in default --addr)
+  ebUnit reset                           : Send reset to UTH900 waveform generator
+  ebUnit sine channel=2 freq=2kHz        : Generate 2 kHz sine signal on channel 2
+  ebUnit sine channel=1 square channel=2 : chaining sine generation on channel 1, and square generation on channel 2
+
+Hint:
+  Run reset to synchronize ebUnit -tool with device state. Ref= ?? command=reset
+  One-liner in linux: ebUnit --addr $(ebUnit list_resources)
 
 
-Ref: https://github.com/vuthalab/RigolInstruments/blob/master/RigolInstruments.py
-Ref: [[file:~/work/data-sheets/skoopit/Rigol-mso1000z_series-programming-guide.pdf]]
-Ref: [[file:~/work/data-sheets/skoopit]]
+#+end_example
+
+
+*** ~ebRigol~
+
+
+#+name: ebRigol
+#+BEGIN_SRC cpp :exports none
+./ebRigol
+#+END_SRC
+
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+<<ebRigol>> ?
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+ebRigol - 0.0.10-pre2
+ebRigol: Tool to control Rigol MSO1104Z osciloscope
+
+Usage: ebRigol [options] [commands and parameters] 
+
+Commands:
+
+----------    Init    ----------
+        general  : General setup
+          setup  : Setup channel
+   setupTrigger  : Setup trigger
+       timebase  : Setup timebase
+       podSetup  : Setup digical channels
+         podOff  : Setup digical channels
+             on  : Open channel
+            off  : Close channel
+           stat  : Set statistics
+      statClear  : Clear statistics
+          reset  : Send reset to Rigol
+          clear  : Send clear to Rigol
+----------  Measure   ----------
+        measure  : Measure
+----------   Record   ----------
+              !  : Start recording
+              .  : Stop recording
+         screen  : Take screenshot
+----------    Help    ----------
+              q  : Exit
+              ?  : List commands
+             ??  : List command parameters
+#+end_example
+
+
+
+** TODO Architecture 
+
+** Documentation references
+
+- Hello World example:  [[file:HELLO.org]]
+- Hello World example integrated with ~ebMenu~: [[file:EBMENU.org]]
+- BDD testig document for ~ebUnit~ -tool: [[file:ebUnit.org]]
+- ~ebench~ -toolset features: [[file:FEATURES.org]]
+
+** TODO Installation
+   :PROPERTIES:
+   :header-args:bash: :dir  tmp
+   :END:
+
+*** Clone repo ~https://github.com/jarjuk/ebench~
+
+ #+BEGIN_SRC bash :eval no-export :results output
+ git clone https://github.com/jarjuk/ebench
+ #+END_SRC
+
+
+*** Show version
+
+ #+BEGIN_SRC bash :eval no-export :results output
+ cat ebench/VERSION
+ #+END_SRC
+
+ #+RESULTS:
+
+
+*** Show releases notes
+
+ #+BEGIN_SRC bash :eval no :results output
+ cat ebench/RELEASES.md
+ #+END_SRC
+
+
+*** Install
+    :PROPERTIES:
+    :header-args:bash: :dir  tmp/ebench
+    :END:
+
+ In ~ebench~ directory 
+
+ #+BEGIN_SRC 
+ cd ebench
+ #+END_SRC
+
+ create distribution package into ~dist~ -directory
+
+  #+BEGIN_SRC bash :eval no-export :results output :exports code
+  python3 setup.py  sdist  bdist_wheel
+  #+END_SRC
+
+
+ and install the latest version 
+
+  #+BEGIN_SRC bash :eval no-export :results output
+  VERSION_FILE=$(ls -1tr dist/*.tar.gz | tail -1| cut -f2)
+  echo VERSION_FILE=$VERSION_FILE
+  python3 -m pip install --user $VERSION_FILE  && echo installed $VERSION_FILE
+  #+END_SRC
+
+
+*** Check installation
+
+ Run 
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ <<ebMenu>> _version
+ #+END_SRC
+
+ #+RESULTS:
+ : 0.0.10-pre2
+
+
+*** Check list resources 
+
+ Use command ~_list_resources~ to list VISA resource found by pyvisa tool 
+
+ #+name: list_resources
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+  <<ebMenu>> _list_resources
+ #+END_SRC
+
+ In development environment it returns:
+
+ #+RESULTS: list_resources
+ : ('USB0::26198::2100::1485061822::0::INSTR',)
+
+
+*** Use it
 
 
 
 
-* Ref
 
-Ref: https://github.com/vuthalab/RigolInstruments/blob/master/RigolInstruments.py
-Ref: [[file:~/work/data-sheets/skoopit/Rigol-mso1000z_series-programming-guide.pdf]]
 
-   [[file:~/work/data-sheets/skoopit]]
+** TODO Usage
+
+*** Interactive usage
+
+*** Command line usage
+
+*** API usage
+
+
+* Fin                                                              :noexport:
+
+
+   # Local Variables:
+   # org-confirm-babel-evaluate: nil
+   # End:
 
 
 

@@ -2,7 +2,7 @@
 from .ebench import MenuCtrl
 
 # Menuactions
-from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording
+from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording, list_resources
 
 
 import yaml
@@ -21,6 +21,7 @@ flags.DEFINE_string('syspath', None, "Append to syspath")
 
 
 CMD="ebMenu"
+SYNOPSIS="Menu of ebench toolset"
 
 # ------------------------------------------------------------------
 # Menu actions
@@ -77,7 +78,7 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
         "Other"                  : ( None, None, None ),
         MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis="Menu controller")),
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS)),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
@@ -86,7 +87,7 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
         # Hidden 
         MenuCtrl.MENU_YAML       : MenuCtrl.MENU_YAML_TUPLE,
         MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
-        
+        MenuCtrl.MENU_LIST_RES   : MenuCtrl.MENU_LIST_RES_TUPLE,
     }
 
     menuController.setMenu( menu = mainMenu, defaults = defaults)

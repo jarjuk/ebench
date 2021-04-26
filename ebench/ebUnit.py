@@ -14,6 +14,7 @@ from absl import app, flags, logging
 from absl.flags import FLAGS
 
 ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
+SYNOPSIS="Tool to control UNIT-T UTG962/932 Waveform generator"
 flags.DEFINE_string('addr', ADDR, "pyvisa instrument address")
 
 
@@ -372,7 +373,7 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordin
         "Help"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
         MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, usageText=usageText )),
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=usageText )),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                   lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 

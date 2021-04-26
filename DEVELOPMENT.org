@@ -8,8 +8,11 @@
 #+RESULTS:
 : Switched to conda environment: pdata
 
+* References
 
-
+Ref: https://github.com/vuthalab/RigolInstruments/blob/master/RigolInstruments.py
+Ref: [[file:~/work/data-sheets/skoopit/Rigol-mso1000z_series-programming-guide.pdf]]
+Ref: [[file:~/work/data-sheets/skoopit]]
 
 * Delivery                                                 
 

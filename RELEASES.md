@@ -6,6 +6,7 @@
   - --ebRigol: mesaurenmet Statiscits not used
   
 - Features added:
+  - README.org: problem statement
   - Document files HELLO.org, ebUnit.org, EBMENU.org
   - ebMenu --config type: `subMenu`, type: `apiCalls`
   - Depreacted `MENU_CMD_PARAM` -> `MENU_HELP_CMD`, 
@@ -15,7 +16,9 @@
 
 - Known issues/missing features
   - `ebUnit`: external waveform documentation missing
-
+  - architecture diagram
+  - installation instructions
+  - users guide of the tools
 
 ## 0.0.8/20210404-22:49:09
 

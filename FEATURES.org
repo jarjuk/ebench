@@ -1,0 +1,81 @@
+* ~ebench~ -Toolset Features
+
+- [X] Simple scripting
+  - [X] Use the tool interactively
+  - [X] Save interactive session to script file
+    - [X] Start recording function
+    - [X] Stop recording (=save) function
+  - [X] Possible to execute saved script from CLI
+- [X] Interactive usage guided by REPL cycle prompt
+  - [X] Present Menu of possible commands  to user
+  - [X] Default value for menu command parameters
+  - [X] Prompt for menu  command parameters and input
+  - [X] Update default value for menu command parameter
+  - [X] Execute menu command with parameters
+- [X] Help for interactive usage 
+  - [X] Configure Menu
+    - [X] Menu configuration: dict mapping  menu command: -> (prompt, menu command parameters, menu action)
+    - [X] Menu configuration: group separator 
+  - [X] List of menu commands (?-menu selection)
+  - [X] Document menu command  (??-menu selection)
+    - [X] Topic: menu command prompt
+    - [X] Menu command synopsis take from Python doc-string
+    - [X] Menu command parameters 
+- [X] Configure otherwise separate instrument management tools to work together
+  - [X] Define  instrument management scripts as a submenu (YAML configuration)
+    - [X] Define menu command for instrument management script
+    - [X] Define menu command prompt for instrument management script
+    - [X] Define Python module providing entry point for instrument management script
+    - [X] Call /run( argv, runMenu:bool=True, **kwargs )/ to construct instrument management script instance
+    - [X] Expect instrument management to implment /MenuCtrl/ ja /Instrument/ -classes (ref architecture)
+  - [X] Merge individual instrument management API interfaces together
+    - [X] Define menu action for API calls (YAML configuration)
+      - [X] Define menu command for API call
+      - [X] Define menu command prompt for API call
+      - [X] Define API calls
+        - [X] Name instrument menu command
+        - [X] Name api method to invoke
+        - [X] Define API literal parameters
+      - [X] Prompt for CSV file where to append API call results into
+- [X] ebench -toolset infrastructure services
+  - [X] Menu structure
+  - [X] List of menu commands in menu structure  (help-?)
+  - [X] Document menu command (help-??)
+  - [X] Start and stop recording 
+    - [X] Append menu commands into script file
+    - [X] Merge menu commands of separate Instrument management scripts together
+  - [X] CSV-file write
+    - [X] JSON record defines header and values
+  - [X] Configurable composition (--config YAML-file)
+    - [X] Instrument management scripts as a sub menu
+    - [X] Merge instrument management script API together into JSON record
+  - [X] Ask user to provide data
+    - [X] Input channel USER
+  - [X] Screenshot 
+    - [X] Screenshot implementation using  lxi interface
+    - [X] Extension point for implementing instrument specific screen shot
+    - [X] Common interface for defining screenshot directory/generating file name
+- [X] Architecture
+  - [X] Instrument (infra) <|-- xxInstrument (API-action) <|-- ebXXX (setup)
+  - [X] MenuCtrl *-- Instrument
+  - [X] Documenation style
+    - [X]  (help-?)
+      - [X] cmd
+      - [X] synopsis
+      - [X] usageText
+    - [X] help-??
+      - [X] Menu action docstring
+  - [X] screenShotImplementation()
+- [-] Examples (ja BDD-testaus)
+  - [X] HELLO.org
+  - [X] EBMENU.org
+  - [ ] EBRIGOL.org
+  - [X] EBUNIT.org
+
+- [X] Current status
+  - [X] ebRigol (Rigol MSO1104z)
+  - [X] ebUTG962 (Unit-T UTG962 signal generator controller)
+  - [X] ebMenu integroityökalu (YAML-konfiguraatio)
+  - [X] STM32 RS323 menu integration
+
+
