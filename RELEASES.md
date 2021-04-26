@@ -1,27 +1,20 @@
 ## 0.0.10-SNAPSHOT/20210415-14:55:49
 ## 0.0.9/20210415-14:55:29
 
-- Features implementing
-  - --config option loads API-menu
-  
+
 - Features fixed
   - --ebRigol: mesaurenmet Statiscits not used
   
 - Features added:
-  - --config option  && yaml load
-  - eMenu measure (call by name)
+  - Document files HELLO.org, ebUnit.org, EBMENU.org
+  - ebMenu --config type: `subMenu`, type: `apiCalls`
   - Depreacted `MENU_CMD_PARAM` -> `MENU_HELP_CMD`, 
   - added `MENU_HELP_CMD_PARAM`, `MENU_REC_SAVE_PARAM`
-  - ebRigol stat: added
-  - ebRigol measure ch USER added
-  - ebRigol timebase
-  - measurement: add automagically measurement timestamp
+  - ebRigol 
+    - stat: added, ch USER added, timebase
 
 - Known issues/missing features
-  - ebRigol: setup triggering not implemented
-  - README.org: API -usage documentation should be enhanced
-  - `UTG900.py arb` external waveform, implementation not working
-  - `UTG900.py arb` external waveform file, format documentation missing
+  - `ebUnit`: external waveform documentation missing
 
 
 ## 0.0.8/20210404-22:49:09

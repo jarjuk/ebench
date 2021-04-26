@@ -1,0 +1,441 @@
+* ebUnit - Tool to control UNIT-T UTG900 Waveform generator
+:PROPERTIES:
+:TOC:      :include all :depth 3 :force (nothing)
+:END:
+
+:CONTENTS:
+- [[#ebunit---tool-to-control-unit-t-utg900-waveform-generator][ebUnit - Tool to control UNIT-T UTG900 Waveform generator]]
+  - [[#use--ebmenu-as-test-context][Use  ebMenu as Test Context]]
+  - [[#application-version-tested][Application Version Tested]]
+  - [[#signal-genrator-output-after-reset--command][Signal Genrator Output After reset -command]]
+  - [[#signal-generation-on-one-channel][Signal Generation on One Channel]]
+    - [[#setup-rigol-osciloscpope-for-2-channels][Setup Rigol Osciloscpope for 2 channels]]
+    - [[#sine1500hzch1][Sine(1500Hz)@ch1]]
+    - [[#square16khzch2][Square(1.6kHz)@ch2]]
+    - [[#arb-sincch1][ARB-Sinc@ch1]]
+    - [[#arb-externaldatasimplewavebsvch1][ARB-External(data/simplewave.bsv)@ch1]]
+  - [[#signal-generation-on-two-channels][Signal Generation on Two Channels]]
+    - [[#ramp1234hzsymmetry808ch1--pulse800hzamp015vppduty35ch2][Ramp(1234Hz,symmetry=808%)@ch1,  Pulse(800Hz,amp=0.15Vpp,duty=35%)@ch2]]
+    - [[#arb-sincch1--arb-tri_upch2][ARB-Sinc@ch1,  ARB-Tri_up:@ch2]]
+    - [[#arb-attaltch1-arb-extenalch2][ARB-AttAlt@Ch1, ARB-Extenal@Ch2]]
+    - [[#arb-extenalch1-rampch2ramp][ARB-Extenal@Ch1, Ramp@Ch2=ramp]]
+  - [[#emacs-variables][Emacs variables]]
+:END:
+
+** Use  ~ebMenu~ as Test Context
+
+Signal generator controller ~ebUnit~ is tested embeded within
+~ebench.ebMenu~ tool. Startup command is
+
+#+name: ebMenu
+#+BEGIN_SRC txt
+./ebMenu --config ebench/ebMenu.yaml 
+#+END_SRC
+
+The command above uses configuration file ~ebench/ebMenu.yaml~
+#+name: ebMenu.yaml 
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat ebench/ebMenu.yaml ebench/ebMenu.yaml 
+#+END_SRC
+
+
+#+RESULTS: ebMenu.yaml
+#+begin_example
+# ebMenu.yaml - example configuration file for ebMenu
+#
+#
+# Define 'subMenu' menu-entry 'hello' 'prompt'. The entry creates sub
+# menu from python module 'ebench.hello'. Sub menu controller is
+# created using run -method in ebench.hello -module. 'run' - method is
+# passed 'kwargs' -dictonary to allow configuration of the sub menu
+# controller created.
+
+# - 
+#   type: subMenu
+#   menu: hello
+#   prompt: Start sub menu for hello.py
+#   module: ebench.hello
+#   kwargs:
+#       initCount: 3
+
+# Two more 'subMenu' entries creating sub menus for 'ebench.ebRigol'
+# and 'ebench.ebUnit' instruments. kwargs define configuration
+# parameters needed to access these instruments
+
+-
+  type: subMenu
+  module: ebench.ebRigol
+  prompt: "Rigol osciloscope control"
+  menu: skooppi
+  kwargs:
+      ip: skooppi
+
+-
+  type: subMenu
+  menu: sgen
+  prompt: "UNIT-T UTG962 signal generator control"
+  module: ebench.ebUnit
+  kwargs:
+      addr: USB0::0x6656::0x0834::1485061822::INSTR
+
+
+# Define 'apiCall' menu-entry 'counters' This menu entry dispatches
+# two apiCalls: "hello.greetCount()" and "hello.greetCount2(42)"
+#
+# Both of these apiCalls access instrument wrapped under sub menu
+# 'hello' The api methods called are 'greetCount' and 'greetCount2'.
+# Parameter value (string!) 42 is passed to greetCount2 method.
+#
+
+
+- 
+  type: apiCall
+  menu: counters
+  prompt: Read hello.py counters
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(added=42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+      
+- 
+  type: apiCall
+  menu: counters2csv
+  prompt: Save hello.py counters to example.csv
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+  measurements: example.csv
+# ebMenu.yaml - example configuration file for ebMenu
+#
+#
+# Define 'subMenu' menu-entry 'hello' 'prompt'. The entry creates sub
+# menu from python module 'ebench.hello'. Sub menu controller is
+# created using run -method in ebench.hello -module. 'run' - method is
+# passed 'kwargs' -dictonary to allow configuration of the sub menu
+# controller created.
+
+# - 
+#   type: subMenu
+#   menu: hello
+#   prompt: Start sub menu for hello.py
+#   module: ebench.hello
+#   kwargs:
+#       initCount: 3
+
+# Two more 'subMenu' entries creating sub menus for 'ebench.ebRigol'
+# and 'ebench.ebUnit' instruments. kwargs define configuration
+# parameters needed to access these instruments
+
+-
+  type: subMenu
+  module: ebench.ebRigol
+  prompt: "Rigol osciloscope control"
+  menu: skooppi
+  kwargs:
+      ip: skooppi
+
+-
+  type: subMenu
+  menu: sgen
+  prompt: "UNIT-T UTG962 signal generator control"
+  module: ebench.ebUnit
+  kwargs:
+      addr: USB0::0x6656::0x0834::1485061822::INSTR
+
+
+# Define 'apiCall' menu-entry 'counters' This menu entry dispatches
+# two apiCalls: "hello.greetCount()" and "hello.greetCount2(42)"
+#
+# Both of these apiCalls access instrument wrapped under sub menu
+# 'hello' The api methods called are 'greetCount' and 'greetCount2'.
+# Parameter value (string!) 42 is passed to greetCount2 method.
+#
+
+
+- 
+  type: apiCall
+  menu: counters
+  prompt: Read hello.py counters
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(added=42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+      
+- 
+  type: apiCall
+  menu: counters2csv
+  prompt: Save hello.py counters to example.csv
+  apiCalls:
+    "count1": "hello.greetCount()"
+    "count2": "hello.greetCount2(42)"
+    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+  measurements: example.csv
+#+end_example
+
+which defines two ~subMenu~ entries:
+- ~skooppi~ for managing Rigol osciloscope
+- ~sgen~ controlling UTG962 signal generator
+
+
+** Application Version Tested
+
+~ebench~ -version tested in document is shown with the following
+command:
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+<<ebMenu>>  _version
+#+END_SRC
+
+#+RESULTS:
+: 0.0.10-pre2
+
+
+** Signal Genrator Output After ~reset~ -command
+
+Reset Rigol scope
+
+#+BEGIN_SRC bash :eval no-export :results output :exports code :noweb yes
+<<ebMenu>> skooppi  reset
+#+END_SRC
+
+#+RESULTS:
+
+and setup it for 2 channels 
+
+#+BEGIN_SRC bash :eval no-export :results output :exports code :noweb yes
+  <<ebMenu>> skooppi  setup channel=1 probe=1x bwlimit= scale=0.2V offset=0V stats=FREQ,VPP q
+  <<ebMenu>> skooppi  setup channel=2 probe=1x bwlimit= scale=0.2V offset=-0.5V stats=FREQ,VPP q
+  <<ebMenu>> skooppi  timebase timebase=1ms q
+  <<ebMenu>> skooppi  setupTrigger source=1 slope=POS level=0.05 q
+#+END_SRC
+
+#+RESULTS:
+
+Reset UTG932 signal generator, open both channels and take screenshots
+from signal generator channels and from Rigol osciloscope.
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports code
+<<ebMenu>>  sgen reset on channel=1 screen fileName=ebUnit-sgen1-reset.png  on channel=2 screen fileName=ebUnit-sgen2-reset.png q skooppi screen fileName=ebUnit-osc-reset.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-reset.png
+: pics/ebUnit-sgen2-reset.png
+: pics/ebUnit-osc-reset.png
+
+Ex
+
+| Screen capture                   | Expect                                      |
+|----------------------------------+---------------------------------------------|
+| [[file:pics/ebUnit-sgen1-reset.png]] | Ch1=On, 1kHz 100mVpp                        |
+| [[file:pics/ebUnit-sgen2-reset.png]] | Ch2=On, 1kHz 100mVpp                        |
+| [[file:pics/ebUnit-osc-reset.png]]   | 1:Freq=1kHz,Vpp=100mV 2:Freq=1kHz,Vpp=100mV |
+
+
+** Signal Generation on One Channel
+
+*** Setup Rigol Osciloscpope for 2 channels 
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports code :noweb yes
+ <<ebMenu>> skooppi  setup channel=1 probe=1x bwlimit= scale=0.2V offset=0V stats=FREQ,VPP,VAVG
+ <<ebMenu>> skooppi  setup channel=2 probe=1x bwlimit= scale=0.2V offset=-0.5V stats=FREQ,VPP 
+ <<ebMenu>> skooppi  timebase timebase=1ms 
+ <<ebMenu>> skooppi  setupTrigger source=1 slope=POS level=0.05
+ #+END_SRC
+
+ #+RESULTS:
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports code :noweb yes
+ <<ebMenu>> skooppi  setup channel=1 probe=1x bwlimit= scale=0.2V offset=0V stats=FREQ,VPP,VAVG q
+ <<ebMenu>> skooppi  timebase timebase=1ms  q
+ <<ebMenu>> skooppi  setupTrigger source=1 slope=POS level=0.05 q
+ <<ebMenu>> skooppi  off channel=2 q
+ #+END_SRC
+
+ #+RESULTS:
+
+
+
+*** Sine(1500Hz)@ch1
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports code
+ <<ebMenu>> sgen reset sine channel=1 freq=1500Hz amp=0.25Vpp offset=-50mV phase= screen fileName=ebUnit-sgen1-sine1.png q skooppi screen fileName=ebUnit-osc-sine1.png q
+ #+END_SRC
+ #+RESULTS:
+ : pics/ebUnit-sgen1-sine1.png
+ : pics/ebUnit-osc-sine1.png
+
+
+ | Screen capture                   | Expect                                         |
+ |----------------------------------+------------------------------------------------|
+ | [[file:pics/ebUnit-sgen1-sine1.png]] | Ch1=On, freq=1500Hz, amp=250mVpp, offset=-50mV |
+ | [[file:pics/ebUnit-osc-sine1.png]]   | 1:FREQ=1.5kHz, 1:Vpp=250mV, 1:Avg=-50mV        |
+
+
+*** Square(1.6kHz)@ch2
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports code
+ <<ebMenu>> sgen reset square channel=2 freq=1.6kHz amp=0.180Vpp offset=50mV phase= screen fileName=ebUnit-sgen1-square1.png q skooppi screen fileName=ebUnit-osc-square1.png q
+ #+END_SRC
+
+ #+RESULTS:
+ : pics/ebUnit-sgen1-square1.png
+ : pics/ebUnit-osc-square1.png
+
+ | Screen capture                     | Expect                                    |
+ |------------------------------------+-------------------------------------------|
+ | [[file:pics/ebUnit-sgen1-square1.png]] | Ch2: square, 1.6kHz, 180mVpp, offset=50mV |
+ | [[file:pics/ebUnit-osc-square1.png]]   | 2: Freq=1.6kHz, Vpp=180mV                 |
+
+
+*** ARB-Sinc@ch1
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes 
+<<ebMenu>> sgen reset arb channel=1 freq=1.2kHz amp=250mVpp offset=-0.05V phase= waveFile=Sinc screen fileName=ebUnit-sgen1-arb1.png q skooppi screen fileName=ebUnit-osc-arb1.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-arb1.png
+: pics/ebUnit-osc-arb1.png
+
+
+| Screen capture                  | Expect                                       |
+|---------------------------------+----------------------------------------------|
+| [[file:pics/ebUnit-sgen1-arb1.png]] | Ch1=On, Freq=1200Hz, amp=200mP, offset=-50mV |
+| [[file:pics/ebUnit-osc-arb1.png]]   | 1:FREQ=1.2kHz, 1:Vpp=250mV, 1:Avg=-50mV      |
+
+
+
+*** ARB-External(~data/simplewave.bsv~)@ch1
+
+   This example uses ARB-simplewave, which show three wavepeak in one
+   sample. Hence, when generating signal @500Hz expect osciloscpope
+   find frequency three times larger.
+
+ [[file:data/simplewave.PNG]]
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes 
+<<ebMenu>> sgen reset arb channel=1 freq=500Hz amp=200mVpp   phase= waveFile=data/simplewave.bsv screen fileName=ebUnit-sgen1-arb2.png q skooppi screen fileName=ebUnit-osc-arb2.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-arb2.png
+: pics/ebUnit-osc-arb2.png
+
+
+
+| Screen capture                  | Expect                           |
+|---------------------------------+----------------------------------|
+| [[file:pics/ebUnit-sgen1-arb2.png]] | Ch1=On, ARB, 500Hz, 200Vpp       |
+| [[file:pics/ebUnit-osc-arb2.png]]   | ARB 1:FREQ=~1.5 kHz, 1:Vpp=~200mV |
+
+
+** Signal Generation on Two Channels
+
+
+*** Ramp(1234Hz,symmetry=808%)@ch1,  Pulse(800Hz,amp=0.15Vpp,duty=35%)@ch2
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes 
+<<ebMenu>> sgen reset ramp channel=1 freq=1234Hz symmetry=80% screen fileName=ebUnit-sgen1-two1.png pulse channel=2 freq=800Hz amp=0.15Vpp duty=35% screen fileName=ebUnit-sgen2-two1.png q skooppi screen fileName=ebUnit-osc-two1.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-two1.png
+: pics/ebUnit-sgen2-two1.png
+: pics/ebUnit-osc-two1.png
+
+| Screen capture                  | Expect                                          |
+|---------------------------------+-------------------------------------------------|
+| [[file:pics/ebUnit-sgen1-two1.png]] | Ch1=On, ramp, 1234Hz, Amp=100mVpp, symmetry=80% |
+| [[file:pics/ebUnit-sgen2-two1.png]] | Ch2=On, pulse, 800Hz, 0.15Vpp, 35% duty cycle   |
+| [[file:pics/ebUnit-osc-two1.png]]   | 1=ramp, freq=1.234kHz, 2=pulse, freq=800Hz      |
+
+
+
+*** ARB-Sinc@ch1,  ARB-Tri_up:@ch2
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports code
+<<ebMenu>> sgen reset arb channel=1 amp=300mVpp waveFile=Sinc screen fileName=ebUnit-sgen1-arb3.png arb channel=2 amp=250mVpp waveFile=Tri_up screen fileName=ebUnit-sgen2-arb3.png q skooppi screen fileName=ebUnit-osc-arb3.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-arb3.png
+: pics/ebUnit-sgen2-arb3.png
+: pics/ebUnit-osc-arb3.png
+
+
+| Screen capture                  | Expect                                          |
+|---------------------------------+-------------------------------------------------|
+| [[file:pics/ebUnit-sgen1-arb3.png]] | Ch1=Sinc, 300mVpp                               |
+| [[file:pics/ebUnit-sgen2-arb3.png]] | Ch2=Tri_up, 1kHz, 250mVpp                       |
+| [[file:pics/ebUnit-osc-arb3.png]]   | 1: Sinc, Freq: 1kHz, Vpp=300mV, 2: Tri_up, 1kHz |
+
+
+*** ARB-AttAlt@Ch1, ARB-Extenal@Ch2
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes 
+<<ebMenu>> sgen reset arb channel=1 amp=300mVpp waveFile=AttALT screen fileName=ebUnit-sgen1-arb4.png arb channel=2 offset=0.1V waveFile=data/simplewave.bsv screen fileName=ebUnit-sgen2-arb4.png q skooppi screen fileName=ebUnit-osc-arb4.png q
+#+END_SRC
+
+#+RESULTS:
+: pics/ebUnit-sgen1-arb4.png
+: pics/ebUnit-sgen2-arb4.png
+: pics/ebUnit-osc-arb4.png
+
+| Screen capture                  | Expect                              |
+|---------------------------------+-------------------------------------|
+| [[file:pics/ebUnit-sgen1-arb4.png]] | Ch1=on, AttAlt, amp=300mVpp         |
+| [[file:pics/ebUnit-sgen2-arb4.png]] | Ch2=0, ARB simplewave, offset=100mV |
+| [[file:pics/ebUnit-osc-arb4.png]]   | Ch1=AttAtl, Ch2=simple wave         |
+
+
+
+*** ARB-Extenal@Ch1, Ramp@Ch2=ramp
+
+ Defining first channel 2 followed by channel 1:
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes  :exports code
+ <<ebMenu>> sgen reset ramp channel=2 symmetry=90% screen fileName=ebUnit-sgen2-arb5.png arb channel=1 offset=-0.1V waveFile=data/simplewave.bsv screen fileName=ebUnit-sgen1-arb5.png q skooppi screen fileName=ebUnit-osc-arb5.png q
+ #+END_SRC
+
+ #+RESULTS:
+ : pics/ebUnit-sgen2-arb5.png
+ : pics/ebUnit-sgen1-arb5.png
+ : pics/ebUnit-osc-arb5.png
+
+ | Screen capture                  | Expect                               |
+ |---------------------------------+--------------------------------------|
+ | [[file:pics/ebUnit-sgen1-arb5.png]] | Ch1=on, ARB simplewave, offset=-0.1V |
+ | [[file:pics/ebUnit-sgen2-arb5.png]] | Ch2=on, ramp, symmetry=90%           |
+ | [[file:pics/ebUnit-osc-arb5.png]]   | Ch1=simple wave, Ch2=ramp            |
+
+
+* Fin                                                              :noexport:
+
+** Emacs variables
+
+   #+RESULTS:
+
+   # Local Variables:
+   # org-confirm-babel-evaluate: nil
+   # End:
+   #
+   # Muuta 
+   # eval: (cdlatex-mode)
+   #
+   # Local ebib:
+   # org-ref-default-bibliography: "./ebUnit.bib"
+   # org-ref-bibliography-notes: "./ebUnit-notes.org"
+   # org-ref-pdf-directory: "./pdf/"
+   # org-ref-notes-directory: "."
+   # bibtex-completion-notes-path: "./ebUnit-notes.org"
+   # ebib-preload-bib-files: ("./ebUnit.bib")
+   # ebib-notes-file: ("./ebUnit-notes.org")
+   # reftex-default-bibliography: ("./ebUnit.bib")
+
+
+
+
+

@@ -7,31 +7,33 @@
 # passed 'kwargs' -dictonary to allow configuration of the sub menu
 # controller created.
 
-- 
-  type: subMenu
-  menu: hello
-  prompt: Start sub menu for hello.py
-  module: ebench.hello
-  kwargs:
-      initCount: 3
+# - 
+#   type: subMenu
+#   menu: hello
+#   prompt: Start sub menu for hello.py
+#   module: ebench.hello
+#   kwargs:
+#       initCount: 3
 
 # Two more 'subMenu' entries creating sub menus for 'ebench.ebRigol'
 # and 'ebench.ebUnit' instruments. kwargs define configuration
 # parameters needed to access these instruments
 
-# -
-#   type: subMenu
-#   module: ebench.ebRigol
-#   menu: Rigol
-#   kwargs:
-#       ip: skooppi
+-
+  type: subMenu
+  module: ebench.ebRigol
+  prompt: "Rigol osciloscope control"
+  menu: skooppi
+  kwargs:
+      ip: skooppi
 
-# -
-#   type: subMenu
-#   menu: UTG962
-#   module: ebench.ebUnit
-#   kwargs:
-#       addr: USB0::0x6656::0x0834::1485061822::INSTR
+-
+  type: subMenu
+  menu: sgen
+  prompt: "UNIT-T UTG962 signal generator control"
+  module: ebench.ebUnit
+  kwargs:
+      addr: USB0::0x6656::0x0834::1485061822::INSTR
 
 
 # Define 'apiCall' menu-entry 'counters' This menu entry dispatches

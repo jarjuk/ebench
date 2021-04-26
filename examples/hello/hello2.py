@@ -48,14 +48,14 @@ class HelloInstrument(Instrument):
 # --------------------------------------
 # Menu interagration
 
-helloPar = {
+greetPar = {
    "whom": "Whom to greet?",
    "who":  "Who is the greeter? Ret accepts default value: ",
 }
 
 
 defaults = {
-"hello" : {
+"greet" : {
              "who": os.environ['USER']
           }
 }
@@ -82,6 +82,8 @@ This demo presents:
 
 - hidden command: _version
 
+- proviso for integrating ~hello2~ with ebMenu
+
 """
 
 
@@ -91,16 +93,32 @@ This demo presents:
 
 
 def run( _argv, runMenu:bool = True, greetCount = 0  ):
-     hello = HelloInstrument( greetCount = greetCount )
+     """Run hello2 as a standalone interactive or CLI application with the
+     proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
+
+     :_argv: list of command line arguments. In interactive mode, this
+     is just the name of script. In CLI mode, name is followed by
+     command line arguments
+
+     :runMenu: defaults True = running standalone application. ebMenu
+     sets this to 'False'.
+
+     :greetCount: In this contrived example, 'greetCount' is the
+     number greetings already made. It is passed to 'HelloInstrument'
+     -constructor. For real world use, 'greetCount' represents
+     parameters needed in instruments constructor.
+
+     """
+     helloController = HelloInstrument( greetCount = greetCount )
 
      mainMenu = {
      
          # First section: application commands
-         "Commands:"              : ( None, None, None),
-         "hello"                  : ( "Say hello", helloPar, hello.sayHello ),
+         "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
+         "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
      
          # Second section: getting help
-         "Help:"                  : ( None, None, None),
+         "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
          MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda : usage(cmd=os.path.basename(__file__)
                                                          , mainMenu=mainMenu
@@ -111,24 +129,27 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
          "_version"               : ("Version number", None, lambda **argv: print(version())),
      
          # Third section: exiting
-         "Exit:"                  : ( None, None, None),
-         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+         "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
+         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+     
      
      }
      
 
-     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=hello )
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
      menuController.setMenu(menu=mainMenu, defaults=defaults)
      if runMenu: menuController.mainMenu()
 
      return menuController
 
 def _main( _argv ):
-     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv )
-    menuController.close()
 
+
+    # Start standalone application
+    menuController = run( _argv )
+    # q from menu or end of CLI parameters
+    menuController.close()
 
 def main():
     try:

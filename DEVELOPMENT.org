@@ -143,7 +143,11 @@
  running bdist_wheel
  running build
  running build_py
+ copying ebench/ebUnit.py -> build/lib/ebench
+ copying ebench/Unit.py -> build/lib/ebench
+ copying ebench/ebRigol.py -> build/lib/ebench
  copying ebench/ebench.py -> build/lib/ebench
+ copying ebench/ebMenu.yaml -> build/lib/ebench
  installing to build/bdist.linux-x86_64/wheel
  running install
  running install_lib
@@ -224,7 +228,7 @@
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.10rc2-py3-none-any.whl size=33362 sha256=39576d3ef031072d0cee3f86f024bfd616eb25a0d20be1aaea5c783b93c68a67
+   Created wheel for ebench: filename=ebench-0.0.10rc2-py3-none-any.whl size=34630 sha256=867338cf9b0fda1a681c8412c6bc5da8f658858ed9d220a1ccef10f81a163cf6
    Stored in directory: /home/jj/.cache/pip/wheels/c1/c7/5c/c4d5edb0456f16d043f82cc0c7aa86d5f492d464e384c14716
  Successfully built ebench
  Installing collected packages: ebench

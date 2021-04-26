@@ -25,6 +25,16 @@ flags.DEFINE_string('captureDir', "pics", "Screen capture directory")
 flags.DEFINE_string('recordingDir', "tmp", "Directory where command line recordings are saved into")
 flags.DEFINE_string('csvDir', "tmp", "Directory where command CSV files are saved into")
 
+def version():
+    """Version number of ebench tool"""
+    versionPath = os.path.join( os.path.dirname( __file__), "..", "VERSION")
+    with open( versionPath, "r") as fh:
+        version = fh.read().rstrip()
+    return version
+
+def printExampleYaml():
+    with open(os.path.join( os.path.dirname(__file__), "ebMenu.yaml"), "r") as f:
+        print( f.read())
 
 class Instrument:
 
@@ -64,6 +74,21 @@ class Instrument:
         
         
     def screenShot( self, captureDir, fileName=None, ext="png", prefix="EB-"  ):
+        """Take screenshot into file '{captureDir}/{fileName}'. 'fileName'
+        defaults to '{prefix}{timestamp}.{ext}'
+
+        Taking screenshot image is delegate to asbtract
+        'screenShotImplementation' -method, which sub classes should
+        override.
+
+        :captureDir: directory where screen shot is mage, defaults to
+        'FLAGS.captureDir'
+
+        :ext:  extension of the image file
+
+        """
+        if captureDir is None: captureDir = FLAGS.captureDir
+
         if fileName is None or not fileName:
             now = datetime.now()
             fileName = "{}{}.{}".format( prefix, now.strftime("%Y%m%d-%H%M%S"), ext )
@@ -151,10 +176,18 @@ class MenuCtrl:
     MENU_REC_SAVE="."         # save recording
     MENU_REC_START="!"        # start/rerset recording
     MENU_VERSION="_version"   # output version number (hidden command)
+    MENU_YAML="_yaml"         # output exxample _yaml
     MENU_SCREEN="screen"      # output screenshot
     MENU_HELP="?"             # list commands
     MENU_CMD_PARAM="??"       # DEPRACTED --> MENU_HELP_CMD
     MENU_HELP_CMD="??"        # help on command
+
+    # Menu tuples
+    MENU_QUIT_TUPLE        = ( "Exit", None, None)
+    MENU_VERSION_TUPLE     = ( "Output version number", None, version )
+    MENU_YAML_TUPLE        = ( "Exaxample yaml", None, printExampleYaml)
+    MENU_SEPATOR_TUPLE     = ( None, None, None)
+
 
     # Parameters
     MENU_HELP_CMD_PARAM={
@@ -164,6 +197,11 @@ class MenuCtrl:
     MENU_REC_SAVE_PARAM = {
          "fileName" : "Filename to save recording (.= show current recording)",
     }
+
+    MENU_SCREENSHOT_PARAM = {
+      'fileName'   :   "Screen capture file name (optional)",    
+    }
+
 
     MENU_INSTRUMENT_ACCESS_PARAMS = {
         "apiCalls" : "JSON string { \"key\": \"instrument.method(commaSepListOfArgs)\"} "
@@ -221,13 +259,13 @@ class MenuCtrl:
         not None)
         """
         logging.info( "MenuCtrl: close called")
-        if self.instrument is not None:
-            self.instrument.close()
         # Close also sub menus
         for menu,menuCtrl in self.subMenuCtrls.items():
             logging.debug( "MenuCtrl: close subMenu={}".format(menu))
             if menuCtrl is not None: menuCtrl.close()
         self.subMenuCtrls = {}
+        if self.instrument is not None:
+            self.instrument.close()
 
     # ------------------------------
     # Properties
@@ -414,11 +452,12 @@ class MenuCtrl:
         else:
             return len(self.recording) > 0
         
-    def stopRecording(self, pgm, fileName =None, fileDir=None ):
+    def stopRecording(self, pgm, fileName =None, recordingDir=None ):
         """@see module function 'stopRecording'
         """
+        if recordingDir is None: recordingDir = FLAGS.recordingDir
         if self.isChildMenu:
-            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, fileDir=fileDir)
+            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, recordingDir=recordingDir)
         else:
             logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
             if not self.anyRecordings():
@@ -429,9 +468,9 @@ class MenuCtrl:
             if fileName is None or not fileName or fileName == MenuCtrl.MENU_REC_SAVE:
                 print(pgm_commandsAndParameters)
             else:
-                if not os.path.exists( fileDir):
-                    raise MenuValueError( "Non existing recording directory: {}".format(fileDir))
-                filePath= os.path.join( fileDir, fileName)
+                if not os.path.exists( recordingDir):
+                    raise MenuValueError( "Non existing recording directory: {}".format(recordingDir))
+                filePath= os.path.join( recordingDir, fileName)
                 if os.path.isdir( filePath ):
                     raise MenuValueError( "Recording path is directory: {}".format(filePath))
                 with open( filePath, "a") as fh:
@@ -886,7 +925,7 @@ class PyInstrument(Instrument):
     def closetti():
         try:
             logging.info(  "Closing Resource manager {}".format(PyInstrument._rm))
-            PyInstrument._rm.close()
+            if PyInstrument._rm is not None: PyInstrument._rm.close()
             PyInstrument._rm = None
         except:
             logging.warn(  "Closing Resource manager {} - failed".format(PyInstrument._rm))
@@ -897,20 +936,36 @@ class PyInstrument(Instrument):
     
     def __init__( self, addr, debug = False ):
         super().__init__( debug=debug)
-        logging.info( "Open PyInstrument instrument in addr {}".format(addr))
+        logging.info( "Setting PyInstrument instrument in addr {}".format(addr))
         self.addr = addr
-        try:
-            self.instrument = PyInstrument.singleton_rm().open_resource(self.addr)
-        except pyvisa.errors.VisaIOError as err:
-                 self.instrument = None
-                 logging.error(err)
-        except ValueError as err:
-                 self.instrument = None
-                 logging.error(err)
-        
+        # Lazy inialization (only when need) 
+        self.instrument = None
         if debug:
             pyvisa.log_to_screen()
 
+    def initInstrument( self ):
+        """
+        """
+        if  self._instrument is not None:
+            logging.warning( "PyInstrument instrument {} is already open".format(self.addr))
+            return
+        logging.info( "OPening PyInstrument instrument in addr {}".format(self.addr))
+        try:
+            self._instrument = PyInstrument.singleton_rm().open_resource(self.addr)
+        except pyvisa.errors.VisaIOError as err:
+            self._instrument = None
+            logging.error(err)
+        except ValueError as err:
+            self._instrument = None
+            logging.error(err)
+        try:
+            idn = self.instrument.query('*IDN?')
+            logging.warning("Successfully connected  '{}' with '{}'".format(self.addr, idn))
+        except:
+            pass
+            
+
+        
     def close(self):
         super().close()
         PyInstrument.closetti()
@@ -927,6 +982,18 @@ class PyInstrument(Instrument):
     def addr( self, addr:str):
         self._addr = addr
 
+    @property
+    def instrument(self):
+        if self._instrument is None:
+            self.initInstrument()
+        return self._instrument
+
+    @instrument.setter
+    def instrument( self, instrument:str):
+        self._instrument = instrument
+
+
+
     # ------------------------------------------------------------------
     # Low level communication
     def write(self, cmd ):
@@ -936,6 +1003,14 @@ class PyInstrument(Instrument):
         else:
             logging.error( "write '{}' failed - self.instrument is None".format(cmd))
 
+    def write_raw( self, data):
+        logging.info( "write_raw: {} bytes ".format(sys.getsizeof(data)))
+        if self.instrument is not None:
+            self.instrument.write_raw(data)
+        else:
+            logging.error( "write_raw '{}' bytes failed - self.instrument is None".format(sys.getsizeof(data)))
+
+            
     def read_raw(self):
         if self.instrument is not None:
             raw = self.instrument.read_raw()
@@ -1057,34 +1132,29 @@ def menuStartRecording(cmdController:MenuCtrl):
     return f
 
 
-def menuStopRecording( cmdController:MenuCtrl, pgm, fileDir ):
+def menuStopRecording( cmdController:MenuCtrl, pgm, recordingDir ):
     """Lambda function to use in mainMenu construct
+
+    :recordingDir: directory where save, default FLAGS.recordingDir
 
     Usage example: 
       MenuCtrl.MENU_REC_SAVE   : 
        ( "Stop recording", stopRecordingPar, 
-          menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir ) ),
+          menuStopRecording(cmdController, pgm=_argv[0], recordingDir=FLAGS.recordingDir ) ),
 
     Document string in f is presented in help commands
 
     """
     def f(**argv):
-        """Save current command recording history to 'fileName' in 'fileDir'
+        """Save current command recording history to 'fileName' in 'recordingDir'
         and clear command history.
 
         If no 'fileName' given, just print current command history
         (and do not clear command history)
 
         """
-        return cmdController.stopRecording(pgm=pgm, fileDir=fileDir, **argv )
+        return cmdController.stopRecording(pgm=pgm, recordingDir=recordingDir, **argv )
     return f
-
-def version():
-    """Version number of ebench tool"""
-    versionPath = os.path.join( os.path.dirname( __file__), "..", "VERSION")
-    with open( versionPath, "r") as fh:
-        version = fh.read().rstrip()
-    return version
 
 def list_resources():
     """List resources pyvisa finds"""

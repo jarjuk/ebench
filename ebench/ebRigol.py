@@ -381,9 +381,6 @@ podPar ={
     "pod" : "Pod number (1,2)",
 }
 
-screenCapturePar  = {
-    'fileName'   :   "Screen capture file name (optional)",    
-}
 
 generalPar = {
     "statsOnOff": "Display statistics ON/OFF",
@@ -409,7 +406,7 @@ defaults = {
 
 # ------------------------------------------------------------------
 # Main
-def run( _argv, runMenu:bool = True, ip=None, addr=None ):
+def run( _argv, runMenu:bool = True, ip=None, addr=None, captureDir=None, recordingDir=None):
     """
     Api interface 
 
@@ -424,7 +421,7 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
     menuController = MenuCtrl(args=_argv,instrument=gSkooppi, prompt="[q=quit,?=commands,??=help on command]")
 
     mainMenu = {
-        "Init"                   : (None, None, None),
+        "Init"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         "general"                : ( "General setup", generalPar, gSkooppi.general),
         "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
         CMD_SETUP_TRIGGER        : ( "Setup trigger", triggerSetupPar, gSkooppi.setupTrigger ),
@@ -437,22 +434,21 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
         "statClear"              : ( "Clear statistics", None, gSkooppi.clearStats),
         "reset"                  : ( "Send reset to Rigol", None, gSkooppi.reset),
         "clear"                  : ( "Send clear to Rigol", None, gSkooppi.clear),
-        "Measure"                : (None, None, None),
+        "Measure"                : MenuCtrl.MENU_SEPATOR_TUPLE,
         CMD_MEASURE              : ("Measure", measurePar, gSkooppi.measurement),
         CMD_TRIGGER_STATUS       : ("Trigger status", None, gSkooppi.triggerStatus),
-        "Record"                 : (None, None, None),
+        "Record"                 : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
-        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
-                                     menuScreenShot(instrument=gSkooppi,captureDir=FLAGS.captureDir,prefix="Rigol-" )),
-        "Misc"                   : (None, None, None),        
-        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
-        "Help"                   : (None, None, None),                
-        MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, pgm=_argv[0], recordingDir=recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
+                                     menuScreenShot(instrument=gSkooppi,captureDir=captureDir,prefix="Rigol-" )),
+        "Help"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
         MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis="Tool to control Rigol MSO1104Z osciloscope")),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
+        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
     }
 
 
@@ -464,10 +460,11 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None ):
     return menuController
 
 def _main( _argv ):
-    # Run standalone
+    # Run standalone,
     # global gSkooppi
     logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv, ip=FLAGS.ip )
+    # set configuration agrugements application FLAGS 
+    menuController = run( _argv, ip=FLAGS.ip, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir)
     menuController.close()
 
     

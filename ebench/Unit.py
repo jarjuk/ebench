@@ -23,19 +23,26 @@ class UnitSignalGenerator(SignalGenerator):
 
     # Construct && close
     def __init__( self, ip:None, addr=None, debug = False ):
-       if addr is None:
-           addr = "TCPIP0::{}::INSTR".format(ip)
-       super().__init__(addr=addr, debug=debug)
-       self.ip = ip
-       try:
-          idn = self.instrument.query('*IDN?')
-          logging.warning("Successfully connected  '{}' with '{}'".format(addr, idn))
-       except:
-          pass
-       # Need to know state of device --> reset, Here make the bold assumption
-       self.ch = [False,False]
-       # self.reset()
+        if addr is None:
+            addr = "TCPIP0::{}::INSTR".format(ip)
+        super().__init__(addr=addr, debug=debug)
+        self.ip = ip
+        self.resetTwinState()
+        # self.reset()
+        
+    def resetTwinState(self):
+        # Need to know state of device --> reset, Here make the bold
+        # assumption that both channels are off
+        self.ch = [False,False]
+        self.current_channel = None
+        self.empty_bsv_loaded = False
+        logging.debug( "resetTwinState: {}".format(self.ch))
 
+
+    def setTwistate( self, channel:int, state:bool ):
+        self.ch[channel-1] = state
+        logging.debug( "after setTwistate: channel={} state={} -> {}".format(channel, state, self.ch))
+        
     # ------------------------------------------------------------------
     # Template methods (used in base classes)
 
@@ -53,7 +60,7 @@ class UnitSignalGenerator(SignalGenerator):
              f.write( sShot)
         # Need to flip it over && convert to ext
         self.dibToImage( filePathDib, filePath )
-
+        self.llOpen()
 
     # LL (low level language =keypress)
     def llSShot(self):
@@ -91,30 +98,33 @@ class UnitSignalGenerator(SignalGenerator):
     def llRight(self):
       self.llKey("Right")
     def llNum(self, numStr):
-      def ch2cmd( ch ):
-          chMap = {
-              "0": "NUM0",
-              "1": "NUM1",
-              "2": "NUM2",
-              "3": "NUM3",
-              "4": "NUM4",
-              "5": "NUM5",
-              "6": "NUM6",
-              "7": "NUM7",
-              "8": "NUM8",
-              "9": "NUM9",
-              "-": "SYMBOL",
-              ".": "DOT",
-              ",": "DOT",
-          }
-          try:
-             keyName = chMap[ch]
-             return  keyName
-          except KeyError:
+        def ch2cmd( ch ):
+            chMap = {
+                "0": "NUM0",
+                "1": "NUM1",
+                "2": "NUM2",
+                "3": "NUM3",
+                "4": "NUM4",
+                "5": "NUM5",
+                "6": "NUM6",
+                "7": "NUM7",
+                "8": "NUM8",
+                "9": "NUM9",
+                "-": "SYMBOL",
+                ".": "DOT",
+                ",": "DOT",
+            }
+            try:
+                keyName = chMap[ch]
+                return  keyName
+            except KeyError:
                 logging.fatal( "Could not extract keyName for ch {} numStr {}".format( ch, numStr ))
-                raise 
-      for ch in str(numStr):
-         self.write( "KEY:{}".format(ch2cmd(ch)))
+                raise
+        logging.info( "llNum: numStr={}".format(numStr) )
+        for ch in str(numStr):
+            self.delay()
+            self.write( "KEY:{}".format(ch2cmd(ch)))  
+        
     def llFKey( self, val, keyMap):
         try:
            self.llF(keyMap[val])
@@ -125,7 +135,7 @@ class UnitSignalGenerator(SignalGenerator):
 
     # IL intermediate (=action in a given mode)
     def ilFreq( self, freq, unit ):
-        self.llNum( str(freq))
+        self.llNum(str(freq))
         self.ilFreqUnit( unit )
     def ilAmp( self, amp, unit ):
         self.llNum( str(amp))
@@ -142,14 +152,19 @@ class UnitSignalGenerator(SignalGenerator):
     def ilRaiseFall( self, raiseFall, unit ):
         self.llNum( str(raiseFall))
         self.ilRaiseFallUnit(unit)
-    def ilWriteFile( self, filePath):
-        """Expect to be in Arb/WaveFile waitin for file loaction &&
-        updaload"""
-        self.ilFileLocation( "External")
-        with open( filePath) as fh:
-            lines = fh.readlines()
-            for line in lines:
-                self.write( line )
+    def ilWriteFile( self, filePath, channel, fileName="ARB"):
+        """Upload 'filePath' with 'fileName' to 'slot'
+
+        :filePath: path to binary bsv -file
+
+        :fileName: name to show in UTG900 signal generator
+
+        """
+        with open( filePath, mode="rb") as fh:
+            arbdata = fh.read()
+            fileNameCommand = "WARB{}:Carrier {}".format(channel,fileName)
+            self.write(fileNameCommand+chr(0))
+            self.write_raw(arbdata)                 
     def ilConf( self, wave ):
         waveMap  = {
            "Freq":   "1",
@@ -171,15 +186,14 @@ class UnitSignalGenerator(SignalGenerator):
         }
         self.llFKey( val=wave, keyMap = waveMap )
 
-    def ilWave1Props( self, wave ):
+    def ilSymmetryProps( self, wave ):
         """Wave properties, page1"""
         waveMap  = {
            "Freq": "1",
            "Amp": "2",
            "Offset":  "3",
            "Phase": "4",
-           "Duty": "5",
-           "Page Down": "6",
+           "Symmetry": "5",
         }
         self.llFKey( val=wave, keyMap = waveMap )
 
@@ -194,6 +208,18 @@ class UnitSignalGenerator(SignalGenerator):
         }
         self.llFKey( val=wave, keyMap = waveMap )
 
+    def ilWave1Props( self, wave ):
+        """Wave properties, page1"""
+        waveMap  = {
+           "Freq": "1",
+           "Amp": "2",
+           "Offset":  "3",
+           "Phase": "4",
+           "Duty": "5",
+           "Page Down": "6",
+        }
+        self.llFKey( val=wave, keyMap = waveMap )
+        
     def ilWave2Props( self, wave ):
         """Wave properties, page2"""
         waveMap  = {
@@ -208,17 +234,27 @@ class UnitSignalGenerator(SignalGenerator):
         """Key sequence to to bring UTG962 to display to a known state. 
 
         Here, invoke Utility option, use function key F1 or F2 to
-        choose channel. Do it twice (and visit Wave menu in between)
+        choose channel. Do it three times. End with wave selection
+        
+        Maintans state: currentChannel
 
         """
         ch = int(ch)
-        self.llUtility()
-        self.ilUtilityCh( ch )
-        self.llWave()
-        self.llUtility()
-        self.ilUtilityCh( ch )
-        self.llWave()
-        self.delay()
+        if self.current_channel is None or self.current_channel != ch:
+            # 1
+            self.llUtility()
+            self.ilUtilityCh(ch)
+            self.delay()
+            # 2
+            self.llUtility()
+            self.ilUtilityCh( ch, other=True )
+            self.delay()
+            # 3
+            self.llUtility()
+            self.ilUtilityCh(ch)
+            self.delay()
+            # rememeber it
+            self.current_channel = ch
     def ilFreqUnit( self, unit ):
         freqUnit  = {
            "uHz": "1",
@@ -258,7 +294,12 @@ class UnitSignalGenerator(SignalGenerator):
             "External": "2",
         }
         self.llFKey( val=location, keyMap=fileLocation )
-    def ilArbInternal( self, waveFile):
+    def ilIsInternalArbName( self, waveFile ):
+        """return True if 'waveFile' in 'ilArbInternalNames'"""
+        return waveFile in self.ilArbInternalNames()
+    def ilArbInternalNames( self ) -> dict:
+        """return dictionary mapping 'waveFile' to a number counting down keys
+        """
         mapWave2DonwKey = {
             "AbsSine":0,
             "AmpALT":1,
@@ -285,16 +326,58 @@ class UnitSignalGenerator(SignalGenerator):
             "Tri_up":22,
             "Tri_down": 23,
         }
+        return mapWave2DonwKey
+    def ilArbModeReset( self, channel ):
+        """Dirty trict to ensure that we know the state UTG900 device.  The
+        device remembers last arb selection (arb.WaveFile.Internal or
+        arb.Wavefile.External).  However, after sequence
+        arb.WaveFile.External, arb.WaveFile.External, Cancel) the device starts
+        with first arb.WaveFile.Internal, arb.WaveFile.External selection.
+        
+        However after reset arb.Wavefile.External is empty --> and
+        'External'  is not not possible after 'arb.WaveFile'. So lets write
+        emtpy arb file to slot 2. After which can can do the dirty trick
+        
+        Assume we are at wave.arb (waiting for WaveFile)
+
+
+        """
+        if not self.empty_bsv_loaded:
+            emptyFilePath="data/empty.bsv"
+            logging.info( "Loding emptyFilePath={}".format(emptyFilePath))
+            self.ilWriteFile(emptyFilePath, fileName="NULL", channel=channel)
+            self.delay(2)
+            self.empty_bsv_loaded = True
+
+        # Now we should be able to toggle some keys (and reset cursor
+        # position)
+        self.ilWaveArbProps( "WaveFile")
+        self.delay()        
+        self.ilFileLocation("External")
+        self.llF(6) # cancel
+        self.delay()        
+        self.ilFileLocation("Internal")
+        self.llF(6) # cancel
+        
+    def ilArbInternal( self, waveFile):
+        mapWave2DonwKey = self.ilArbInternalNames()
         try:
+            logging.info( "ilArbInternal: waveFile={}".format(waveFile) )
             for i in range(mapWave2DonwKey[waveFile]):
+                self.delay()
                 self.llDown()
         except KeyError as err:
             raise MenuValueError( "Invalid waveformat name {}, valid names one of: {}".format(str(err), list(mapWave2DonwKey.keys()) ))
-    def ilUtilityCh( self, ch ):
+    def ilUtilityOtherChannel( self, ch ):
+        ch = (int(ch)%2)+1
+        return ch
+    def ilUtilityCh( self, ch, other=False ):
         chSelect  = {
            1: "1",
            2: "2",
         }
+        # ch = (ch % 2) +1
+        if other: ch = self.ilUtilityOtherChannel( ch  )
         self.llFKey( val=ch, keyMap = chSelect )
     def ilPhaseUnit( self, unit ):
         phaseUnit  = {
@@ -319,6 +402,8 @@ class UnitSignalGenerator(SignalGenerator):
     
     def delay(self, delay=1):
         delayUnit=0.2
+        # delayUnit=2
+        logging.debug( "delay: {}".format(delay))
         sleep(delay*delayUnit)
 
 

@@ -47,10 +47,6 @@ defaults = {
     MenuCtrl.MENU_REC_SAVE: { "fileName": "apu.sh"},
 }
 
-def printExampleYaml():
-    with open(os.path.join( os.path.dirname(__file__), "ebMenu.yaml"), "r") as f:
-        print( f.read())
-
 
 # ------------------------------------------------------------------
 # Main && run 
@@ -69,15 +65,15 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
                    subMenuDefs = yaml.safe_load(y)
         return subMenuDefs
 
-    cmdController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]" )
+    menuController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]" )
 
     # Load submenus con ebMenu.yaml?
     subMenuDefs = loadsubMenuDefs(config=config)
 
-    subMenus = cmdController.registerSubMenus(subMenuDefs=subMenuDefs)
+    subMenus = menuController.registerSubMenus(subMenuDefs=subMenuDefs)
 
     mainMenu = subMenus | {
-        # MENU_HELLO_MENU          : ( "Start sub menu", None, subMenu( command=MENU_HELLO_MENU, parentMenu=cmdController, run=hello.run ) ),
+        # MENU_HELLO_MENU          : ( "Start sub menu", None, subMenu( command=MENU_HELLO_MENU, parentMenu=menuController, run=hello.run ) ),
         MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
         "Other"                  : ( None, None, None ),
         MenuCtrl.MENU_HELP       : ( "List commands", None,
@@ -85,21 +81,19 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
-        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
-        "_yaml"                   : ( "Exaxample yaml", None, printExampleYaml),
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(menuController, pgm=_argv[0], recordingDir=FLAGS.recordingDir) ),
+        # Hidden 
+        MenuCtrl.MENU_YAML       : MenuCtrl.MENU_YAML_TUPLE,
+        MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
         
     }
 
-    cmdController.setMenu( menu = mainMenu, defaults = defaults)
+    menuController.setMenu( menu = mainMenu, defaults = defaults)
     # Exec it 
-    cmdController.mainMenu()
-    if cmdController.isTopMenu:
-        # Top level closes instruments && cleanup
-        cmdController.close()
-        cmdController = None
+    menuController.mainMenu()
 
-    return cmdController
+    return menuController
     
 
     
@@ -109,7 +103,11 @@ def _main( _argv ):
     if FLAGS.syspath:
         sys.path.insert( 0, FLAGS.syspath )
     logging.info( "sys.path={}".format(sys.path))
-    run( _argv, config=FLAGS.config)
+    menuController = run( _argv, config=FLAGS.config)
+    if menuController is not None:
+        logging.info( "Closing menuController: {}".format(menuController))
+        menuController.close()
+
     
 
 

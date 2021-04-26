@@ -15,7 +15,7 @@ helloPar = {
 
 mainMenu = {
     "hello"                 : ( "Say hello", helloPar, hello),
-    MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
+    MenuCtrl.MENU_QUIT      : MenuCtrl.MENU_QUIT_TUPLE,
 }
 
 def _main( _argv ):

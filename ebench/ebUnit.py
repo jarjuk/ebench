@@ -2,8 +2,8 @@
 
 
 from .Unit import UnitSignalGenerator
-from .ebench import version, MenuCtrl, subMenuHelp
-from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot
+from .ebench import MenuCtrl
+from .ebench import version, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot
 from .ebench import list_resources, MenuValueError
 
 # Installing this module as command
@@ -21,7 +21,7 @@ class UTG962(UnitSignalGenerator):
 
     def __init__( self, ip=None, addr=None, debug = False ):
         logging.info( "UTG962: ip={},  addr={}".format(ip, addr))
-        super().__init__( ip=ip, addr=addr, debug=debug)
+        super().__init__(ip=ip, addr=addr, debug=debug)
     
 
     # API ---> 
@@ -44,7 +44,8 @@ class UTG962(UnitSignalGenerator):
 
         """
         # Known state
-        self.ch = [ False, False ]
+        # self.ch = [ False, False ]
+        self.resetTwinState()
         self.pyvisaReset()
         self.llOpen()
 
@@ -53,38 +54,63 @@ class UTG962(UnitSignalGenerator):
         if channel < 1 or channel > 2: raise MenuValueError("Invalid channel {} - expect 1 or 2".format(channel))
         return channel
 
-    def on(self,channel):
+    def on(self,channel, keyWave=True):
         """Opens 'channel' on UTG962/932 device.
+        
+        :keyWave: When called generate or from arb function we are
+        already configuing wave and should no call it twice.
+
         """
         channel = self.validateCh(channel)
-        if self.ch[channel-1]: return;
+        logging.debug( "on: self.ch={}".format(self.ch))
         self.ilChooseChannel( channel )
-        self.llCh(channel)
-        self.ch[channel-1] = True
-        self.llOpen()
+        if keyWave: self.llWave()
+        if not self.ch[channel-1]:
+            self.llCh(channel)
+            # self.ch[channel-1] = True
+            self.setTwistate(channel,True)
         self.delay()
+        self.llOpen()
 
+    def tst( self, channel ):
+        self.delay(10)
+        self.ilChooseChannel(channel)
+        self.llWave()
+        wave = "arb"
+        self.ilWave1(wave)
+        self.llOpen()
+        # self.ilArbModeReset(channel)
+        # self.ilFileLocation("Internal")
+        # waveFile = "AttALT"
+        # self.ilArbInternal( waveFile )
+        self.llOpen()
+        
     def off(self,channel):
         """Closes 'channel' on UTG962/932 device.
+        Open lock on device
         """
         channel = self.validateCh(channel)
-        if not self.ch[channel-1]: return;
+        logging.debug( "off: self.ch={}".format(self.ch))
         self.ilChooseChannel( channel )
-        self.llCh(channel)
-        self.ch[channel-1] = False
+        if self.ch[channel-1]:
+            self.llCh(channel)
+            # self.ch[channel-1] = False
+            self.setTwistate(channel,False)
         self.llOpen()
         self.delay()
 
 
-    def generate( self, channel=1, wave="sine", freq=None, amp=None,  offset=None, phase=None, duty=None, raised=None, fall=None ):
-        """sine, square, pulse generation
+    def generate( self, channel=1, wave="sine", freq=None, amp=None,  offset=None, phase=None, duty=None, raised=None, fall=None, symmetry=None ):
+        """sine, square, pulse, ramp generation
         """
         # Deactivate
-        self.off(channel)
+        # self.off(channel)
         # Start config
+        logging.info( "generate: channel={}, wave={}, freq={}".format(channel, wave, freq))
         self.ilChooseChannel( channel )
         # At this point correct channel selected
-        self.ilWave1( wave )
+        self.llWave()
+        self.ilWave1(wave)
         # Frequencey (sine, square, pulse,arb)
         if freq is not None and not not freq:
             # Without down would toggle Periosd
@@ -108,6 +134,10 @@ class UTG962(UnitSignalGenerator):
         if duty is not None and not not duty:
             self.ilWave1Props( "Duty")
             self.ilDuty( *self.valUnit( duty ))
+        # Ramp (only)
+        if symmetry is not None and not not symmetry:
+            self.ilSymmetryProps( "Symmetry")
+            self.ilDuty( *self.valUnit(symmetry))
         # Raise (pulse)
         if raised is not None and not not raised:
             self.ilWave1Props( "Page Down")
@@ -124,18 +154,23 @@ class UTG962(UnitSignalGenerator):
             self.ilRaiseFall( *self.valUnit( fall ))
             self.ilWave2Props( "Page Up")
         # Activate
-        self.on(channel)
+        self.delay(2)
+        self.on(channel, keyWave=False)
 
     def sine( self, **argv ):
         """Generate sine wave on 'channel' """
         self.generate( wave="sine", **argv)
     def square( self, **argv ):
         """Generate square wave on 'channel' """
-        self.generate( wave="sine", **argv)
+        self.generate( wave="square", **argv)
     def pulse( self, **argv ):
         """Generate pulse wave on 'channel' 
         """
-        self.generate( wave="sine", **argv)
+        self.generate( wave="pulse", **argv)
+    def ramp( self, **argv ):
+        """Generate ramp wave on 'channel' 
+        """
+        self.generate( wave="ramp", **argv)
         
     def arb( self, channel=1, wave="arb", waveFile="AbsSine",
              freq=None, amp=None, offset=None, phase=None ):
@@ -161,23 +196,34 @@ class UTG962(UnitSignalGenerator):
                    StairUD, StepResp,Trapezia, TV, Voice, Log_up,
                    Log_down, Tri_up, Tri_down
 
+                   or path bsv file to upload
+
         """
         # Deactivate
-        self.off(channel)
-        # Start config
+        # self.off(channel)
+        # # Start config
+        logging.info( "wave={}, freq={}, waveFile={}".format(wave, freq, waveFile))
         self.ilChooseChannel( channel )
-        # Choose arb
-        self.ilWave1( wave )
+        # At this point correct channel selected
+        self.llWave()
+        self.ilWave1(wave)
 
         # WaveFile -> Internal --> WaveFile --> OK
-        self.llDown()
-        self.delay()
-        self.ilWaveArbProps("WaveFile")
-        self.delay()
-        self.ilFileLocation("Internal")
-        self.ilArbInternal( waveFile )
+        self.ilArbModeReset(channel)
+        # self.delay(2)
+        # Assume in Wave.Arb.WaveFile (w. reset)
+        if self.ilIsInternalArbName(waveFile):
+            # internal 'waveFile' - activate it 
+            self.ilFileLocation("Internal")
+            self.ilArbInternal( waveFile )
+        else:
+            self.ilArbModeReset(channel)
+            # upload exteral first slot [1] 
+            self.ilWriteFile( waveFile, channel=channel )
+            self.ilFileLocation("External")
         self.delay(2)
         self.llF(5)  # ok
+        self.delay(2)
 
         # self.ilWriteFile( filePath = filePath )
         
@@ -185,7 +231,6 @@ class UTG962(UnitSignalGenerator):
         if freq is not None and not not freq:
             self.ilWaveArbProps( "Freq")
             self.ilFreq( *self.valUnit( freq ) )
-            self.llDown()
         # Amplification (sine, square, pulse, arb)
         if amp is not None and not not amp:
             logging.info( "amp value:'{}'".format(amp))
@@ -200,11 +245,20 @@ class UTG962(UnitSignalGenerator):
             self.ilWaveArbProps( "Phase")
             self.ilPhase( *self.valUnit( phase ))
         # Activate
-        self.on(channel)
+        self.delay(2)
+        # self.llOpen()
+        # arb needs this - not sure why :(
+        # self.llWave()
+        # self.ilWave1(wave)
+        # self.delay(2)
+        # No need to choose because have already done 'ilChooseChannel'
+        self.on(channel, keyWave=False )
 
 
     def close(self):
-        self.llOpen()
+        # self.llOpen()
+        # Wait for a while before closing connection
+        # self.delay(10)        
         super().close()
    
 
@@ -220,9 +274,9 @@ onOffProps  = {
     'channel'    :   "Channel 1,2 to operate upon",    
 }
 
-screenCapturePar  = {
-    'fileName'   :   "Screen capture file name (optional)",    
-}
+# screenCapturePar  = {
+#     'fileName'   :   "Screen capture file name (optional)",    
+# }
 
 # stopRecordingPar = {
 #     "fileName" : "Filename to store recording, '.' show current playback list",
@@ -246,6 +300,10 @@ squarePar = sinePar | {
 pulsePar = squarePar | {
     'raised':   "Raise [ns,us,ms,s,ks]",
     'fall'  :     "Fall [ns,us,ms,s,ks]",
+}
+
+rampPar = sinePar | {
+    'symmetry'  :   "Symmetry [%]",
 }
 
 defaults = {
@@ -279,7 +337,7 @@ Hint:
 # ------------------------------------------------------------------
 # Main
 
-def run( _argv, runMenu:bool =True, addr=None, ip=None ):
+def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordingDir=None ):
     """Construct UTG962 -instrument and wrap it to MenuCtrl object. Call
      MenuCtrl.mainMenu if 'runMenu' True (default).
 
@@ -292,48 +350,46 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None ):
 
     sgen = UTG962( addr=addr, ip=ip)
     
-    cmdController = MenuCtrl( args=_argv, instrument=sgen, prompt = "[q=quit,?=commands,??=help on command]")
+    menuController = MenuCtrl( args=_argv, instrument=sgen, prompt = "[q=quit,?=commands,??=help on command]")
     mainMenu = {
         "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
         "square"                 : ( "Generate square -wave on channel 1|2", squarePar, sgen.square  ),
         "pulse"                  : ( "Generate pulse -wave on channel 1|2", pulsePar, sgen.pulse ),
+        "ramp"                   : ( "Generate ramp -wave on channel 1|2", rampPar, sgen.ramp ),        
         "arb"                    : ( "Upload wave file and use it to generate wave on channel 1|2", arbProps, sgen.arb),
         "on"                     : ( "Switch on channel 1|2", onOffProps, sgen.on ),
+        "_tst"                   : ( "Switch on channel 1|2", onOffProps, sgen.tst ),
         "off"                    : ( "Switch off channel 1|2", onOffProps, sgen.off),
         "reset"                  : ( "Send reset to UTG900 signal generator", None, sgen.reset),
-        "Record"                 : (None, None, None),
-        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(cmdController) ),
+        "Record"                 : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
         MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
-                                     menuStopRecording(cmdController, pgm=_argv[0], fileDir=FLAGS.recordingDir) ),
-        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", screenCapturePar,
+                                     menuStopRecording(menuController, pgm=_argv[0], recordingDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
                                      menuScreenShot(instrument=sgen,captureDir=FLAGS.captureDir,prefix="UTG-" )),
         "list_resources"         : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources ),
-        "Misc"                   : (None, None, None),        
-        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
-        "Help"                   : (None, None, None),                
-        MenuCtrl.MENU_QUIT       : ( "Exit", None, None),
+        # "Misc"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        "Help"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
         MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, usageText=usageText )),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                   lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
+        MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
     }
 
-    cmdController.setMenu( menu = mainMenu, defaults = defaults)
+    menuController.setMenu( menu = mainMenu, defaults = defaults)
     
-    if runMenu:
-        cmdController.mainMenu()
-        if cmdController.isTopMenu:
-            # Top level closes instruments && cleanup
-            cmdController.close()
-            cmdController = None
+    if runMenu:  menuController.mainMenu()
 
-    return cmdController
+    return menuController
         
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    run( _argv, addr=FLAGS.addr  )
+    menuController = run( _argv, addr=FLAGS.addr, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir  )
+    menuController.close()
 
 
 def main():

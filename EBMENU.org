@@ -1,5 +1,237 @@
+* Integrating an ~ebench~ application with =ebMenu= 
+:PROPERTIES:
+:TOC:      :include all
+:END:
 
-* Merging hello2.py to =ebMenu= 
+This example continues with ~hello2~ -example presented in
+[[file:HELLO.org]] and explains, how to integrate of a standalone ~ebench~
+application with ~ebench.ebMenu~
+
+:CONTENTS:
+- [[#integrating-an-ebench-application-with-ebmenu][Integrating an ebench application with ebMenu]]
+  - [[#proviso-for-integrating-an-ebench-application-with-ebmenu][Proviso for integrating an ebench application with ebMenu]]
+    - [[#inherit-instrument-controller-from-ebenchinstrument][Inherit instrument controller from ebench.Instrument]]
+    - [[#define-run-function][Define run function]]
+    - [[#construct-instrument-controller-for-a-class-inherting-from-ebenchinstrument][Construct instrument controller for a class inherting from ebench.Instrument]]
+    - [[#construct-menu-controller-object-for-ebenchmenuctrl--class][Construct menu controller object for ebench.MenuCtrl -class]]
+    - [[#guard-menu-repl--loop][Guard menu REPL -loop]]
+    - [[#summary-of-hello2][Summary of hello2]]
+  - [[#create-helloyaml][Create hello.yaml]]
+    - [[#configure--submenu-menu-commands][Configure  subMenu menu commands]]
+    - [[#configure-apicall-menu-commands][Configure apiCall menu commands]]
+  - [[#run-ebmenu-with---config-pointing-to-exampleshellohelloyaml][Run ebMenu with --config pointing to examples/hello/hello.yaml]]
+    - [[#list-application-commands-and-usage][List application commands and usage]]
+    - [[#yaml--configuration-used-in-object-initalization][yaml -configuration used in object initalization]]
+    - [[#api-calls][API calls]]
+    - [[#counters-saved-to-csv-file][Counters saved to csv-file]]
+- [[#source-code-and-configurations][Source code and configurations]]
+  - [[#source-code-and-configurations-files][Source code and configurations files]]
+  - [[#example-application-hello2py-integrated-to-ebmenu][Example application hello2.py integrated to ebMenu]]
+  - [[#example-configuration-defining-integration-helloyaml][Example configuration defining integration hello.yaml]]
+  - [[#emacs-variables][Emacs variables]]
+:END:
+
+
+** Proviso for integrating an ~ebench~ application with ~ebMenu~
+
+Proviso for integrating an ~ebench~ application with ~ebMenu~ is
+explained using ~hello2~ application presented in [[file:HELLO.org]].
+
+*** Inherit instrument controller from ~ebench.Instrument~
+
+~hello2~ -example defines class ~HelloInstrument~, which is derived
+from ~Instrument~
+
+#+BEGIN_SRC bash :eval no-export :results output
+grep 'class *HelloInstrument'  examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+: class HelloInstrument(Instrument):
+
+where ~Instrument~ is imported from ~ebench~
+#+BEGIN_SRC bash :eval no-export :results output
+grep 'import *Instrument'  examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+: from ebench import Instrument
+
+
+
+*** Define ~run~ function
+
+Example ~hello2~ defines ~run~ -function 
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+grep 'def.*run' examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+: def run( _argv, runMenu:bool = True, greetCount = 0  ):
+
+The parameters are documented in function docstring as follows:
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat examples/hello/hello2.py | sed -ne '/def run/,/"""$/ p'
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+def run( _argv, runMenu:bool = True, greetCount = 0  ):
+     """Run hello2 as a standalone interactive or CLI application with the
+     proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
+
+     :_argv: list of command line arguments, in interactive mode this
+     is just the name of script. In CLI mode, name is followed by
+     command line arguments
+
+     :runMenu: defaults True = running standalone application, ebMenu
+     sets this to false
+
+     :greetCount: In this contrived example, 'greetCount' is the
+     number greetings already made and it is passed 'HelloInstrument'
+     -constructor. For real world use, it represent any parameter
+     needed in instruments constructor.
+
+     """
+#+end_example
+
+
+with two parameters
+passes the object controlling instrument it to ~menuController~
+  object created for ~MenuCtrl~ class
+
+- . In
+- returns ~menuController~ object it has constructed
+- uses boolean parameter ~runMenu~ guarding
+  ~menuController.mainMenu()~ executing REPL -loop of the menu 
+- does not close menu ~menuController~. Call to
+  ~menuController.close()~ is done in ~_main~ -function after
+  returning from ~run~ method
+
+
+*** Construct instrument controller for a class inherting from ~ebench.Instrument~
+
+In ~run~ function, ~hello2~ creates an instrument controller
+~helloController~, for ~HelloInstrument~ class
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+grep 'hello.*HelloInstrument' examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+:      helloController = HelloInstrument( greetCount = greetCount )
+
+
+*** Construct menu controller object for ~ebench.MenuCtrl~ -class
+
+In ~run~ -function, ~hello2~ -example constructs menu controller
+object ~menuController~ for ~MenuCtrl~ class.
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+grep 'menuController.*=.*MenuCtrl' examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+:      menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
+
+imported from ~ebench~
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+grep 'import.*MenuCtrl' examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+: from ebench import MenuCtrl
+
+*** Guard menu REPL -loop
+
+Use ~runMenu~ parameter to guard call to ~menuController.mainMenu()~
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+grep 'if runMenu' examples/hello/hello2.py
+#+END_SRC
+
+#+RESULTS:
+:      if runMenu: menuController.mainMenu()
+
+
+*** Summary of hello2
+
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+  cat examples/hello/hello2.py | sed -ne '/def run/,$ p'
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+def run( _argv, runMenu:bool = True, greetCount = 0  ):
+     """Run hello2 as a standalone interactive or CLI application with the
+     proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
+
+     :_argv: list of command line arguments, in interactive mode this
+     is just the name of script. In CLI mode, name is followed by
+     command line arguments
+
+     :runMenu: defaults True = running standalone application, ebMenu
+     sets this to false
+
+     :greetCount: In this contrived example, 'greetCount' is the
+     number greetings already made and it is passed 'HelloInstrument'
+     -constructor. For real world use, it represent any parameter
+     needed in instruments constructor.
+
+     """
+     helloController = HelloInstrument( greetCount = greetCount )
+
+     mainMenu = {
+     
+         # First section: application commands
+         "Commands:"              : ( None, None, None),
+         "hello"                  : ( "Say hello", helloPar, helloController.sayHello ),
+     
+         # Second section: getting help
+         "Help:"                  : ( None, None, None),
+         MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda : usage(cmd=os.path.basename(__file__)
+                                                         , mainMenu=mainMenu
+                                                         , synopsis="Demo hello v2"
+                                                         , usageText=usageText )),
+         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+         "_version"               : ("Version number", None, lambda **argv: print(version())),
+     
+         # Third section: exiting
+         "Exit:"                  : ( None, None, None),
+         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+     
+     }
+     
+
+     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
+     menuController.setMenu(menu=mainMenu, defaults=defaults)
+     if runMenu: menuController.mainMenu()
+
+     return menuController
+
+def _main( _argv ):
+     # global gSkooppi
+    logging.set_verbosity(FLAGS.debug)
+    menuController = run( _argv )
+    menuController.close()
+
+def main():
+    try:
+        app.run(_main)
+    except SystemExit:
+        pass
+
+
+if __name__ == '__main__':
+    main()
+#+end_example
+
+
 
 ** Create hello.yaml
 
