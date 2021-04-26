@@ -47,6 +47,7 @@
   - high flexibility
   - and high service value
 
+
 ** Study of viability ~ebench~ -Tools
 
    The problem statement in the previous chapter is obviously quite
@@ -67,7 +68,7 @@
 
 #+name: ebMenu
 #+BEGIN_SRC cpp :exports none
-./ebMenu
+ebMenu
 #+END_SRC
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -99,7 +100,7 @@ Commands:
 
 #+name: ebUnit
 #+BEGIN_SRC cpp :exports none
-./ebUnit
+ebUnit
 #+END_SRC
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -108,7 +109,6 @@ Commands:
 
 #+RESULTS:
 #+begin_example
-ebUnit - 0.0.10-pre2
 ebUnit: Tool to control UNIT-T UTG962/932 Waveform generator
 
 Usage: ebUnit [options] [commands and parameters] 
@@ -159,7 +159,7 @@ Hint:
 
 #+name: ebRigol
 #+BEGIN_SRC cpp :exports none
-./ebRigol
+ebRigol
 #+END_SRC
 
 
@@ -169,7 +169,6 @@ Hint:
 
 #+RESULTS:
 #+begin_example
-ebRigol - 0.0.10-pre2
 ebRigol: Tool to control Rigol MSO1104Z osciloscope
 
 Usage: ebRigol [options] [commands and parameters] 
@@ -205,12 +204,14 @@ Commands:
 
 ** TODO Architecture 
 
+
 ** Documentation references
 
 - Hello World example:  [[file:HELLO.org]]
 - Hello World example integrated with ~ebMenu~: [[file:EBMENU.org]]
 - BDD testig document for ~ebUnit~ -tool: [[file:ebUnit.org]]
 - ~ebench~ -toolset features: [[file:FEATURES.org]]
+
 
 ** TODO Installation
    :PROPERTIES:
@@ -305,7 +306,65 @@ Commands:
 
 *** Interactive usage
 
+~ebench~ -tools  should give usage instructions with ~?~ -command.
+
+For example running 
+
+#+BEGIN_SRC bash :eval no-export :results output :exports both :noweb yes
+cat <<EOF | ebMenu
+?
+q
+EOF
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+[?=help, q=quit] > ebMenu: Menu of ebench toolset
+
+Usage: ebMenu [options] [commands and parameters] 
+
+Commands:
+
+        skooppi  : Rigol osciloscope control
+           sgen  : UNIT-T UTG962 signal generator control
+       counters  : Read hello.py counters
+   counters2csv  : Save hello.py counters to example.csv
+              q  : Exit
+----------   Other    ----------
+              ?  : List commands
+             ??  : List command parameters
+              !  : Start recording
+              .  : Stop recording
+[?=help, q=quit] > 
+#+end_example
+
+
 *** Command line usage
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes
+<<ebMenu>> ? 
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+ebMenu: Menu of ebench toolset
+
+Usage: ebMenu [options] [commands and parameters] 
+
+Commands:
+
+        skooppi  : Rigol osciloscope control
+           sgen  : UNIT-T UTG962 signal generator control
+       counters  : Read hello.py counters
+   counters2csv  : Save hello.py counters to example.csv
+              q  : Exit
+----------   Other    ----------
+              ?  : List commands
+             ??  : List command parameters
+              !  : Start recording
+              .  : Stop recording
+#+end_example
+
 
 *** API usage
 

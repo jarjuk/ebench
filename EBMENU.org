@@ -4,7 +4,7 @@
 :END:
 
 This example continues with ~hello2~ -example presented in
-[[file:HELLO.org]] and explains, how to integrate of a standalone ~ebench~
+[[file:HELLO.org]] and explains, how to integrate a standalone ~ebench~
 application with ~ebench.ebMenu~
 
 :CONTENTS:
@@ -144,6 +144,7 @@ grep 'import.*MenuCtrl' examples/hello/hello2.py
 
 #+RESULTS:
 : from ebench import MenuCtrl
+
 
 *** Guard menu REPL -loop
 
