@@ -494,9 +494,9 @@ This document presents two hello world examples:
   #+END_SRC
 
 
-*** Interactive and CLI -entry point in ~hello2_main.py~ for 
+*** Interactive and CLI -entry point in ~hello2_main.py~ 
 
-Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
+Import ~hello2.run~ and some [[https://pypi.org/project/absl-py/][absl]] -services
 
 #+name: hello2-import
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -507,7 +507,8 @@ Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-
 #+END_SRC
 
 
-and define command line configuration parameter ~greetCount~ with initial value ~0~
+DEfine command line configuration parameter ~greetCount~ with initial
+value ~0~
 
 #+name: hello2-configs
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -515,8 +516,8 @@ and define command line configuration parameter ~greetCount~ with initial value 
 #+END_SRC
 
 ~_main~ calls ~hello.run()~ and passes command line configuration
-parameter ~FLAGS.greetCount~ to ~run~ -function. After returning from
-~run~, close ~menuController~ constructed.
+parameter ~FLAGS.greetCount~ to the function. After returning from
+~run~, close ~menuController~.
 
  #+name: _main2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
@@ -533,7 +534,8 @@ parameter ~FLAGS.greetCount~ to ~run~ -function. After returning from
 
   #+END_SRC
 
-In ~main~ -function setup ~absl~  context and call run ~_main()~ function from above
+In ~main~ -function, setup ~absl~ context and call run ~_main()~
+defined above:
 
 #+name: _main2_main
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -608,7 +610,8 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/__init__.py :noweb yes :exports none
   #+END_SRC
 
- Complete hello2 -example is following sections:
+ The complete hello2 implementation is presented in the following
+ sections:
 
 **** ~hello2.py~
   #+BEGIN_SRC bash :eval no-export :results output :exports results
@@ -762,10 +765,11 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
        return menuController
   #+end_example
 
+
 **** ~hello2_main.py~
 
-  Main -function are save in a separate file ~hello2_main.py~ to avoid
-  conflicts in ~absl~ flags. 
+  Application main is saved into a separate file, ~hello2_main.py~, to
+  avoid conflicts in ~absl~ flags in other applications.
 
   #+BEGIN_SRC bash :eval no-export :results output :exports results
   cat examples/hello2/hello2_main.py
@@ -811,9 +815,12 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
       main()
   #+end_example
 
+
 **** ~__init__.py~ and directory list
 
-  Python needs an ampty file ~__init__.py~ saved along with ~hello2.py~ and ~hello2_main.py~ 
+  Python requires an ~__init__.py~ -file to be saved along with
+  ~hello2.py~ and ~hello2_main.py~
+
   #+BEGIN_SRC bash :eval no-export :results output :exports results
   cd examples/hello2
   ls -ltr | grep -v  __pycache__ | grep -v 'hello.yaml'
@@ -828,8 +835,7 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
 
 *** Running ~hello2~
 
-In the examples below, ~<<hello2Cmd>>~ refers to following python
-module:
+In the examples below, ~<<hello2Cmd>>~ refers to following command:
 
 #+name: hello2Cmd
 #+BEGIN_SRC cpp :exports code
@@ -967,21 +973,22 @@ examples/hello2/hello2_main.py
  : Hello #1 to world from jj
 
 
- Expect to see 'Hello world from moon', where default value is
- overridden on command line.
+ Expect to see 'Hello earth from moon', where default value
+ ~os.environ['USER']~ is overridden with the value received from
+ command line ~who="moon~:
 
  #+BEGIN_SRC bash :eval no-export :results output :noweb yes
- <<hello2Cmd>> greet whom="world" who="moon"
+ <<hello2Cmd>> greet whom="earth" who="moon"
  #+END_SRC
 
  #+RESULTS:
- : Hello #1 to world from moon
+ : Hello #1 to earth from moon
 
 
 **** Object state is managed and parameter values are remembered
 
  Making two CLI -greetings line demonstrates how object state is
- maintained (=variable ~greetCount~ increment for each greeting).
+ maintained (=variable ~greetCount~ incremented for each greeting).
 
  #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  <<hello2Cmd>> greet whom="moon" who="earth" greet whom="sun"
@@ -999,12 +1006,12 @@ examples/hello2/hello2_main.py
 
  #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  echo USER=$USER
- <<hello2Cmd>> --greetCount=61 greet whom="World"  greet whom="the sun"   greet whom="the moon"  
+ <<hello2Cmd>> --greetCount=61 greet whom="the world"  greet whom="the sun"   greet whom="the moon"  
  #+END_SRC
 
  #+RESULTS:
  : USER=jj
- : Hello #62 to World from jj
+ : Hello #62 to the world from jj
  : Hello #63 to the sun from jj
  : Hello #64 to the moon from jj
 
