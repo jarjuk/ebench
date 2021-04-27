@@ -78,14 +78,8 @@
    List of features mainained in [[file:FEATURES.org]]
 
 *** ~ebMenu~
-
-#+name: ebMenu
-#+BEGIN_SRC cpp :exports none
-ebMenu
-#+END_SRC
-
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<ebMenu>> ?
+ebMenu ?
 #+END_SRC
 
 #+RESULTS:
@@ -111,13 +105,8 @@ Commands:
 
 *** ~ebUnit~
 
-#+name: ebUnit
-#+BEGIN_SRC cpp :exports none
-ebUnit
-#+END_SRC
-
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<ebUnit>> ?
+ebUnit ?
 #+END_SRC
 
 #+RESULTS:
@@ -167,17 +156,11 @@ Hint:
 #+end_example
 
 
+
 *** ~ebRigol~
 
-
-#+name: ebRigol
-#+BEGIN_SRC cpp :exports none
-ebRigol
-#+END_SRC
-
-
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<ebRigol>> ?
+ebRigol ?
 #+END_SRC
 
 #+RESULTS:
