@@ -34,7 +34,6 @@ This document presents two hello world examples:
       - [[#default-value-of-a-parameter][Default value of a parameter]]
       - [[#object-state-is-managed-and-parameter-values-are-remembered][Object state is managed and parameter values are remembered]]
       - [[#use-command-line-configuration-for-intialization][Use command line configuration for intialization]]
-  - [[#emacs-variables][Emacs variables]]
 :END:
 
 
@@ -523,6 +522,7 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
 
 #+END_SRC
 
+
 *** Create application main for Interactive and CLI -use
 
 Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
@@ -826,7 +826,7 @@ examples/hello2/hello2_main.py
 
 **** Configuration parameters with ~--help~
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  <<hello2Cmd>> --help
  #+END_SRC
 
@@ -848,7 +848,7 @@ examples/hello2/hello2_main.py
 
 
 **** Usage help and listing commands with =?=
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  <<hello2Cmd>> ?
  #+END_SRC
 
@@ -944,7 +944,7 @@ examples/hello2/hello2_main.py
  Expect to see 'Hello world from $USER', where user gets default value
  from environment variable.
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  echo USER=$USER
  <<hello2Cmd>> greet whom="world" 
  #+END_SRC
@@ -970,7 +970,7 @@ examples/hello2/hello2_main.py
  Making two CLI -greetings line demonstrates how object state is
  maintained (=variable ~greetCount~ increment for each greeting).
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  <<hello2Cmd>> greet whom="moon" who="earth" greet whom="sun"
  #+END_SRC
 
@@ -984,7 +984,7 @@ examples/hello2/hello2_main.py
  Use command CLI switch ~--greetCount=61~ to initialize application,
  and expect to see greetings counted starting from 62:
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  echo USER=$USER
  <<hello2Cmd>> --greetCount=61 greet whom="World"  greet whom="the sun"   greet whom="the moon"  
  #+END_SRC
@@ -996,30 +996,13 @@ examples/hello2/hello2_main.py
  : Hello #64 to the moon from jj
 
 
-
+ 
  
 * Fin                                                              :noexport:
-
-** Emacs variables
-
-   #+RESULTS:
 
    # Local Variables:
    # org-confirm-babel-evaluate: nil
    # End:
    #
-   # Muuta 
-   # eval: (cdlatex-mode)
-   #
-   # Local ebib:
-   # org-ref-default-bibliography: "./HELLO.bib"
-   # org-ref-bibliography-notes: "./HELLO-notes.org"
-   # org-ref-pdf-directory: "./pdf/"
-   # org-ref-notes-directory: "."
-   # bibtex-completion-notes-path: "./HELLO-notes.org"
-   # ebib-preload-bib-files: ("./HELLO.bib")
-   # ebib-notes-file: ("./HELLO-notes.org")
-   # reftex-default-bibliography: ("./HELLO.bib")
-
 
 
