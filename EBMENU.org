@@ -149,7 +149,7 @@ grep 'if runMenu' examples/hello/hello2.py
 *** Summary of ~hello2.run()~ -function
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
-  cat examples/hello/hello2.py | sed -ne '/def run/,$ p'
+  cat examples/hello2/hello2.py | sed -ne '/def run/,$ p'
 #+END_SRC
 
 #+RESULTS:
@@ -158,17 +158,17 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      """Run hello2 as a standalone interactive or CLI application with the
      proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
 
-     :_argv: list of command line arguments, in interactive mode this
+     :_argv: list of command line arguments. In interactive mode, this
      is just the name of script. In CLI mode, name is followed by
      command line arguments
 
-     :runMenu: defaults True = running standalone application, ebMenu
-     sets this to false
+     :runMenu: defaults True = running standalone application. ebMenu
+     sets this to 'False'.
 
      :greetCount: In this contrived example, 'greetCount' is the
-     number greetings already made and it is passed 'HelloInstrument'
-     -constructor. For real world use, it represent any parameter
-     needed in instruments constructor.
+     number greetings already made. It is passed to 'HelloInstrument'
+     -constructor. For real world use, 'greetCount' represents
+     parameters needed in instruments constructor.
 
      """
      helloController = HelloInstrument( greetCount = greetCount )
@@ -176,11 +176,11 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      mainMenu = {
      
          # First section: application commands
-         "Commands:"              : ( None, None, None),
-         "hello"                  : ( "Say hello", helloPar, helloController.sayHello ),
+         "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
+         "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
      
          # Second section: getting help
-         "Help:"                  : ( None, None, None),
+         "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
          MenuCtrl.MENU_HELP       : ( "List commands", None,
                                     lambda : usage(cmd=os.path.basename(__file__)
                                                          , mainMenu=mainMenu
@@ -188,11 +188,13 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
                                                          , usageText=usageText )),
          MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                     lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-         "_version"               : ("Version number", None, lambda **argv: print(version())),
      
          # Third section: exiting
-         "Exit:"                  : ( None, None, None),
-         MenuCtrl.MENU_QUIT       : ("Exit", None, None),
+         "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
+         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+     
+         # Hidden
+         "_version"               : ("Version number", None, lambda **argv: print(version())),
      
      }
      
@@ -202,27 +204,15 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      if runMenu: menuController.mainMenu()
 
      return menuController
-
-def _main( _argv ):
-     # global gSkooppi
-    logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv )
-    menuController.close()
-
-def main():
-    try:
-        app.run(_main)
-    except SystemExit:
-        pass
-
-
-if __name__ == '__main__':
-    main()
 #+end_example
 
-
-
 ** Create hello.yaml
+
+   This example uses ~hello.yaml~ to integrate two instances of
+   ~hello2.py~ Instrument controller into ~ebench.ebMenu~ tool, and to
+   define two API commands operating on thes instruments. First API
+   command prints JSON object collected from intrument controller
+   APIs, and the second appends results to a CSV-file.
 
 *** Configure  ~subMenu~ menu commands
 
