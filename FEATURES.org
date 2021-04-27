@@ -1,13 +1,14 @@
 * ~ebench~ -Toolset Features
 
-- [X] Simple scripting
+- [-] Gentle slope to  scripting
   - [X] Use the tool interactively
   - [X] Save interactive session to script file
     - [X] Start recording function
     - [X] Stop recording (=save) function
   - [X] Possible to execute saved script from CLI
-- [X] Interactive usage guided by REPL cycle prompt
-  - [X] Present Menu of possible commands  to user
+  - [ ] Interactive/CLI interface 1:1 migration path to API scripting
+- [X] Interactive usage guided by [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] prompts
+  - [X] Present a Menu of possible commands  to user
   - [X] Default value for menu command parameters
   - [X] Prompt for menu  command parameters and input
   - [X] Update default value for menu command parameter
@@ -15,7 +16,8 @@
 - [X] Help for interactive usage 
   - [X] Configure Menu
     - [X] Menu configuration: dict mapping  menu command: -> (prompt, menu command parameters, menu action)
-    - [X] Menu configuration: group separator 
+    - [X] Menu configuration: group separator
+    - [X] Hidden menu commands
   - [X] List of menu commands (?-menu selection)
   - [X] Document menu command  (??-menu selection)
     - [X] Topic: menu command prompt

@@ -41,8 +41,8 @@
     collection with the help of scripts
 
 - with gently sloping adoption curve
-  - incorporate one instrument at the time, when need arises
-  - without the need of upfront investments in infrastructure 
+  - incorporatin  instrument at the time, when need arises
+  - without too much need of upfront investments in infrastructure
 
 - as as on-going work to integrate tools created by
   - fellow hobbyists
@@ -75,6 +75,7 @@
    - use Python as core implementation language and existing libraries
      for [[https://pyvisa.readthedocs.io/en/latest/][instrument integrations]] and [[https://pypi.org/project/absl-py/][configuration]] interfaces
 
+   List of features mainained in [[file:FEATURES.org]]
 
 *** ~ebMenu~
 
@@ -222,7 +223,7 @@ Commands:
 - Hello World example:  [[file:HELLO.org]]
 - Hello World example integrated with ~ebMenu~: [[file:EBMENU.org]]
 - BDD testig document for ~ebUnit~ -tool: [[file:ebUnit.org]]
-- ~ebench~ -toolset features: [[file:FEATURES.org]]
+- ~ebench~ -toolset
 
 
 ** TODO Installation
