@@ -212,32 +212,48 @@ Commands:
 - ~ebench~ -toolset
 
 
-** *TBD* Installation
+** Installation
    :PROPERTIES:
    :header-args:bash: :dir  tmp
    :END:
 
-*TBD*
 
 *** Clone repo ~https://github.com/jarjuk/ebench~
 
- #+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports none
+pwd
+#+END_SRC
+
+#+RESULTS:
+: /home/jj/work/ebench/tmp
+
+#+BEGIN_SRC bash :eval no-export :results output
+rm -rf ebench
+#+END_SRC
+
+#+RESULTS:
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports code
  git clone https://github.com/jarjuk/ebench
- #+END_SRC
-
-
-*** Show version
-
- #+BEGIN_SRC bash :eval no-export :results output
- cat ebench/VERSION
  #+END_SRC
 
  #+RESULTS:
 
 
+*** Show version
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ cat ebench/VERSION
+ #+END_SRC
+
+ #+RESULTS:
+ : 0.0.10-pre5
+
+
 *** Show releases notes
 
- #+BEGIN_SRC bash :eval no :results output
+ #+BEGIN_SRC bash :eval no :results output :exports both
  cat ebench/RELEASES.md
  #+END_SRC
 
@@ -259,6 +275,109 @@ Commands:
   python3 setup.py  sdist  bdist_wheel
   #+END_SRC
 
+  #+RESULTS:
+  #+begin_example
+  version 0.0.10-pre5 , packages ['ebench']
+  running sdist
+  running egg_info
+  writing ebench.egg-info/PKG-INFO
+  writing dependency_links to ebench.egg-info/dependency_links.txt
+  writing entry points to ebench.egg-info/entry_points.txt
+  writing requirements to ebench.egg-info/requires.txt
+  writing top-level names to ebench.egg-info/top_level.txt
+  reading manifest file 'ebench.egg-info/SOURCES.txt'
+  writing manifest file 'ebench.egg-info/SOURCES.txt'
+  running check
+  creating ebench-0.0.10rc5
+  creating ebench-0.0.10rc5/ebench
+  creating ebench-0.0.10rc5/ebench.egg-info
+  copying files to ebench-0.0.10rc5...
+  copying setup.py -> ebench-0.0.10rc5
+  copying ebench/CMDS.py -> ebench-0.0.10rc5/ebench
+  copying ebench/Rigol.py -> ebench-0.0.10rc5/ebench
+  copying ebench/Unit.py -> ebench-0.0.10rc5/ebench
+  copying ebench/__init__.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebMenu.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebMenu.yaml -> ebench-0.0.10rc5/ebench
+  copying ebench/ebRigol.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebRigol_main.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebUnit.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebUnit_main.py -> ebench-0.0.10rc5/ebench
+  copying ebench/ebench.py -> ebench-0.0.10rc5/ebench
+  copying ebench/hello.py -> ebench-0.0.10rc5/ebench
+  copying ebench.egg-info/PKG-INFO -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/SOURCES.txt -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/dependency_links.txt -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/entry_points.txt -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/requires.txt -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/top_level.txt -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench.egg-info/zip-safe -> ebench-0.0.10rc5/ebench.egg-info
+  copying ebench/../RELEASES.md -> ebench-0.0.10rc5/ebench/..
+  copying ebench/../VERSION -> ebench-0.0.10rc5/ebench/..
+  Writing ebench-0.0.10rc5/setup.cfg
+  Creating tar archive
+  removing 'ebench-0.0.10rc5' (and everything under it)
+  running bdist_wheel
+  running build
+  running build_py
+  installing to build/bdist.linux-x86_64/wheel
+  running install
+  running install_lib
+  creating build/bdist.linux-x86_64/wheel
+  creating build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/CMDS.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/Rigol.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebRigol_main.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebMenu.yaml -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebUnit.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebMenu.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/Unit.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/hello.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebRigol.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/__init__.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebench.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/ebench/ebUnit_main.py -> build/bdist.linux-x86_64/wheel/ebench
+  copying build/lib/VERSION -> build/bdist.linux-x86_64/wheel
+  copying build/lib/RELEASES.md -> build/bdist.linux-x86_64/wheel
+  running install_egg_info
+  Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.10rc5-py3.9.egg-info
+  running install_scripts
+  creating build/bdist.linux-x86_64/wheel/ebench-0.0.10rc5.dist-info/WHEEL
+  creating 'dist/ebench-0.0.10rc5-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+  adding 'RELEASES.md'
+  adding 'VERSION'
+  adding 'ebench/CMDS.py'
+  adding 'ebench/Rigol.py'
+  adding 'ebench/Unit.py'
+  adding 'ebench/__init__.py'
+  adding 'ebench/ebMenu.py'
+  adding 'ebench/ebMenu.yaml'
+  adding 'ebench/ebRigol.py'
+  adding 'ebench/ebRigol_main.py'
+  adding 'ebench/ebUnit.py'
+  adding 'ebench/ebUnit_main.py'
+  adding 'ebench/ebench.py'
+  adding 'ebench/hello.py'
+  adding 'ebench-0.0.10rc5.dist-info/METADATA'
+  adding 'ebench-0.0.10rc5.dist-info/WHEEL'
+  adding 'ebench-0.0.10rc5.dist-info/entry_points.txt'
+  adding 'ebench-0.0.10rc5.dist-info/top_level.txt'
+  adding 'ebench-0.0.10rc5.dist-info/zip-safe'
+  adding 'ebench-0.0.10rc5.dist-info/RECORD'
+  removing build/bdist.linux-x86_64/wheel
+  #+end_example
+
+Distribution package files created in ~dist~ directory
+
+#+BEGIN_SRC bash :eval no-export :results output
+ls -ltr dist
+#+END_SRC
+
+#+RESULTS:
+: total 68
+: -rw-rw-r-- 1 jj jj 31438 huhti 27 21:54 ebench-0.0.10rc5.tar.gz
+: -rw-rw-r-- 1 jj jj 36142 huhti 27 21:54 ebench-0.0.10rc5-py3-none-any.whl
+
 
  and install the latest version 
 
@@ -268,17 +387,42 @@ Commands:
   python3 -m pip install --user $VERSION_FILE  && echo installed $VERSION_FILE
   #+END_SRC
 
+  #+RESULTS:
+  #+begin_example
+  VERSION_FILE=dist/ebench-0.0.10rc5.tar.gz
+  Processing ./dist/ebench-0.0.10rc5.tar.gz
+  Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.10rc5) (0.5.2)
+  Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.10rc5) (0.12.0)
+  Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench==0.0.10rc5) (1.15.0)
+  Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.10rc5) (3.7.4.3)
+  Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.10rc5) (1.11.3)
+  Building wheels for collected packages: ebench
+    Building wheel for ebench (setup.py): started
+    Building wheel for ebench (setup.py): finished with status 'done'
+    Created wheel for ebench: filename=ebench-0.0.10rc5-py3-none-any.whl size=36142 sha256=07bdf039d6994d75338ec4da6ac5d4cdf58eaf7838a9f3793cace3a7574df96d
+    Stored in directory: /home/jj/.cache/pip/wheels/8d/02/08/cfc3a36bae88e51c539d93d049c095785ac537f4dbac91cc53
+  Successfully built ebench
+  Installing collected packages: ebench
+    Attempting uninstall: ebench
+      Found existing installation: ebench 0.0.10-SNAPSHOT
+      Uninstalling ebench-0.0.10-SNAPSHOT:
+        Successfully uninstalled ebench-0.0.10-SNAPSHOT
+  Successfully installed ebench-0.0.10rc5
+  installed dist/ebench-0.0.10rc5.tar.gz
+  #+end_example
+
 
 *** Check installation
 
- Run 
+ Run, and expect to see same version number noticed in ~VERSION~ -file
+ above:
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
- <<ebMenu>> _version
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+ ebMenu _version
  #+END_SRC
 
  #+RESULTS:
- : 0.0.10-pre2
+ : 0.0.10-pre5
 
 
 *** Check list resources 
@@ -287,7 +431,7 @@ Commands:
 
  #+name: list_resources
  #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
-  <<ebMenu>> _list_resources
+ ebMenu  _list_resources
  #+END_SRC
 
  In development environment it returns:
@@ -298,7 +442,27 @@ Commands:
 
 *** Use it
 
+#+BEGIN_SRC bash :eval no-export :results output
+ebMenu --debug=1  '?' 
+#+END_SRC
 
+#+RESULTS:
+#+begin_example
+ebMenu: Menu of ebench toolset
+
+Usage: ebMenu [options] [commands and parameters] 
+
+Commands:
+
+        skooppi  : Rigol osciloscope control
+           sgen  : UNIT-T UTG962 signal generator control
+              q  : Exit
+----------   Other    ----------
+              ?  : List commands
+             ??  : List command parameters
+              !  : Start recording
+              .  : Stop recording
+#+end_example
 
 
 
