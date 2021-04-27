@@ -44,11 +44,12 @@
   - incorporatin  instrument at the time, when need arises
   - without too much need of upfront investments in infrastructure
 
-- as as on-going work to integrate tools created by
+- be prepared for implementation as an on-going work to integrate
+  tools created by
   - fellow hobbyists
   - future me
 
-- into an electronic instrumentation system with characterized by
+- into an electronic instrumentation system characterized by
   - strict focus on instrument setup and data collection
   - ease of use 
   - low maintenance
