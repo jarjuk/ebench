@@ -5,7 +5,7 @@
 
 :CONTENTS:
 - [[#ebunit---tool-to-control-unit-t-utg900-waveform-generator][ebUnit - Tool to control UNIT-T UTG900 Waveform generator]]
-  - [[#use--ebmenu-as-test-context][Use  ebMenu as Test Context]]
+  - [[#test-command-ebmenu][Test command <<ebMenu>>]]
   - [[#application-version-tested][Application Version Tested]]
   - [[#signal-genrator-output-after-reset--command][Signal Genrator Output After reset -command]]
   - [[#signal-generation-on-one-channel][Signal Generation on One Channel]]
@@ -22,22 +22,27 @@
   - [[#emacs-variables][Emacs variables]]
 :END:
 
-** Use  ~ebMenu~ as Test Context
 
-Signal generator controller ~ebUnit~ is tested embeded within
-~ebench.ebMenu~ tool. Startup command is
+** Test command ~<<ebMenu>>~ 
 
-#+name: ebMenu
+In this document ~<<ebMenu>>~ refers to following command
+
+#+name: ebMenuebMenu
 #+BEGIN_SRC txt
 ./ebMenu --config ebench/ebMenu.yaml 
 #+END_SRC
 
-The command above uses configuration file ~ebench/ebMenu.yaml~
+The command above refers to configuration file ~ebench/ebMenu.yaml~
 #+name: ebMenu.yaml 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 cat ebench/ebMenu.yaml ebench/ebMenu.yaml 
 #+END_SRC
 
+which basically defines two ~subMenu~ entries:
+- ~skooppi~ for managing Rigol osciloscope
+- ~sgen~ controlling UTG962 signal generator
+
+The whole content of configuration file ~ebench/ebMenu.yaml~ is shown below:
 
 #+RESULTS: ebMenu.yaml
 #+begin_example
@@ -175,9 +180,6 @@ cat ebench/ebMenu.yaml ebench/ebMenu.yaml
 #   measurements: example.csv
 #+end_example
 
-which defines two ~subMenu~ entries:
-- ~skooppi~ for managing Rigol osciloscope
-- ~sgen~ controlling UTG962 signal generator
 
 
 ** Application Version Tested
