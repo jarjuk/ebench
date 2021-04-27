@@ -977,7 +977,7 @@ examples/hello2/hello2_main.py
  ~os.environ['USER']~ is overridden with the value received from
  command line ~who="moon~:
 
- #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  <<hello2Cmd>> greet whom="earth" who="moon"
  #+END_SRC
 
