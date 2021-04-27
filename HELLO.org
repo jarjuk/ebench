@@ -817,9 +817,11 @@ and define command line configuration parameter ~greetCount~ with initial value 
 
 *** Running ~hello2~
 
+In the examples below, ~<<hello2Cmd>>~ refers to following python
+module:
 
 #+name: hello2Cmd
-#+BEGIN_SRC cpp :exports none
+#+BEGIN_SRC cpp :exports code
 examples/hello2/hello2_main.py
 #+END_SRC
 
