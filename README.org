@@ -11,9 +11,9 @@
     - [[#ebmenu][ebMenu]]
     - [[#ebunit][ebUnit]]
     - [[#ebrigol][ebRigol]]
-  - [[#architecture][Architecture]]
+  - [[#tbd-architecture][TBD Architecture]]
   - [[#documentation-references][Documentation references]]
-  - [[#installation][Installation]]
+  - [[#tbd-installation][TBD Installation]]
     - [[#clone-repo-httpsgithubcomjarjukebench][Clone repo https://github.com/jarjuk/ebench]]
     - [[#show-version][Show version]]
     - [[#show-releases-notes][Show releases notes]]
@@ -21,7 +21,7 @@
     - [[#check-installation][Check installation]]
     - [[#check-list-resources][Check list resources]]
     - [[#use-it][Use it]]
-  - [[#usage][Usage]]
+  - [[#tbd-usage][TBD Usage]]
     - [[#interactive-usage][Interactive usage]]
     - [[#command-line-usage][Command line usage]]
     - [[#api-usage][API usage]]
@@ -198,7 +198,7 @@ Commands:
 
 
 
-** TODO Architecture 
+** *TBD* Architecture 
 
 *TBD*
 
@@ -210,7 +210,7 @@ Commands:
 - ~ebench~ -toolset
 
 
-** TODO Installation
+** *TBD* Installation
    :PROPERTIES:
    :header-args:bash: :dir  tmp
    :END:
@@ -301,7 +301,7 @@ Commands:
 
 
 
-** TODO Usage
+** *TBD* Usage
 
 *TDB*
 
