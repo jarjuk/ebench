@@ -15,9 +15,10 @@ This document presents two hello world examples:
     - [[#define-hello--function-and-parameter-prompt][Define hello -function and parameter prompt]]
     - [[#define-menu][Define menu]]
     - [[#wrap-hello-to-an-executable-script][Wrap hello to an executable script]]
-    - [[#hellopy][Hello.py]]
-    - [[#hello-interctive-usage][hello interctive usage]]
-    - [[#hello-cli-usage][hello CLI usage]]
+    - [[#complete-hellopy][Complete hello.py]]
+    - [[#runnig-hellopy][Runnig hello.py]]
+      - [[#hello-interctive-usage][hello interctive usage]]
+      - [[#hello-cli-usage][hello CLI usage]]
   - [[#hello-world-as-an-instrument-controller---hello2py][Hello World as an Instrument Controller - hello2.py]]
     - [[#define-instrument-controller-class--helloinstrument][Define Instrument Controller Class  HelloInstrument]]
     - [[#define-parameters-and-default-values-for-menu-action-hello][Define parameters and default values for menu action hello]]
@@ -156,8 +157,7 @@ This document presents two hello world examples:
   #+END_SRC
 
 
-*** Hello.py
-
+*** Complete ~hello.py~
 
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
   <<import>>
@@ -232,43 +232,47 @@ This document presents two hello world examples:
  #+end_example
 
 
-*** =hello= interctive usage
+*** Runnig ~hello.py~
 
- Interactive usage demonstrated using HERE-document. The following
- example prompts user whom to greet, and after the answer, ~moon~,
- greets the moon.
+**** =hello= interctive usage
 
- #+BEGIN_SRC bash :eval no-export :results output :exports both
-   cat <<EOF | examples/hello/hello.py
-   hello
-   moon
-   q
-   EOF
- #+END_SRC
+  Interactive usage demonstrated using HERE-document. The following
+  example prompts user whom to greet, and after the answer, ~moon~,
+  greets the moon.
 
- #+RESULTS:
+  #+BEGIN_SRC bash :eval no-export :results output :exports both
+    cat <<EOF | examples/hello/hello.py
+    hello
+    moon
+    q
+    EOF
+  #+END_SRC
 
-
-*** =hello= CLI usage
-
- for Command line usage, menu command 'hello' is followed by key-value
- pair ~whom=World~. The result greets the world.
-
- #+BEGIN_SRC bash :eval no-export :results output :exports both
- examples/hello/hello.py hello whom=World
- #+END_SRC
-
- #+RESULTS:
- : Hello World
+  #+RESULTS:
+  : [hello, q=quit] > Whom to greet? > Hello moon
+  : [hello, q=quit] > 
 
 
- :PROPERTIES:
- :TOC:      :include all
- :END:
+**** =hello= CLI usage
 
- :CONTENTS:
+  for Command line usage, menu command 'hello' is followed by key-value
+  pair ~whom=World~. The result greets the world.
 
- :END:
+  #+BEGIN_SRC bash :eval no-export :results output :exports both
+  examples/hello/hello.py hello whom=World
+  #+END_SRC
+
+  #+RESULTS:
+  : Hello World
+
+
+  :PROPERTIES:
+  :TOC:      :include all
+  :END:
+
+  :CONTENTS:
+
+  :END:
 
 
 ** Hello World as an Instrument Controller - ~hello2.py~ 
