@@ -31,15 +31,15 @@ class HelloInstrument(Instrument):
   def sayHello( self, whom:str, who:str ):
       """Hello -command just demonstrates simple menu action.
 
-      It receives to parameters 'whom' and 'who' and prints
-      greeting. Defaulta value of 'who' parameter is logged user, and
-      its value is remembered between hello commands
+      It receives to parameters 'whom' and 'who' and prints greeting
+      and increments 'greetCount' (just to demonstrate that Intrument
+      MAY maintain internal state).
 
-      Returns greeted 'whom' if greeter/who is not the same as
-      greeted/whom.
 
-      Incrementing greetCount demonstrates that Intrument MAY
-      maintain internal state.
+      :who: default value is of 'who' parameter is logged in user, its
+      value is remembered between greetings
+
+      :whom: object to be greeted
 
       """
       self._greetCount = self._greetCount + 1
