@@ -133,7 +133,8 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      
          # Hidden
          "_version"               : ("Version number", None, lambda **argv: print(version())),
-     
+         # Line above makes following line visible
+         # MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
      }
      
 

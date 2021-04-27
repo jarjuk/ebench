@@ -4,9 +4,9 @@
 :END:
 
 This document presents two hello world examples:
-1) stand alone Hello World
-2) Hello World as instrument controllers, which can be integrated to
-   work together with other instrument controllers on ~ebMenu~
+1) Stand alone Hello World
+2) Hello World as an instrument controller, which can be integrated
+   with other instrument controllers to ~ebMenu~
 
 :CONTENTS:
 - [[#hello-world][Hello World]]
@@ -446,7 +446,8 @@ This document presents two hello world examples:
 
         # Hidden
         "_version"               : ("Version number", None, lambda **argv: print(version())),
-
+        # Line above makes following line visible
+        # MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
     }
 
   #+END_SRC
