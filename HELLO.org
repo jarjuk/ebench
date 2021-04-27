@@ -375,8 +375,8 @@ This document presents two hello world examples:
 
 *** List commands and help commands 
 
- Import ~usage~ and ~usageCommand~ for presenting usage instructions
- and help on menu selections.
+ Import ~usage~ and ~usageCommand~ from ~ebench~ -module for
+ presenting usage help.
 
   #+name: import2b
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -384,8 +384,8 @@ This document presents two hello world examples:
   #+END_SRC
 
 
- Define application usage text. For this example we will define
- variable ~usageText~ with the following content
+ Define variable ~usageText~ with text documenting ~hello2~
+ application in general.
 
  #+name:usageText
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -455,11 +455,11 @@ This document presents two hello world examples:
 
 *** Create  ~run~ -Function for executing the application
 
- ~run~ function instantiates ~HelloInstrument~, application menu
- (~mainMenu~ using placeholder ~<<menu2>>~), and creates
- ~menuController~. Call to ~menuController.mainMenu()~ which executes
- application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop
-
+ ~run~ -function instantiates ~HelloInstrument~, constructs
+ ~menuController~, configures application ~mainMenu~ presented above
+ (in the code snippet below ~mainMenu~ configuration is indicated with
+ placeholder ~<<menu2>>~), and calls to ~menuController.mainMenu()~,
+ which starts application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop
 
  #+name: _run2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
