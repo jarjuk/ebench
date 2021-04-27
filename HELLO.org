@@ -288,8 +288,8 @@ This document presents two hello world examples:
  - menu structuring using menu separator
  - hiding menu command from menu command list
  - default value for menu command parameter
- - proviso to integrate ~hello2~ to menu system ~ebMenu~ (to be
-   document separately)
+ - proviso to integrate ~hello2~ to menu system ~ebMenu~ (ref
+   [[file:EBMENU.org]])
 
 *** Define Instrument Controller Class  ~HelloInstrument~
 
