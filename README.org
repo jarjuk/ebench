@@ -29,7 +29,7 @@
 
 ** Problem Statement
 
-- As a hobby electronics need to control diverse electronic instruments
+- As a  electronics hobbyist need to control diverse electronic instruments
   - to set up instruments in various configurations
   - to collect data in projects for further processing and
     documentation
