@@ -49,7 +49,7 @@
   - fellow hobbyists
   - future me
 
-- into an electronic instrumentation system characterized by
+- to build an electronic instrumentation system characterized by
   - strict focus on instrument setup and data collection
   - ease of use 
   - low maintenance
