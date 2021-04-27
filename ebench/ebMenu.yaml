@@ -1,23 +1,10 @@
 # ebMenu.yaml - example configuration file for ebMenu
 #
 #
-# Define 'subMenu' menu-entry 'hello' 'prompt'. The entry creates sub
-# menu from python module 'ebench.hello'. Sub menu controller is
-# created using run -method in ebench.hello -module. 'run' - method is
-# passed 'kwargs' -dictonary to allow configuration of the sub menu
-# controller created.
-
-# - 
-#   type: subMenu
-#   menu: hello
-#   prompt: Start sub menu for hello.py
-#   module: ebench.hello
-#   kwargs:
-#       initCount: 3
 
 # Two more 'subMenu' entries creating sub menus for 'ebench.ebRigol'
-# and 'ebench.ebUnit' instruments. kwargs define configuration
-# parameters needed to access these instruments
+# and 'ebench.ebUnit' instruments. kwargs define parameters passed to 
+# instrument __init__() -method.
 
 -
   type: subMenu
@@ -36,6 +23,20 @@
       addr: USB0::0x6656::0x0834::1485061822::INSTR
 
 
+# Define 'subMenu' menu-entry 'hello' 'prompt'. The entry creates sub
+# menu from python module 'ebench.hello'. Sub menu controller is
+# created using run -method in ebench.hello -module. 'run' - method is
+# passed 'kwargs' -dictonary to allow configuration of the sub menu
+# controller created.
+
+# - 
+#   type: subMenu
+#   menu: hello
+#   prompt: Start sub menu for hello.py
+#   module: ebench.hello
+#   kwargs:
+#       initCount: 3
+      
 # Define 'apiCall' menu-entry 'counters' This menu entry dispatches
 # two apiCalls: "hello.greetCount()" and "hello.greetCount2(42)"
 #
@@ -45,21 +46,21 @@
 #
 
 
-- 
-  type: apiCall
-  menu: counters
-  prompt: Read hello.py counters
-  apiCalls:
-    "count1": "hello.greetCount()"
-    "count2": "hello.greetCount2(added=42)"
-    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+# - 
+#   type: apiCall
+#   menu: counters
+#   prompt: Read hello.py counters
+#   apiCalls:
+#     "count1": "hello.greetCount()"
+#     "count2": "hello.greetCount2(added=42)"
+#     "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
       
-- 
-  type: apiCall
-  menu: counters2csv
-  prompt: Save hello.py counters to example.csv
-  apiCalls:
-    "count1": "hello.greetCount()"
-    "count2": "hello.greetCount2(42)"
-    "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
-  measurements: example.csv
+# - 
+#   type: apiCall
+#   menu: counters2csv
+#   prompt: Save hello.py counters to example.csv
+#   apiCalls:
+#     "count1": "hello.greetCount()"
+#     "count2": "hello.greetCount2(42)"
+#     "user":   "hello.askUser(item='whether', validValues=['sunny','cloudy','rainy'])"
+#   measurements: example.csv

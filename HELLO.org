@@ -18,19 +18,22 @@ This document presents two hello world examples:
     - [[#hellopy][Hello.py]]
     - [[#hello-interctive-usage][hello interctive usage]]
     - [[#hello-cli-usage][hello CLI usage]]
-  - [[#instrument-controller-hello-world--hello2py][Instrument Controller Hello World- hello2.py]]
+  - [[#hello-world-as-an-instrument-controller---hello2py][Hello World as an Instrument Controller - hello2.py]]
     - [[#define-instrument-controller-class--helloinstrument][Define Instrument Controller Class  HelloInstrument]]
     - [[#define-parameters-and-default-values-for-menu-action-hello][Define parameters and default values for menu action hello]]
     - [[#list-commands-and-help-commands][List commands and help commands]]
     - [[#define-application-menu][Define application menu]]
-    - [[#running-application][Running application]]
+    - [[#create--run--function-for-executing-the-application][Create  run -Function for executing the application]]
+    - [[#create-application-main-for-interactive-and-cli--use][Create application main for Interactive and CLI -use]]
     - [[#hello2-application][hello2 application]]
     - [[#running-hello2][Running hello2]]
+      - [[#configuration-parameters-with---help][Configuration parameters with --help]]
       - [[#usage-help-and-listing-commands-with-][Usage help and listing commands with ?]]
       - [[#hidden-commands][Hidden commands]]
       - [[#help-on-a-specific-command-][Help on a specific command: ??]]
       - [[#default-value-of-a-parameter][Default value of a parameter]]
       - [[#object-state-is-managed-and-parameter-values-are-remembered][Object state is managed and parameter values are remembered]]
+      - [[#use-command-line-configuration-for-intialization][Use command line configuration for intialization]]
   - [[#emacs-variables][Emacs variables]]
 :END:
 
@@ -269,9 +272,9 @@ This document presents two hello world examples:
  :END:
 
 
-** Instrument Controller Hello World- ~hello2.py~ 
+** Hello World as an Instrument Controller - ~hello2.py~ 
 
- Second hello version, ~hello2~ presents:
+ Second Hello World  -version, ~hello2~, presents:
  - maintaining instrument state (in this example count number of greets
    made)
  - help to list commands 
@@ -442,14 +445,14 @@ This document presents two hello world examples:
   #+END_SRC
 
 
-*** Running application
+*** Create  ~run~ -Function for executing the application
 
  Application ~_main~ calls ~run~ method, which instantiates
  ~HelloInstrument~, application menu and creates ~menuController~,
  which executes application REPL (red-eval-print) -loop
 
 
- #+name: _main2
+ #+name: _run2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
 
    def run( _argv, runMenu:bool = True, greetCount = 0  ):
@@ -479,24 +482,75 @@ This document presents two hello world examples:
 
         return menuController
 
+  #+END_SRC
+
+In ~_main~ call ~hello.run()~ and pass configuration parameters to
+~run~ -function. After returning interacfrom ~run~, close
+~menuController~ constructed.
+
+ #+name: _main2
+ #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
+
    def _main( _argv ):
        logging.set_verbosity(FLAGS.debug)
 
-
        # Start standalone application
-       menuController = run( _argv )
+       menuController = run( _argv, greetCount = FLAGS.greetCount )
+
        # q from menu or end of CLI parameters
        menuController.close()
+
+
   #+END_SRC
 
-  #+RESULTS: _main
+In ~main~ -function setup ~absl~  context and call run ~_main()~ function from above
+
+#+name: _main2_main
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+
+  def main():
+      try:
+          app.run(_main)
+      except SystemExit:
+          pass
+    
+    
+  if __name__ == '__main__':
+      main()
+
+
+#+END_SRC
+
+
+
+*** Create application main for Interactive and CLI -use
+
+Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
+
+#+name: hello2-import
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+  from hello2 import run
+
+  from absl import app, flags, logging
+  from absl.flags import FLAGS
+#+END_SRC
+
+
+and define command line configuration parameter ~greetCount~ with initial value ~0~
+
+#+name: hello2-configs
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+  flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made")
+#+END_SRC
 
 
 
 *** hello2 application 
 
-  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello2.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
+*hello2.py*
+  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/hello2.py :noweb yes :shebang :exports none
   <<import>>
+
   <<import2a>>
 
   <<import2b>>
@@ -520,27 +574,51 @@ This document presents two hello world examples:
   <<usageText>>
 
   # --------------------------------------
-  # Application main && ebMenu integration
+  # Application run && ebMenu integration
+
+  <<_run2>>
+
+  #+END_SRC
+
+
+*hello2_main.py*
+  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/hello2_main.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
+
+  <<hello2-import>> 
+
+  # --------------------------------------
+  # Command line configurations
+
+  <<hello2-configs>> 
+
+  # --------------------------------------
+  # Application main - call hello2.run()
 
   <<_main2>>
 
-  <<main>>
+  <<_main2_main>>
+
 
   #+END_SRC
+
+*__init__.py*
+  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/__init__.py :noweb yes :exports none
+  #+END_SRC
+
 
  Complete hello2 -example is shown below
 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello/hello2.py
+ cat examples/hello2/hello2.py
  #+END_SRC
 
  #+RESULTS:
  #+begin_example
- #!/usr/bin/env python3
  from ebench import MenuCtrl
+
  from ebench import Instrument
 
- from ebench import usage, usageCommand
+ from ebench import usage, usageCommand, version
 
  import os
  from absl import app, flags, logging
@@ -586,14 +664,14 @@ This document presents two hello world examples:
  # --------------------------------------
  # Menu interagration
 
- helloPar = {
+ greetPar = {
     "whom": "Whom to greet?",
     "who":  "Who is the greeter? Ret accepts default value: ",
  }
 
 
  defaults = {
- "hello" : {
+ "greet" : {
               "who": os.environ['USER']
            }
  }
@@ -620,25 +698,43 @@ This document presents two hello world examples:
 
  - hidden command: _version
 
+ - proviso for integrating ~hello2~ with ebMenu
+
  """
 
 
 
  # --------------------------------------
- # Application main && ebMenu integration
+ # Application run && ebMenu integration
 
 
  def run( _argv, runMenu:bool = True, greetCount = 0  ):
-      hello = HelloInstrument( greetCount = greetCount )
+      """Run hello2 as a standalone interactive or CLI application with the
+      proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
+
+      :_argv: list of command line arguments. In interactive mode, this
+      is just the name of script. In CLI mode, name is followed by
+      command line arguments
+
+      :runMenu: defaults True = running standalone application. ebMenu
+      sets this to 'False'.
+
+      :greetCount: In this contrived example, 'greetCount' is the
+      number greetings already made. It is passed to 'HelloInstrument'
+      -constructor. For real world use, 'greetCount' represents
+      parameters needed in instruments constructor.
+
+      """
+      helloController = HelloInstrument( greetCount = greetCount )
 
       mainMenu = {
-     
+
           # First section: application commands
-          "Commands:"              : ( None, None, None),
-          "hello"                  : ( "Say hello", helloPar, hello.sayHello ),
-     
+          "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
+          "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
+
           # Second section: getting help
-          "Help:"                  : ( None, None, None),
+          "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
           MenuCtrl.MENU_HELP       : ( "List commands", None,
                                      lambda : usage(cmd=os.path.basename(__file__)
                                                           , mainMenu=mainMenu
@@ -646,26 +742,55 @@ This document presents two hello world examples:
                                                           , usageText=usageText )),
           MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                      lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-          "_version"               : ("Version number", None, lambda **argv: print(ebench.version())),
-     
-          # Third section: exiting
-          "Exit:"                  : ( None, None, None),
-          MenuCtrl.MENU_QUIT       : ("Exit", None, None),
-     
-      }
-     
+          "_version"               : ("Version number", None, lambda **argv: print(version())),
 
-      menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=hello )
+          # Third section: exiting
+          "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
+          MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+
+
+      }
+
+
+      menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
       menuController.setMenu(menu=mainMenu, defaults=defaults)
       if runMenu: menuController.mainMenu()
 
       return menuController
+ #+end_example
+
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports results
+ cat examples/hello2/hello2_main.py
+ #+END_SRC
+
+ #+RESULTS:
+ #+begin_example
+ #!/usr/bin/env python3
+ from hello2 import run
+
+ from absl import app, flags, logging
+ from absl.flags import FLAGS 
+
+ # --------------------------------------
+ # Command line configurations
+
+ flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made") 
+
+ # --------------------------------------
+ # Application main - call hello2.run()
+
 
  def _main( _argv ):
-      # global gSkooppi
      logging.set_verbosity(FLAGS.debug)
-     menuController = run( _argv )
+
+     # Start standalone application
+     menuController = run( _argv, greetCount = FLAGS.greetCount )
+
+     # q from menu or end of CLI parameters
      menuController.close()
+
+
 
 
  def main():
@@ -680,11 +805,49 @@ This document presents two hello world examples:
  #+end_example
 
 
+ #+BEGIN_SRC bash :eval no-export :results output :exports results
+ cat examples/hello2/__init__.py
+ #+END_SRC
+
+ #+RESULTS:
+ : 
+
+
 *** Running ~hello2~
 
+
+#+name: hello2Cmd
+#+BEGIN_SRC cpp :exports none
+examples/hello2/hello2_main.py
+#+END_SRC
+
+
+**** Configuration parameters with ~--help~
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ <<hello2Cmd>> --help
+ #+END_SRC
+
+ #+RESULTS:
+ #+begin_example
+
+        USAGE: examples/hello2/hello2_main.py [flags]
+ flags:
+
+ examples/hello2/hello2_main.py:
+   --greetCount: Initial number of greets already made
+     (default: '0')
+     (an integer)
+
+ Try --helpfull to get a list of all flags.
+ #+end_example
+
+
+
+
 **** Usage help and listing commands with =?=
- #+BEGIN_SRC bash :eval no-export :results output
- examples/hello/hello2.py ?
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ <<hello2Cmd>> ?
  #+END_SRC
 
  #+RESULTS:
@@ -733,20 +896,20 @@ This document presents two hello world examples:
  previous chapter. However, running
 
  #+name: hello2-version
- #+BEGIN_SRC bash :eval no-export :results output :exports both
- examples/hello/hello2.py _version
+ #+BEGIN_SRC bash :eval no-export :results output :exports both :noweb yes
+ <<hello2Cmd>> _version
  #+END_SRC
 
  outputs version number of ebench -application
 
  #+RESULTS: hello2-version
- : 0.0.10-pre2
+ : 0.0.10-SNAPSHOT
 
 
 **** Help on a specific command: =??=
 
- #+BEGIN_SRC bash :eval no-eval :results output :exports both
- examples/hello/hello2.py ?? command=greet
+ #+BEGIN_SRC bash :eval no-eval :results output :exports both :noweb yes
+ <<hello2Cmd>> ?? command=greet
  #+END_SRC
 
  #+RESULTS:
@@ -779,9 +942,9 @@ This document presents two hello world examples:
  Expect to see 'Hello world from $USER', where user gets default value
  from environment variable.
 
- #+BEGIN_SRC bash :eval no-export :results output
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
  echo USER=$USER
- examples/hello/hello2.py greet whom="world" 
+ <<hello2Cmd>> greet whom="world" 
  #+END_SRC
 
  #+RESULTS:
@@ -792,8 +955,8 @@ This document presents two hello world examples:
  Expect to see 'Hello world from moon', where default value is
  overridden on command line.
 
- #+BEGIN_SRC bash :eval no-export :results output
- examples/hello/hello2.py greet whom="world" who="moon"
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ <<hello2Cmd>> greet whom="world" who="moon"
  #+END_SRC
 
  #+RESULTS:
@@ -805,13 +968,32 @@ This document presents two hello world examples:
  Making two CLI -greetings line demonstrates how object state is
  maintained (=variable ~greetCount~ increment for each greeting).
 
- #+BEGIN_SRC bash :eval no-export :results output
- examples/hello/hello2.py greet whom="world" who="earth" greet whom="sun"
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ <<hello2Cmd>> greet whom="moon" who="earth" greet whom="sun"
  #+END_SRC
 
  #+RESULTS:
- : Hello #1 to world from earth
+ : Hello #1 to moon from earth
  : Hello #2 to sun from earth
+
+
+**** Use command line configuration for intialization
+
+ Use command CLI switch ~--greetCount=61~ to initialize application,
+ and expect to see greetings counted starting from 62:
+
+ #+BEGIN_SRC bash :eval no-export :results output :noweb yes
+ echo USER=$USER
+ <<hello2Cmd>> --greetCount=61 greet whom="World"  greet whom="the sun"   greet whom="the moon"  
+ #+END_SRC
+
+ #+RESULTS:
+ : USER=jj
+ : Hello #62 to World from jj
+ : Hello #63 to the sun from jj
+ : Hello #64 to the moon from jj
+
+
 
  
 * Fin                                                              :noexport:

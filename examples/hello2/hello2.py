@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 from ebench import MenuCtrl
+
 from ebench import Instrument
 
 from ebench import usage, usageCommand, version
@@ -89,7 +89,7 @@ This demo presents:
 
 
 # --------------------------------------
-# Application main && ebMenu integration
+# Application run && ebMenu integration
 
 
 def run( _argv, runMenu:bool = True, greetCount = 0  ):
@@ -141,22 +141,3 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      if runMenu: menuController.mainMenu()
 
      return menuController
-
-def _main( _argv ):
-    logging.set_verbosity(FLAGS.debug)
-
-
-    # Start standalone application
-    menuController = run( _argv )
-    # q from menu or end of CLI parameters
-    menuController.close()
-
-def main():
-    try:
-        app.run(_main)
-    except SystemExit:
-        pass
-
-
-if __name__ == '__main__':
-    main()

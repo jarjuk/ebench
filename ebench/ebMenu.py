@@ -61,6 +61,7 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
                 subMenuDefs = yaml.safe_load(y)
         else:
             pkgDefault = os.path.join( os.path.dirname(__file__), "ebMenu.yaml")
+            logging.info("loadsubMenuDefs: config was none loading pkgDefault={}".format(pkgDefault))
             if os.path.exists( pkgDefault ):
                with open( pkgDefault, "r") as y:
                    subMenuDefs = yaml.safe_load(y)

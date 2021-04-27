@@ -6,7 +6,7 @@
 :CONTENTS:
 - [[#ebench---an-extensible-toolset-to-control-e-instruments-release0010-snapshot][ebench - An extensible toolset to control e-instruments $Release:0.0.10-SNAPSHOT$]]
   - [[#problem-statement][Problem Statement]]
-  - [[#study-of-viability-ebench--tools][Study of viability ebench -Tools]]
+  - [[#study-of-viability-in--ebench--toolset][Study of Viability in  ebench -Toolset]]
     - [[#ebmenu][ebMenu]]
     - [[#ebunit][ebUnit]]
     - [[#ebrigol][ebRigol]]
@@ -33,35 +33,46 @@
   - to collect data in projects for further processing and
     documentation
 
+- with the objective to reap benefits
+  - ab initio by having configuration setups and data collection
+    actions documented as scripts
+  - and thenceforth being able to automate setup construction and data
+    collection with the help of these scripts
+
 - with gently sloping adoption curve
-  - including one instrument at the time, when need arises
+  - incorporate one instrument at the time, when need arises
   - without the need of upfront investments in infrastructure 
 
-- with the objective to be able to integrate  tools created by 
+- with the objective to integrate tools created by
   - fellow hobbyists
   - future me
 
-- into an all-encompassing electronic instrumentation system with characteristics of
+- into an electronic instrumentation system with characteristics of
+  - strict focus on instrument setup and data collection
   - ease of use 
   - low maintenance
   - high flexibility
   - and high service value
 
 
-** Study of viability ~ebench~ -Tools
+** Study of Viability in  ~ebench~ -Toolset
 
-   The problem statement in the previous chapter is obviously quite
-   bold. However, one can argue:
-   - vision should be clear before starting any endeavour
-   - a study of viability should be considered before investing too
-     much
-   - each investment step shoud be justified by itself
-
-   Meet ~ebench~, at this time, comprising following three tools:
+   The vision presented in the previous chapter is abstract and it
+   must be materialized for implementation.  Meet ~ebench~ -toolset, a
+   viability study, which, at this time, comprises following three
+   tools:
 
    - ~ebMenu~ : Menu of ebench toolset
    - ~ebUnit~ : Tool to control UNIT-T UTG962/932 Waveform generator
    - ~ebRigol~ : Tool to control Rigol MSO1104Z osciloscope
+
+   Characteristics of ~ebench~ toolset lists:
+   - scope core architecture to the minimum and identify a set of
+     infrastructure services
+   - interactive, command line and API -interfaces implementable in
+     one go
+   - use Python as core implementation language and existing libraries
+     for [[https://pyvisa.readthedocs.io/en/latest/][instrument integrations]] and [[https://pypi.org/project/absl-py/][configuration]] interfaces
 
 
 *** ~ebMenu~
@@ -77,7 +88,7 @@ ebMenu
 
 #+RESULTS:
 #+begin_example
-ebMenu: Menu to Integrate ebench -tools
+ebMenu: Menu of ebench toolset
 
 Usage: ebMenu [options] [commands and parameters] 
 

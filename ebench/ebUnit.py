@@ -3,19 +3,18 @@
 
 from .Unit import UnitSignalGenerator
 from .ebench import MenuCtrl
-from .ebench import version, usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot
+from .ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot
 from .ebench import list_resources, MenuValueError
 
 # Installing this module as command
 from .CMDS import CMD_UNIT
 CMD=CMD_UNIT
 
-from absl import app, flags, logging
-from absl.flags import FLAGS
+from absl import logging
 
-ADDR= "USB0::0x6656::0x0834::1485061822::INSTR"
+
 SYNOPSIS="Tool to control UNIT-T UTG962/932 Waveform generator"
-flags.DEFINE_string('addr', ADDR, "pyvisa instrument address")
+
 
 
 class UTG962(UnitSignalGenerator):
@@ -365,9 +364,9 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordin
         "Record"                 : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
         MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
-                                     menuStopRecording(menuController, pgm=_argv[0], recordingDir=FLAGS.recordingDir) ),
+                                     menuStopRecording(menuController, pgm=_argv[0], recordingDir=recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
-                                     menuScreenShot(instrument=sgen,captureDir=FLAGS.captureDir,prefix="UTG-" )),
+                                     menuScreenShot(instrument=sgen,captureDir=captureDir,prefix="UTG-" )),
         "list_resources"         : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources ),
         # "Misc"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         "Help"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
@@ -386,22 +385,4 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordin
 
     return menuController
         
-
-def _main( _argv ):
-    logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv, addr=FLAGS.addr, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir  )
-    menuController.close()
-
-
-def main():
-    try:
-        app.run(_main)
-    except SystemExit:
-        pass
-    
-    
-if __name__ == '__main__':
-    main()
-    
-
 

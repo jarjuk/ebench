@@ -28,8 +28,8 @@ setuptools.setup(
     },
     #  scripts=[f"{CMDS.CMD_RIGOL}", f"{CMDS.CMD_UNIT}"],
     entry_points = {
-        "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol:main"
-                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit:main"
+        "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol_main:main"
+                             , f"{CMDS.CMD_UNIT}=ebench.ebUnit_main:main"
                              , f"{CMDS.CMD_MENU}=ebench.ebMenu:main"
         ],
     },
