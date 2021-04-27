@@ -25,8 +25,11 @@ This document presents two hello world examples:
     - [[#list-commands-and-help-commands][List commands and help commands]]
     - [[#define-application-menu][Define application menu]]
     - [[#create--run--function-for-executing-the-application][Create  run -Function for executing the application]]
-    - [[#create-application-main-for-interactive-and-cli--use][Create application main for Interactive and CLI -use]]
+    - [[#interactive-and-cli--entry-point-in-hello2_mainpy-for][Interactive and CLI -entry point in hello2_main.py for]]
     - [[#hello2-application][hello2 application]]
+      - [[#hello2py][hello2.py]]
+      - [[#hello2_mainpy][hello2_main.py]]
+      - [[#__init__py-and-directory-list][__init__.py and directory list]]
     - [[#running-hello2][Running hello2]]
       - [[#configuration-parameters-with---help][Configuration parameters with --help]]
       - [[#usage-help-and-listing-commands-with-][Usage help and listing commands with ?]]
@@ -489,6 +492,27 @@ This document presents two hello world examples:
 
   #+END_SRC
 
+
+*** Interactive and CLI -entry point in ~hello2_main.py~ for 
+
+Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
+
+#+name: hello2-import
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+  from hello2 import run
+
+  from absl import app, flags, logging
+  from absl.flags import FLAGS
+#+END_SRC
+
+
+and define command line configuration parameter ~greetCount~ with initial value ~0~
+
+#+name: hello2-configs
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+  flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made")
+#+END_SRC
+
 ~_main~ calls ~hello.run()~ and passes command line configuration
 parameter ~FLAGS.greetCount~ to ~run~ -function. After returning from
 ~run~, close ~menuController~ constructed.
@@ -523,30 +547,7 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
   if __name__ == '__main__':
       main()
 
-
 #+END_SRC
-
-
-*** Create application main for Interactive and CLI -use
-
-Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
-
-#+name: hello2-import
-#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-  from hello2 import run
-
-  from absl import app, flags, logging
-  from absl.flags import FLAGS
-#+END_SRC
-
-
-and define command line configuration parameter ~greetCount~ with initial value ~0~
-
-#+name: hello2-configs
-#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-  flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made")
-#+END_SRC
-
 
 
 *** hello2 application 
@@ -606,217 +607,222 @@ and define command line configuration parameter ~greetCount~ with initial value 
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/__init__.py :noweb yes :exports none
   #+END_SRC
 
- Complete hello2 -example is shown below
+ Complete hello2 -example is following sections:
 
- #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello2/hello2.py
- #+END_SRC
+**** ~hello2.py~
+  #+BEGIN_SRC bash :eval no-export :results output :exports results
+  cat examples/hello2/hello2.py
+  #+END_SRC
 
- #+RESULTS:
- #+begin_example
- from ebench import MenuCtrl
+  #+RESULTS:
+  #+begin_example
+  from ebench import MenuCtrl
 
- from ebench import Instrument
+  from ebench import Instrument
 
- from ebench import usage, usageCommand, version
+  from ebench import usage, usageCommand, version
 
- import os
- from absl import app, flags, logging
- from absl.flags import FLAGS
+  import os
+  from absl import app, flags, logging
+  from absl.flags import FLAGS
 
- # --------------------------------------
- # Example instrument "HelloInstrument"
+  # --------------------------------------
+  # Example instrument "HelloInstrument"
 
- class HelloInstrument(Instrument):
+  class HelloInstrument(Instrument):
 
-   def __init__(self, greetCount=0):
-       self._greetCount = greetCount
+    def __init__(self, greetCount=0):
+        self._greetCount = greetCount
 
-   def greetCount(self, fake=0 ):
-       """Access object state variable with API twist
+    def greetCount(self, fake=0 ):
+        """Access object state variable with API twist
 
-       :fake: parameter used to demonstrate passing literal parameter
-       value in API call
+        :fake: parameter used to demonstrate passing literal parameter
+        value in API call
 
-       :return: current 'greetCount' + 'fake'
+        :return: current 'greetCount' + 'fake'
+
+        """
+
+        return self._greetCount + int(fake)
+
+    def sayHello( self, whom:str, who:str ):
+        """Hello -command just demonstrates simple menu action.
+
+        It receives to parameters 'whom' and 'who' and prints
+        greeting. Defaulta value of 'who' parameter is logged user, and
+        its value is remembered between hello commands
+
+        Returns greeted 'whom' if greeter/who is not the same as
+        greeted/whom.
+
+        Incrementing greetCount demonstrates that Intrument MAY
+        maintain internal state.
+
+        """
+        self._greetCount = self._greetCount + 1
+        print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
+
+  # --------------------------------------
+  # Menu interagration
+
+  greetPar = {
+     "whom": "Whom to greet?",
+     "who":  "Who is the greeter? Ret accepts default value: ",
+  }
+
+
+  defaults = {
+  "greet" : {
+               "who": os.environ['USER']
+            }
+  }
+
+
+
+
+  usageText = """
+
+  This demo presents:
+
+  - maintaining instrument state: counting number of greetings made
+
+  - command 'hello' accepting two parameters, one of the parameters
+    (whom) is prompted for every command call, the other paremeter (who)
+    defaults to to login-name, and its value is rememebered from
+    previous call
+
+  - menu separator
+
+  - help to list command (and to show this text)
+
+  - more detailed help on menu commands
+
+  - hidden command: _version
+
+  - proviso for integrating ~hello2~ with ebMenu
+
+  """
+
+
+
+  # --------------------------------------
+  # Application run && ebMenu integration
+
+
+  def run( _argv, runMenu:bool = True, greetCount = 0  ):
+       """Run hello2 as a standalone interactive or CLI application with the
+       proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
+
+       :_argv: list of command line arguments. In interactive mode, this
+       is just the name of script. In CLI mode, name is followed by
+       command line arguments
+
+       :runMenu: defaults True = running standalone application. ebMenu
+       sets this to 'False'.
+
+       :greetCount: In this contrived example, 'greetCount' is the
+       number greetings already made. It is passed to 'HelloInstrument'
+       -constructor. For real world use, 'greetCount' represents
+       parameters needed in instruments constructor.
 
        """
+       helloController = HelloInstrument( greetCount = greetCount )
 
-       return self._greetCount + int(fake)
+       mainMenu = {
 
-   def sayHello( self, whom:str, who:str ):
-       """Hello -command just demonstrates simple menu action.
+           # First section: application commands
+           "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
+           "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
 
-       It receives to parameters 'whom' and 'who' and prints
-       greeting. Defaulta value of 'who' parameter is logged user, and
-       its value is remembered between hello commands
+           # Second section: getting help
+           "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
+           MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                      lambda : usage(cmd=os.path.basename(__file__)
+                                                           , mainMenu=mainMenu
+                                                           , synopsis="Demo hello v2"
+                                                           , usageText=usageText )),
+           MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                      lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
+           "_version"               : ("Version number", None, lambda **argv: print(version())),
 
-       Returns greeted 'whom' if greeter/who is not the same as
-       greeted/whom.
-
-       Incrementing greetCount demonstrates that Intrument MAY
-       maintain internal state.
-
-       """
-       self._greetCount = self._greetCount + 1
-       print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
-
- # --------------------------------------
- # Menu interagration
-
- greetPar = {
-    "whom": "Whom to greet?",
-    "who":  "Who is the greeter? Ret accepts default value: ",
- }
+           # Third section: exiting
+           "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
+           MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
 
 
- defaults = {
- "greet" : {
-              "who": os.environ['USER']
-           }
- }
+       }
 
 
+       menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
+       menuController.setMenu(menu=mainMenu, defaults=defaults)
+       if runMenu: menuController.mainMenu()
+
+       return menuController
+  #+end_example
+
+**** ~hello2_main.py~
+
+  Main -function are save in a separate file ~hello2_main.py~ to avoid
+  conflicts in ~absl~ flags. 
+
+  #+BEGIN_SRC bash :eval no-export :results output :exports results
+  cat examples/hello2/hello2_main.py
+  #+END_SRC
+
+  #+RESULTS:
+  #+begin_example
+  #!/usr/bin/env python3
+  from hello2 import run
+
+  from absl import app, flags, logging
+  from absl.flags import FLAGS 
+
+  # --------------------------------------
+  # Command line configurations
+
+  flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made") 
+
+  # --------------------------------------
+  # Application main - call hello2.run()
 
 
- usageText = """
+  def _main( _argv ):
+      logging.set_verbosity(FLAGS.debug)
 
- This demo presents:
+      # Start standalone application
+      menuController = run( _argv, greetCount = FLAGS.greetCount )
 
- - maintaining instrument state: counting number of greetings made
-
- - command 'hello' accepting two parameters, one of the parameters
-   (whom) is prompted for every command call, the other paremeter (who)
-   defaults to to login-name, and its value is rememebered from
-   previous call
-
- - menu separator
-
- - help to list command (and to show this text)
-
- - more detailed help on menu commands
-
- - hidden command: _version
-
- - proviso for integrating ~hello2~ with ebMenu
-
- """
-
-
-
- # --------------------------------------
- # Application run && ebMenu integration
-
-
- def run( _argv, runMenu:bool = True, greetCount = 0  ):
-      """Run hello2 as a standalone interactive or CLI application with the
-      proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
-
-      :_argv: list of command line arguments. In interactive mode, this
-      is just the name of script. In CLI mode, name is followed by
-      command line arguments
-
-      :runMenu: defaults True = running standalone application. ebMenu
-      sets this to 'False'.
-
-      :greetCount: In this contrived example, 'greetCount' is the
-      number greetings already made. It is passed to 'HelloInstrument'
-      -constructor. For real world use, 'greetCount' represents
-      parameters needed in instruments constructor.
-
-      """
-      helloController = HelloInstrument( greetCount = greetCount )
-
-      mainMenu = {
-
-          # First section: application commands
-          "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
-          "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
-
-          # Second section: getting help
-          "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-          MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                     lambda : usage(cmd=os.path.basename(__file__)
-                                                          , mainMenu=mainMenu
-                                                          , synopsis="Demo hello v2"
-                                                          , usageText=usageText )),
-          MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
-                                     lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-          "_version"               : ("Version number", None, lambda **argv: print(version())),
-
-          # Third section: exiting
-          "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-          MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
-
-
-      }
-
-
-      menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
-      menuController.setMenu(menu=mainMenu, defaults=defaults)
-      if runMenu: menuController.mainMenu()
-
-      return menuController
- #+end_example
-
- Main -function are save in a separate file ~hello2_main.py~ to avoid
- conflicts in ~absl~ flags. 
-
- #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello2/hello2_main.py
- #+END_SRC
-
- #+RESULTS:
- #+begin_example
- #!/usr/bin/env python3
- from hello2 import run
-
- from absl import app, flags, logging
- from absl.flags import FLAGS 
-
- # --------------------------------------
- # Command line configurations
-
- flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made") 
-
- # --------------------------------------
- # Application main - call hello2.run()
-
-
- def _main( _argv ):
-     logging.set_verbosity(FLAGS.debug)
-
-     # Start standalone application
-     menuController = run( _argv, greetCount = FLAGS.greetCount )
-
-     # q from menu or end of CLI parameters
-     menuController.close()
+      # q from menu or end of CLI parameters
+      menuController.close()
 
 
 
 
- def main():
-     try:
-         app.run(_main)
-     except SystemExit:
-         pass
+  def main():
+      try:
+          app.run(_main)
+      except SystemExit:
+          pass
 
 
- if __name__ == '__main__':
-     main()
- #+end_example
+  if __name__ == '__main__':
+      main()
+  #+end_example
 
- Python needs an ampty file ~__init__.py~ saved along with ~hello2.py~ and ~hello2_main.py~ 
- #+BEGIN_SRC bash :eval no-export :results output :exports results
- cd examples/hello2
- ls -ltr | grep -v  __pycache__
- #+END_SRC
+**** ~__init__.py~ and directory list
 
- #+RESULTS:
- : total 20
- : -rw-rw-r-- 1 jj jj 4335 huhti 27 12:22 hello2.py
- : -rwxr-xr-x 1 jj jj  705 huhti 27 12:22 hello2_main.py
- : -rw-rw-r-- 1 jj jj    1 huhti 27 12:22 __init__.py
+  Python needs an ampty file ~__init__.py~ saved along with ~hello2.py~ and ~hello2_main.py~ 
+  #+BEGIN_SRC bash :eval no-export :results output :exports results
+  cd examples/hello2
+  ls -ltr | grep -v  __pycache__ | grep -v 'hello.yaml'
+  #+END_SRC
+
+  #+RESULTS:
+  : total 24
+  : -rw-rw-r-- 1 jj jj 4335 huhti 27 12:22 hello2.py
+  : -rwxr-xr-x 1 jj jj  705 huhti 27 12:22 hello2_main.py
+  : -rw-rw-r-- 1 jj jj    1 huhti 27 12:22 __init__.py
 
 
 *** Running ~hello2~
