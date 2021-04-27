@@ -9,7 +9,6 @@
   - [[#application-version-tested][Application Version Tested]]
   - [[#signal-genrator-output-after-reset--command][Signal Genrator Output After reset -command]]
   - [[#signal-generation-on-one-channel][Signal Generation on One Channel]]
-    - [[#setup-rigol-osciloscpope-for-2-channels][Setup Rigol Osciloscpope for 2 channels]]
     - [[#sine1500hzch1][Sine(1500Hz)@ch1]]
     - [[#square16khzch2][Square(1.6kHz)@ch2]]
     - [[#arb-sincch1][ARB-Sinc@ch1]]
@@ -39,7 +38,7 @@ cat ebench/ebMenu.yaml ebench/ebMenu.yaml
 #+END_SRC
 
 which basically defines two ~subMenu~ entries:
-- ~skooppi~ for managing Rigol osciloscope
+- ~skooppi~ for managing Rigol oscilloscope
 - ~sgen~ controlling UTG962 signal generator
 
 The whole content of configuration file ~ebench/ebMenu.yaml~ is shown below:
@@ -57,7 +56,7 @@ The whole content of configuration file ~ebench/ebMenu.yaml~ is shown below:
 -
   type: subMenu
   module: ebench.ebRigol
-  prompt: "Rigol osciloscope control"
+  prompt: "Rigol oscilloscope control"
   menu: skooppi
   kwargs:
       ip: skooppi
@@ -123,7 +122,7 @@ The whole content of configuration file ~ebench/ebMenu.yaml~ is shown below:
 -
   type: subMenu
   module: ebench.ebRigol
-  prompt: "Rigol osciloscope control"
+  prompt: "Rigol oscilloscope control"
   menu: skooppi
   kwargs:
       ip: skooppi
@@ -217,7 +216,7 @@ and setup it for 2 channels
 #+RESULTS:
 
 Reset UTG932 signal generator, open both channels and take screenshots
-from signal generator channels and from Rigol osciloscope.
+from signal generator channels and from Rigol oscilloscope.
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports code
 <<ebMenu>>  sgen reset on channel=1 screen fileName=ebUnit-sgen1-reset.png  on channel=2 screen fileName=ebUnit-sgen2-reset.png q skooppi screen fileName=ebUnit-osc-reset.png q
@@ -228,7 +227,6 @@ from signal generator channels and from Rigol osciloscope.
 : pics/ebUnit-sgen2-reset.png
 : pics/ebUnit-osc-reset.png
 
-Ex
 
 | Screen capture                   | Expect                                      |
 |----------------------------------+---------------------------------------------|
@@ -238,21 +236,6 @@ Ex
 
 
 ** Signal Generation on One Channel
-
-*** Setup Rigol Osciloscpope for 2 channels 
-
- #+BEGIN_SRC bash :eval no-export :results output :exports code :noweb yes
- <<ebMenu>> skooppi  setup channel=1 probe=1x bwlimit= scale=0.2V offset=0V stats=FREQ,VPP,VAVG
- <<ebMenu>> skooppi  setup channel=2 probe=1x bwlimit= scale=0.2V offset=-0.5V stats=FREQ,VPP 
- <<ebMenu>> skooppi  timebase timebase=1ms 
- <<ebMenu>> skooppi  setupTrigger source=1 slope=POS level=0.05
- #+END_SRC
-
- #+RESULTS:
-
-
-
-
 
 *** Sine(1500Hz)@ch1
 
@@ -306,9 +289,9 @@ Ex
 
 *** ARB-External(~data/simplewave.bsv~)@ch1
 
-   This example uses ARB-simplewave, which show three wavepeak in one
-   sample. Hence, when generating signal @500Hz expect osciloscpope
-   find frequency three times larger.
+   This example uses ARB-simplewave, which include three waves within
+   one sample. Hence, when generating signal @500Hz, expect
+   oscilloscope find frequency three times larger.
 
  [[file:data/simplewave.PNG]]
 
@@ -329,7 +312,6 @@ Ex
 
 
 ** Signal Generation on Two Channels
-
 
 *** Ramp(1234Hz,symmetry=808%)@ch1,  Pulse(800Hz,amp=0.15Vpp,duty=35%)@ch2
 
