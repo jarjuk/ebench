@@ -13,11 +13,11 @@
     - [[#ebrigol][ebRigol]]
   - [[#tbd-architecture][TBD Architecture]]
   - [[#documentation-references][Documentation references]]
-  - [[#tbd-installation][TBD Installation]]
+  - [[#installation][Installation]]
     - [[#clone-repo-httpsgithubcomjarjukebench][Clone repo https://github.com/jarjuk/ebench]]
-    - [[#show-version][Show version]]
-    - [[#show-releases-notes][Show releases notes]]
-    - [[#install][Install]]
+    - [[#check-ebench-version--file][Check ebench VERSION -file]]
+    - [[#check-release-notes][Check release notes]]
+    - [[#install-ebench][Install ebench]]
     - [[#check-installation][Check installation]]
     - [[#check-list-resources][Check list resources]]
     - [[#use-it][Use it]]
@@ -221,19 +221,21 @@ Commands:
 *** Clone repo ~https://github.com/jarjuk/ebench~
 
 #+BEGIN_SRC bash :eval no-export :results output :exports none
+# Ensure correct directory
 pwd
 #+END_SRC
 
 #+RESULTS:
 : /home/jj/work/ebench/tmp
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports none
+# Cleanup previous installation
 rm -rf ebench
 #+END_SRC
 
 #+RESULTS:
 
-
+ Clone repo
  #+BEGIN_SRC bash :eval no-export :results output :exports code
  git clone https://github.com/jarjuk/ebench
  #+END_SRC
@@ -241,7 +243,7 @@ rm -rf ebench
  #+RESULTS:
 
 
-*** Show version
+*** Check ~ebench~ VERSION -file
 
  #+BEGIN_SRC bash :eval no-export :results output :exports both
  cat ebench/VERSION
@@ -251,25 +253,25 @@ rm -rf ebench
  : 0.0.10-pre5
 
 
-*** Show releases notes
+*** Check release notes
 
- #+BEGIN_SRC bash :eval no :results output :exports both
+ #+BEGIN_SRC bash :eval no :results output :exports code
  cat ebench/RELEASES.md
  #+END_SRC
 
 
-*** Install
+*** Install ~ebench~ 
     :PROPERTIES:
     :header-args:bash: :dir  tmp/ebench
     :END:
 
- In ~ebench~ directory 
+ Change working directory to  ~ebench~
 
  #+BEGIN_SRC 
  cd ebench
  #+END_SRC
 
- create distribution package into ~dist~ -directory
+ and create distribution package into ~dist~ -sub directory
 
   #+BEGIN_SRC bash :eval no-export :results output :exports code
   python3 setup.py  sdist  bdist_wheel
@@ -367,9 +369,9 @@ rm -rf ebench
   removing build/bdist.linux-x86_64/wheel
   #+end_example
 
-Distribution package files created in ~dist~ directory
+Check distribution package files created in ~dist~ directory:
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports both
 ls -ltr dist
 #+END_SRC
 
@@ -379,9 +381,9 @@ ls -ltr dist
 : -rw-rw-r-- 1 jj jj 36142 huhti 27 21:54 ebench-0.0.10rc5-py3-none-any.whl
 
 
- and install the latest version 
+ To install the latest version found in ~dist~ directory run
 
-  #+BEGIN_SRC bash :eval no-export :results output
+  #+BEGIN_SRC bash :eval no-export :results output :exports code
   VERSION_FILE=$(ls -1tr dist/*.tar.gz | tail -1| cut -f2)
   echo VERSION_FILE=$VERSION_FILE
   python3 -m pip install --user $VERSION_FILE  && echo installed $VERSION_FILE
@@ -414,15 +416,19 @@ ls -ltr dist
 
 *** Check installation
 
- Run, and expect to see same version number noticed in ~VERSION~ -file
- above:
+ Run
 
+ #+name: install_version
  #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
  ebMenu _version
  #+END_SRC
 
- #+RESULTS:
+ and expect to see same version number noticed in ~VERSION~ -file
+ above
+
+ #+RESULTS: install_version
  : 0.0.10-pre5
+
 
 
 *** Check list resources 
