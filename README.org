@@ -29,7 +29,8 @@
 
 ** Problem Statement
 
-- As a  electronics hobbyist need to control diverse electronic instruments
+- As an electronics hobbyist need to control diverse electronic
+  instruments
   - to set up instruments in various configurations
   - to collect data in projects for further processing and
     documentation
@@ -44,8 +45,8 @@
   - incorporatin  instrument at the time, when need arises
   - without too much need of upfront investments in infrastructure
 
-- be prepared for implementation as an on-going work to integrate
-  tools created by
+- be prepared for implementation as on-going work to integrate tools
+  created by
   - fellow hobbyists
   - future me
 
