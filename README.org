@@ -84,7 +84,7 @@
 ebMenu
 #+END_SRC
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<ebMenu>> ?
 #+END_SRC
 
@@ -116,7 +116,7 @@ Commands:
 ebUnit
 #+END_SRC
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<ebUnit>> ?
 #+END_SRC
 
@@ -176,7 +176,7 @@ ebRigol
 #+END_SRC
 
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<ebRigol>> ?
 #+END_SRC
 
@@ -217,6 +217,7 @@ Commands:
 
 ** TODO Architecture 
 
+*TBD*
 
 ** Documentation references
 
@@ -230,6 +231,8 @@ Commands:
    :PROPERTIES:
    :header-args:bash: :dir  tmp
    :END:
+
+*TBD*
 
 *** Clone repo ~https://github.com/jarjuk/ebench~
 
@@ -316,6 +319,8 @@ Commands:
 
 
 ** TODO Usage
+
+*TDB*
 
 *** Interactive usage
 

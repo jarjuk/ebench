@@ -126,12 +126,13 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
                                                          , usageText=usageText )),
          MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                     lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-         "_version"               : ("Version number", None, lambda **argv: print(version())),
      
          # Third section: exiting
          "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
          MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
      
+         # Hidden
+         "_version"               : ("Version number", None, lambda **argv: print(version())),
      
      }
      

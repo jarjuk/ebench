@@ -160,7 +160,7 @@ This document presents two hello world examples:
 *** Hello.py
 
 
-  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello.py :noweb yes :shebang "#!/usr/bin/env python3" :export none
+  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello/hello.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
   <<import>>
 
   <<import-env>>
@@ -433,12 +433,13 @@ This document presents two hello world examples:
                                                         , usageText=usageText )),
         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-        "_version"               : ("Version number", None, lambda **argv: print(version())),
 
         # Third section: exiting
         "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
 
+        # Hidden
+        "_version"               : ("Version number", None, lambda **argv: print(version())),
 
     }
 
@@ -447,9 +448,10 @@ This document presents two hello world examples:
 
 *** Create  ~run~ -Function for executing the application
 
- Application ~_main~ calls ~run~ method, which instantiates
- ~HelloInstrument~, application menu and creates ~menuController~,
- which executes application REPL (red-eval-print) -loop
+ ~run~ function instantiates ~HelloInstrument~, application menu
+ (~mainMenu~ using placeholder ~<<menu2>>~), and creates
+ ~menuController~. Call to ~menuController.mainMenu()~ which executes
+ application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop
 
 
  #+name: _run2
@@ -484,9 +486,9 @@ This document presents two hello world examples:
 
   #+END_SRC
 
-In ~_main~ call ~hello.run()~ and pass configuration parameters to
-~run~ -function. After returning interacfrom ~run~, close
-~menuController~ constructed.
+~_main~ calls ~hello.run()~ and passes command line configuration
+parameter ~FLAGS.greetCount~ to ~run~ -function. After returning from
+~run~, close ~menuController~ constructed.
 
  #+name: _main2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
@@ -521,8 +523,6 @@ In ~main~ -function setup ~absl~  context and call run ~_main()~ function from a
 
 #+END_SRC
 
-
-
 *** Create application main for Interactive and CLI -use
 
 Import ~run~ function from ~hello2~ -module and [[https://pypi.org/project/absl-py/][absl]] -services
@@ -547,7 +547,6 @@ and define command line configuration parameter ~greetCount~ with initial value 
 
 *** hello2 application 
 
-*hello2.py*
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/hello2.py :noweb yes :shebang :exports none
   <<import>>
 
@@ -581,7 +580,6 @@ and define command line configuration parameter ~greetCount~ with initial value 
   #+END_SRC
 
 
-*hello2_main.py*
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/hello2_main.py :noweb yes :shebang "#!/usr/bin/env python3" :exports none
 
   <<hello2-import>> 
@@ -601,10 +599,8 @@ and define command line configuration parameter ~greetCount~ with initial value 
 
   #+END_SRC
 
-*__init__.py*
   #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello2/__init__.py :noweb yes :exports none
   #+END_SRC
-
 
  Complete hello2 -example is shown below
 
@@ -759,6 +755,8 @@ and define command line configuration parameter ~greetCount~ with initial value 
       return menuController
  #+end_example
 
+ Main -function are save in a separate file ~hello2_main.py~ to avoid
+ conflicts in ~absl~ flags. 
 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
  cat examples/hello2/hello2_main.py
@@ -804,13 +802,17 @@ and define command line configuration parameter ~greetCount~ with initial value 
      main()
  #+end_example
 
-
+ Python needs an ampty file ~__init__.py~ saved along with ~hello2.py~ and ~hello2_main.py~ 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello2/__init__.py
+ cd examples/hello2
+ ls -ltr | grep -v  __pycache__
  #+END_SRC
 
  #+RESULTS:
- : 
+ : total 20
+ : -rw-rw-r-- 1 jj jj 4335 huhti 27 12:22 hello2.py
+ : -rwxr-xr-x 1 jj jj  705 huhti 27 12:22 hello2_main.py
+ : -rw-rw-r-- 1 jj jj    1 huhti 27 12:22 __init__.py
 
 
 *** Running ~hello2~
