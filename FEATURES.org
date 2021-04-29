@@ -5,6 +5,9 @@
   - [X] Save interactive session to script file
     - [X] Start recording function
     - [X] Stop recording (=save) function
+  - [X] Replay recording
+    - [X] Replay as command line interfeace (CLI) script (--outputTemplate=None (default))
+    - [X] Replay as API calls triggered for user actions (--outputTemplate=API)
   - [X] Possible to execute saved script from CLI
   - [ ] Interactive/CLI interface 1:1 migration path to API scripting
 - [X] Interactive usage guided by [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] prompts
