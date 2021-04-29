@@ -59,11 +59,11 @@ interactive session to directory pointed by command line option
 :     (default: 'tmp')
 
 In this example, recording of interactive use is saved into a file in
-directory ~examples/hello3~. Interactive use is simulated HERE
--document, which, first invokes ~greet~ prompting for two
-arguments. When application prompts for a new command, user enters ~.~
-to save recording, followed by the answer to application prompting for
-file name. The last command, ~q~, quits interactive session
+directory ~examples/hello3~. Interactive use is simulated using a HERE
+-document. At first, it invokes ~greet~ command, which prompts for two
+arguments. For the next command, user enters ~.~ to save recording,
+which prompts for a file name. The last command, ~q~, quits
+interactive session:
 
 #+name: step1-run
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -123,8 +123,8 @@ and execute the the recorded script
 examples/hello3/rec.sh
 #+END_SRC
 
-Notice that command line returns the same greeting that was made
-during interactive session:
+The output prints, which is the same greeting that was made during
+interactive session:
 
 #+RESULTS: step2-run
 : HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
@@ -160,16 +160,19 @@ integrate ~hello3.py~ with ebMenu.
 
 #+END_SRC
 
-Ebmenu is invoked using configuration options pointing to the YAML
-file and setting Python path to locate ~hello3~ application
-code. Subsequetly, ~<<ebMenu>>~ refers to 
+~ebMenu~ is invoked using ~syspath~ option allowing Python to locate
+~hello3~ application code and configuration option pointing to the
+YAML file presented above. 
+
+Later, the notation ~<<ebMenu>>~ refers to following command
 
 #+name: ebMenu
 #+BEGIN_SRC cpp :exports code :eval no
 ebMenu --syspath=$(pwd) --config examples/hello3/hello3.yaml
 #+END_SRC
 
-List available menu commands and notice command ~hello3~ and ~ap1~ in the list:
+Output the list of available menu commands to validadate that menu commands ~hello3~
+and ~ap1~ are made available with the YAML -configuration:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 <<ebMenu>> ?
@@ -193,15 +196,15 @@ Commands:
               .  : Stop recording
 #+end_example
 
-Runing  ~api1~ menu command results to 
+Runing  ~api1~ menu command
 
 #+name: api1-call
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 <<ebMenu>> api1
 #+END_SRC
 
-to observe JSON document mapping keys in YAML-configuration to value
-returned by the API.
+results to a JSON document mapping keys in YAML-configuration to
+values returned by the API call.
 
 #+RESULTS: api1-call
 : {'multiverse': "HELLO: 'multiverse' FROM: 'me'",
@@ -222,9 +225,13 @@ cat examples/hello3/rec.sh
 #+RESULTS: cat-koe
 : examples/hello3/hello3_main.py $1 greet whom="value entered to first promted value" who="value given to second promted value"
 
-The same script may be used to generate Python api calls using command
-line parameter ~--outputTemplate=API~. Documentation of this
-configuration parameter says
+In addition to allowing user to reproduce interactive session over CLI
+-interface, this script may be used to generate Python API calls. This
+is done passing command line parameter
+~--outputTemplate=API~ to the script.
+
+
+Documentation of ~outputTemplate~ configuration parameter says
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/p'
@@ -236,15 +243,14 @@ configuration parameter says
 :     execute cmds)
 
 
-Passing this option to script parameter
+Running 
 
 #+name: runu-api
 #+BEGIN_SRC bash :eval no-export :results output :exports both
   examples/hello3/rec.sh '--outputTemplate=API'
 #+END_SRC
 
-does not execute CLI, but maps maps CLI parameters to Python API
-calls, instead:
+maps maps CLI parameters to Python API calls:
 
 #+RESULTS: runu-api
 : hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
@@ -257,8 +263,8 @@ In the output above, we see
 - with arguments correspoding values recorded in interactive use.
 
 
-Next chapter demonstrates, how these API calls can be used
-in Python scripts.
+Next chapter demonstrates, how these API calls can be used in Python
+scripts.
 
 
 *** Demo: Using API snippets from step 4
@@ -275,10 +281,10 @@ parameter  ~--outputTemplate API~:
 #+RESULTS:
 : hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
 
-To give an idea, how to use these API calls, the example below shows
-a Python script, which imports ~HelloInstrument~ class and
-instantiates object ~hello3_main~ for this class, followed by
-copy-paste of the output of ~examples/hello3/rec.sh~ script
+To give an idea, how to use these API calls, the example below shows a
+Python script. It imports ~HelloInstrument~ class, instantiates object
+~hello3_main~ for this class, and uses copy-paste of the output of
+~examples/hello3/rec.sh~ script to execute Python API:
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
   FILE=examples/hello3/api-demo.py
