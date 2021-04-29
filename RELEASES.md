@@ -1,4 +1,9 @@
 ## 0.0.10-SNAPSHOT/20210415-14:55:49
+
+- Features added:
+  - `--outputTemplate` option added
+
+
 ## 0.0.9/20210415-14:55:29
 
 

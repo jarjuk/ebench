@@ -5,8 +5,6 @@ from ebench import Instrument
 from ebench import usage, usageCommand, version
 
 import os
-from absl import app, flags, logging
-from absl.flags import FLAGS
 
 # --------------------------------------
 # Example instrument "HelloInstrument"
@@ -92,7 +90,7 @@ This demo presents:
 # Application run && ebMenu integration
 
 
-def run( _argv, runMenu:bool = True, greetCount = 0  ):
+def run( _argv, runMenu:bool = True, greetCount = 0, outputTemplate:str = None  ):
      """Run hello2 as a standalone interactive or CLI application with the
      proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
 
@@ -107,6 +105,11 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      number greetings already made. It is passed to 'HelloInstrument'
      -constructor. For real world use, 'greetCount' represents
      parameters needed in instruments constructor.
+
+     :outputTemplate: controls how '_argv'/REPL input in processed,
+     default None: they are executed, any other value is mapped to
+     template to produce API reprensentation of menu actions. Here
+     just pass it trough.
 
      """
      helloController = HelloInstrument( greetCount = greetCount )
@@ -138,7 +141,10 @@ def run( _argv, runMenu:bool = True, greetCount = 0  ):
      }
      
 
-     menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
+     menuController = MenuCtrl( args=_argv
+                        , prompt="[hello, q=quit]"
+                        , instrument=helloController
+                        , outputTemplate=outputTemplate )
      menuController.setMenu(menu=mainMenu, defaults=defaults)
      if runMenu: menuController.mainMenu()
 

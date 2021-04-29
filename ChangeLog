@@ -1,3 +1,16 @@
+2021-04-29  jj  <jj@santtu>
+
+	* ebench/ebMenu.py (run): Fixed menuStopRecording
+
+	* ebench/ebench.py: (menuStopRecording): pgm parmaters removed
+
+2021-04-28  jj  <jj@santtu>
+
+	* ebench/ebench.py (MenuCtrl.__init__): outputTemplate 
+	(MenuCtrl.__init__): added parameter cmd
+
+	* HELLO.org: outputTemplate added
+
 2021-04-20  jj  <jj@santtu>
 
 	* ebench/hello.py (run): cmdController -> menuController

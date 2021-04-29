@@ -402,19 +402,26 @@ defaults = {
 
 # ------------------------------------------------------------------
 # Main
-def run( _argv, runMenu:bool = True, ip=None, addr=None, captureDir=None, recordingDir=None):
-    """
-    Api interface 
+def run( _argv, runMenu:bool = True, ip=None, addr=None, outputTemplate=None, captureDir=None, recordingDir=None):
+    """Api interface 
 
     :parentMenu: is set if called from 'parentMenu'
+
+    :outputTemplate: CLI configuration, None(default): =execute
+    cmds/args, not None: map menu actions to strings using
+    'outputTemplate',
+
 
     :runMenu: call MenuCtrl.mainMenu if True, default True
 
     :return: MenuCtrl (wrapping MSO1104 instrument )
+
     """
     
     gSkooppi=MSO1104(addr=addr, ip=ip)
-    menuController = MenuCtrl(args=_argv,instrument=gSkooppi, prompt="[q=quit,?=commands,??=help on command]")
+    menuController = MenuCtrl(args=_argv,instrument=gSkooppi
+                              , prompt="[q=quit,?=commands,??=help on command]"
+                              , outputTemplate=outputTemplate )
 
     mainMenu = {
         "Init"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
@@ -435,7 +442,7 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None, captureDir=None, record
         CMD_TRIGGER_STATUS       : ("Trigger status", None, gSkooppi.triggerStatus),
         "Record"                 : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, pgm=_argv[0], recordingDir=recordingDir) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, recordingDir=recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
                                      menuScreenShot(instrument=gSkooppi,captureDir=captureDir,prefix="Rigol-" )),
         "Help"                   : MenuCtrl.MENU_SEPATOR_TUPLE,

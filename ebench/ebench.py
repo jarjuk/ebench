@@ -19,11 +19,56 @@ import importlib
 import csv
 import pyvisa
 
+OUTPUT_TEMPLATE_DEFAULT="API"
 
 flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
 flags.DEFINE_string('captureDir', "pics", "Screen capture directory")
 flags.DEFINE_string('recordingDir', "tmp", "Directory where command line recordings are saved into")
 flags.DEFINE_string('csvDir', "tmp", "Directory where command CSV files are saved into")
+flags.DEFINE_enum( "outputTemplate", None, [OUTPUT_TEMPLATE_DEFAULT], "{}: convert cmds to API calls, default(None): execute cmds)".format(OUTPUT_TEMPLATE_DEFAULT))
+
+# ------------------------------------------------------------------
+# output Template
+
+class OutputTemplate: 
+    """
+    Template to format menuCommand and commandParameters instead of executing
+    them using menuAction lambda
+    """
+
+    def __init__(self):
+        pass
+
+
+    def formatTemplate( self, name:str, menuCommand:str, commandParameters:dict)->str:
+        raise NotImplementedError( "formatTemplate: implementation missing on {}".format(self.__class__.__name__))
+    
+    def outputTemplate( self, templateStr ):
+        print( templateStr )
+
+    def applyTemplate( self, name, menuCommand:str, commandParameters:dict):
+        """Template service called from menu controller
+
+        :name:  name of program/sub menuCommand
+
+        """
+        self.outputTemplate(self.formatTemplate(name, menuCommand=menuCommand,commandParameters=commandParameters))
+
+class OutputTemplateApi(OutputTemplate):
+    def formatTemplate( self, name:str, menuCommand:str, commandParameters:dict)->str:
+        """:return: instance.method( **argv ), where name->instance,
+        menuCommand->method, commandParameters->**argv
+        """
+        def name2Instance( name:str )->str:
+            return os.path.splitext(os.path.basename(name))[0]
+        def formatValue( v ):
+            return '"{}"'.format(v)
+        dictAsKeyValues = ", ".join(  [ "{}={}".format(k,formatValue(v)) for k,v in commandParameters.items() ])
+        return f"{name2Instance(name)}.{menuCommand}({dictAsKeyValues })"
+
+
+# ------------------------------------------------------------------
+# infrastructure services
 
 def version():
     """Version number of ebench tool"""
@@ -41,6 +86,8 @@ def list_resources():
     logging.info( "List resources called")
     return PyInstrument.singleton_rm().list_resources()
 
+# ------------------------------------------------------------------
+# Abstract instrment class
         
 class Instrument:
 
@@ -229,19 +276,22 @@ class MenuCtrl:
     SUB_MENU_MEASUREMENT="csvFile"       # configure SUB_MENU_TYPE_API, save to csvFile
     
     
-    def __init__( self, args, prompt, instrument:Instrument = None ):
-        """
+    def __init__( self, args, prompt, instrument:Instrument = None, outputTemplate=None ):
+        """:args: paramerter from command line, pgm name etc
 
-        :args: paramerter from command line, pgm name etc
 
         :prompt: prompt presented to user
 
         :instrument: instrument managerd by this menu (optional)
 
+        :outputTemplate: None execute args/REPL responses, not None
+        output (python API)
+
         """
         self.subMenuCtrls = {}
         self.instrument = instrument
         self.prompt = prompt
+        self.outputTemplate = MenuCtrl.dispatchOutputTemplate(outputTemplate)
         if not self.isChildMenu:
             # top level menu created - recording started
             self.recording = []
@@ -252,6 +302,9 @@ class MenuCtrl:
     def initArgs( self, args):
         """
         Init args (used only on top topMenu: only which receives args)
+
+        :args: args[0] name of program starting/sub menuCommand
+
         """
         # Interactive receives only pgroramm name in _argv
         self.interactive = len(args) == 1
@@ -346,7 +399,6 @@ class MenuCtrl:
     def cmds( self, cmds:str):
         self._cmds = cmds
 
-
     @property
     def interactive(self) -> bool :
         """Interactive: some command line parameters given?
@@ -378,6 +430,7 @@ class MenuCtrl:
 
     @property
     def cmds(self) -> List[str] :
+        """Parameters"""
         if self.isChildMenu:
             return self.parentMenu.cmds
         if not hasattr(self, "_cmds"):
@@ -430,6 +483,19 @@ class MenuCtrl:
         self.menu = menu
         self.defaults = defaults
 
+    @property
+    def outputTemplate(self) -> str :
+        """Defaults None: args/REPL responses are executed
+        """
+        if not hasattr(self, "_outputTemplate"):
+            return None
+        return self._outputTemplate
+
+    @outputTemplate.setter
+    def outputTemplate( self, outputTemplate:str):
+        self._outputTemplate = outputTemplate
+
+
 
     
     # ------------------------------
@@ -452,7 +518,7 @@ class MenuCtrl:
             logging.debug( "appendRecording: delegate to parentMenu, menuCommand={}".format(menuCommand))
             self.parentMenu.appendRecording( menuCommand=menuCommand, commandParameters=commandParameters)
         else:
-            self.recording = self.recording + [menuCommand] + [ "{}={}".format(k,v) for k,v in commandParameters.items() ]
+            self.recording = self.recording + [menuCommand] + [ '{}="{}"'.format(k,v) for k,v in commandParameters.items() ]
             logging.debug( "appendRecording: {}".format(self.recording))
 
     def anyRecordings( self ) -> bool:
@@ -461,8 +527,21 @@ class MenuCtrl:
             return self.parentMenu.anyRecordings()
         else:
             return len(self.recording) > 0
+
+    def pgmAndOptions(self)->str:
+        """Return string which starts menuController.  For toplevel
+        application is argv[0] + command line parameters, for sub menu
+        it is the menu command used to enter sub menu.
+
+        For options add $1, which maps to bash option paramter
+
+        """
+        # commandLineOptionsToInclude = ["syspath", "recordingDir"]
+        # opts = [ '--{}="{}"'.format( opt, str(FLAGS[opt]))
+        #          for opt in commandLineOptionsToInclude if opt in FLAGS ]
+        return "{} {}".format(self.pgm, "$1" )
         
-    def stopRecording(self, pgm, fileName =None, recordingDir=None ):
+    def stopRecording(self, fileName =None, recordingDir=None ):
         """@see module function 'stopRecording'
         """
         if recordingDir is None: recordingDir = FLAGS.recordingDir
@@ -472,9 +551,13 @@ class MenuCtrl:
             logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
             if not self.anyRecordings():
                 print( "NO recordings to save")
-                raise MenuNoRecording                
+                raise MenuNoRecording
+
+            # Create recording line
             commandsAndParameters = " ".join( self.recording)
-            pgm_commandsAndParameters = "{} {}".format(pgm, commandsAndParameters)
+            pgm_commandsAndParameters = "{} {}".format(self.pgmAndOptions(), commandsAndParameters)
+
+            # Show/save to file
             if fileName is None or not fileName or fileName == MenuCtrl.MENU_REC_SAVE:
                 print(pgm_commandsAndParameters)
             else:
@@ -689,6 +772,32 @@ class MenuCtrl:
 
         return menuActionLambda
 
+    # ------------------------------
+    # Dispatch output templateate
+    OUTPUT_TEMPLATE_DISPATCHER= {
+        OUTPUT_TEMPLATE_DEFAULT: OutputTemplateApi
+    }
+
+    def dispatchOutputTemplate( outputTemplate:str )->OutputTemplate:
+        """Map 'outputTemplate' to class OutputTemplate 
+
+        :outputTemplate: command line configuration
+
+        :return: None if 'outputTemplate' is None else class
+        'OutputTemplate'
+
+        """
+        logging.debug( "dispatchOutputTemplate: outputTemplate={}".format(outputTemplate))
+        # cli options None --> no outputTemplate processing
+        if outputTemplate is None: return None
+        if outputTemplate in MenuCtrl.OUTPUT_TEMPLATE_DISPATCHER:
+            templateInstance = MenuCtrl.OUTPUT_TEMPLATE_DISPATCHER[outputTemplate]()
+            logging.info( "dispatchOutputTemplate: outputTemplate={} -> {}".format(outputTemplate, templateInstance) )
+            return templateInstance
+        else:
+            raise ValueError( "Invalid outputTemplate {}, valid outputTemplates={}".format(
+                outputTemplate, " ".join( MenuCtrl.OUTPUT_TEMPLATE_DISPATCHER.keys())))
+        
 
      
     # ------------------------------
@@ -807,8 +916,9 @@ class MenuCtrl:
 
         """
         
-        def execMenuCommand(mainMenu,menuCommand,defaults, promptIndentation):
+        def execMenuCommand(mainMenu,menuCommand,defaults, promptIndentation,outputTemplate=None):
             # Extract mainMenu elements
+            # :outputTemplate: execute 'menuCommand' if None, else format output using template
             menuSelection = mainMenu[menuCommand]
 
             # 'defaultParameters' may provide initial value 
@@ -834,37 +944,43 @@ class MenuCtrl:
                 }
 
             if menuAction is not None:
-                try:
-                    # Call menu action (w. parameters)
-                    logging.debug( "call menuAction={}, with commandParameters={}".format( menuAction, commandParameters))
-                    returnVal = menuAction( **commandParameters )
-                    self.appendRecording( menuCommand, commandParameters )
-                    if returnVal is not None: # and interactive:
-                        if isinstance(returnVal, str):
-                            print(returnVal )
+                if not outputTemplate is None:
+                    # Format output (to API)
+                    logging.debug( "applyTemplate menuAction={}, with commandParameters={}".format( menuAction, commandParameters))
+                    outputTemplate.applyTemplate( name=self.pgm, menuCommand=menuCommand, commandParameters=commandParameters)
+                else:
+                    # Normal execution
+                    try:
+                        # Call menu action (w. parameters)
+                        logging.debug( "call menuAction={}, with commandParameters={}".format( menuAction, commandParameters))
+                        returnVal = menuAction( **commandParameters )
+                        self.appendRecording( menuCommand, commandParameters )
+                        if returnVal is not None: # and interactive:
+                            if isinstance(returnVal, str):
+                                print(returnVal )
+                            else:
+                                print( pformat(returnVal) )
+                    except MenuValueError as err:
+                        if self.interactive:
+                            # Interactive error - print erros msg && continue
+                            print( "Error: {}".format(str(err)))
                         else:
-                            print( pformat(returnVal) )
-                except MenuValueError as err:
-                    if self.interactive:
-                        # Interactive error - print erros msg && continue
-                        print( "Error: {}".format(str(err)))
-                    else:
-                        raise
-                except MenuNoRecording:
-                    # Help, start/stop recording commands
-                    pass
-                except: #  Exception as err:
-                    err = sys.exc_info()[0]
-                    # In Interactive mode all errors are printed, user quits 
-                    if self.interactive:
-                        # Interactive error - print erros msg &&
-                        # continue (debug print stacktrace)
-                        print( "Error: {}".format(str(err)))
-                        if logging.level_debug():
+                            raise
+                    except MenuNoRecording:
+                        # Help, start/stop recording commands
+                        pass
+                    except: #  Exception as err:
+                        err = sys.exc_info()[0]
+                        # In Interactive mode all errors are printed, user quits 
+                        if self.interactive:
+                            # Interactive error - print erros msg &&
+                            # continue (debug print stacktrace)
+                            print( "Error: {}".format(str(err)))
+                            if logging.level_debug():
+                                raise err
+                        else:
                             raise err
-                    else:
-                        raise err
-                    
+                        
             return True
 
         promptIndentation = "" if self.isTopMenu else " "
@@ -895,12 +1011,14 @@ class MenuCtrl:
                     # automagically when all input consume)
                     self.appendRecording( menuCommand )
             else:
-                goon = execMenuCommand( menu, menuCommand,defaults, promptIndentation=promptIndentation)
+                goon = execMenuCommand( menu, menuCommand,defaults
+                                        , promptIndentation=promptIndentation , outputTemplate=self.outputTemplate)
 
-        # Confirmm whether save recording when exiting
+        # Confirm whether save recording when exiting
         if self.anyRecordings() and self.interactive and MenuCtrl.MENU_REC_SAVE in menu and self.isTopMenu:
             print( "Save recordings?")
-            execMenuCommand( menu, MenuCtrl.MENU_REC_SAVE,defaults,promptIndentation=promptIndentation)
+            execMenuCommand( menu, MenuCtrl.MENU_REC_SAVE,defaults
+                             ,promptIndentation=promptIndentation, outputTemplate=self.outputTemplate)
 
     def callIntrumentMethodByName( self, name, *args, **kwargs):
         """Dispatch 'name' method on 'self.instrument' and pass to it
@@ -1142,7 +1260,7 @@ def menuStartRecording(cmdController:MenuCtrl):
     return f
 
 
-def menuStopRecording( cmdController:MenuCtrl, pgm, recordingDir ):
+def menuStopRecording( menuController:MenuCtrl, recordingDir ):
     """Lambda function to use in mainMenu construct
 
     :recordingDir: directory where save, default FLAGS.recordingDir
@@ -1150,7 +1268,7 @@ def menuStopRecording( cmdController:MenuCtrl, pgm, recordingDir ):
     Usage example: 
       MenuCtrl.MENU_REC_SAVE   : 
        ( "Stop recording", stopRecordingPar, 
-          menuStopRecording(cmdController, pgm=_argv[0], recordingDir=FLAGS.recordingDir ) ),
+          menuStopRecording(menuController, recordingDir=FLAGS.recordingDir ) ),
 
     Document string in f is presented in help commands
 
@@ -1163,7 +1281,7 @@ def menuStopRecording( cmdController:MenuCtrl, pgm, recordingDir ):
         (and do not clear command history)
 
         """
-        return cmdController.stopRecording(pgm=pgm, recordingDir=recordingDir, **argv )
+        return menuController.stopRecording(recordingDir=recordingDir, **argv )
     return f
 
 def usageListCommands( mainMenu:dict[str,List] ):

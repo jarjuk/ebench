@@ -25,7 +25,7 @@ This document presents two hello world examples:
     - [[#list-commands-and-help-commands][List commands and help commands]]
     - [[#define-application-menu][Define application menu]]
     - [[#create--run--function-for-executing-the-application][Create  run -Function for executing the application]]
-    - [[#interactive-and-cli--entry-point-in-hello2_mainpy-for][Interactive and CLI -entry point in hello2_main.py for]]
+    - [[#interactive-and-cli--entry-point-in-hello2_mainpy][Interactive and CLI -entry point in hello2_main.py]]
     - [[#hello2-application][hello2 application]]
       - [[#hello2py][hello2.py]]
       - [[#hello2_mainpy][hello2_main.py]]
@@ -459,12 +459,16 @@ This document presents two hello world examples:
  ~menuController~, configures application ~mainMenu~ presented above
  (in the code snippet below ~mainMenu~ configuration is indicated with
  placeholder ~<<menu2>>~), and calls to ~menuController.mainMenu()~,
- which starts application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop
+ which starts application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop.
+
+ In this example, ~outputTemplate~ is left to default value None, and
+ menu actions are executed. Example [[file:GENTLE_SLOPE.org]] covers
+ using ~outputTemplate~. 
 
  #+name: _run2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
 
-   def run( _argv, runMenu:bool = True, greetCount = 0  ):
+   def run( _argv, runMenu:bool = True, greetCount = 0, outputTemplate:str = None  ):
         """Run hello2 as a standalone interactive or CLI application with the
         proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
 
@@ -480,12 +484,20 @@ This document presents two hello world examples:
         -constructor. For real world use, 'greetCount' represents
         parameters needed in instruments constructor.
 
+        :outputTemplate: controls how '_argv'/REPL input in processed,
+        default None: they are executed, any other value is mapped to
+        template to produce API reprensentation of menu actions. Here
+        just pass it trough.
+
         """
         helloController = HelloInstrument( greetCount = greetCount )
 
         <<menu2>>
 
-        menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]", instrument=helloController )
+        menuController = MenuCtrl( args=_argv
+                           , prompt="[hello, q=quit]"
+                           , instrument=helloController
+                           , outputTemplate=outputTemplate )
         menuController.setMenu(menu=mainMenu, defaults=defaults)
         if runMenu: menuController.mainMenu()
 
@@ -517,7 +529,12 @@ value ~0~
 
 ~_main~ calls ~hello.run()~ and passes command line configuration
 parameter ~FLAGS.greetCount~ to the function. After returning from
-~run~, close ~menuController~.
+~run~, close ~menuController~. 
+
+ ~outputTemplate~ parameter is passed from command line option
+~FLAGS.outputTemplate~.  Example [[file:GENTLE_SLOPE.org]] covers the
+effect of using any other value than the default ~None~ for
+~FLAGS.outputTemplate~.
 
  #+name: _main2
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes
@@ -526,7 +543,7 @@ parameter ~FLAGS.greetCount~ to the function. After returning from
        logging.set_verbosity(FLAGS.debug)
 
        # Start standalone application
-       menuController = run( _argv, greetCount = FLAGS.greetCount )
+       menuController = run( _argv, greetCount = FLAGS.greetCount, outputTemplate=FLAGS.outputTemplate )
 
        # q from menu or end of CLI parameters
        menuController.close()
@@ -562,7 +579,7 @@ defined above:
 
   <<import2b>>
 
-  <<import-env>>
+  import os
 
   # --------------------------------------
   # Example instrument "HelloInstrument"

@@ -52,7 +52,13 @@ defaults = {
 # ------------------------------------------------------------------
 # Main && run 
 
-def run( _argv, parentMenu:MenuCtrl=None, config=None):
+def run( _argv, parentMenu:MenuCtrl=None, config=None, outputTemplate=None, captureDir=None, recordingDir=None ):
+    """
+    :outputTemplate: CLI configuration, None(default): =execute
+    cmds/args, not None: map menu actions to strings using
+    'outputTemplate',
+
+    """
 
     def loadsubMenuDefs(config):
         subMenuDefs = []
@@ -67,7 +73,7 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
                    subMenuDefs = yaml.safe_load(y)
         return subMenuDefs
 
-    menuController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]" )
+    menuController = MenuCtrl( args=_argv, prompt="[?=help, q=quit]", outputTemplate=outputTemplate,  )
 
     # Load submenus con ebMenu.yaml?
     subMenuDefs = loadsubMenuDefs(config=config)
@@ -84,7 +90,7 @@ def run( _argv, parentMenu:MenuCtrl=None, config=None):
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
-        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(menuController, pgm=_argv[0], recordingDir=FLAGS.recordingDir) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", stopRecordingPar, menuStopRecording(menuController, recordingDir=FLAGS.recordingDir) ),
         # Hidden 
         MenuCtrl.MENU_YAML       : MenuCtrl.MENU_YAML_TUPLE,
         MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,

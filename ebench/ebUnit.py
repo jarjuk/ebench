@@ -337,9 +337,13 @@ Hint:
 # ------------------------------------------------------------------
 # Main
 
-def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordingDir=None ):
+def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordingDir=None, outputTemplate=None ):
     """Construct UTG962 -instrument and wrap it to MenuCtrl object. Call
      MenuCtrl.mainMenu if 'runMenu' True (default).
+
+    :outputTemplate: CLI configuration, None(default): =execute
+    cmds/args, not None: map menu actions to strings using
+    'outputTemplate',
 
     :runMenu: call MenuCtrl.mainMenu if True, default True
 
@@ -350,7 +354,11 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordin
 
     sgen = UTG962( addr=addr, ip=ip)
     
-    menuController = MenuCtrl( args=_argv, instrument=sgen, prompt = "[q=quit,?=commands,??=help on command]")
+    menuController = MenuCtrl( args=_argv
+                               , instrument=sgen, prompt = "[q=quit,?=commands,??=help on command]"
+                               , outputTemplate = outputTemplate  )
+
+    
     mainMenu = {
         "sine"                   : ( "Generate sine -wave on channel 1|2", sinePar, sgen.sine ),
         "square"                 : ( "Generate square -wave on channel 1|2", squarePar, sgen.square  ),
@@ -364,7 +372,7 @@ def run( _argv, runMenu:bool =True, addr=None, ip=None,captureDir=None, recordin
         "Record"                 : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
         MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
-                                     menuStopRecording(menuController, pgm=_argv[0], recordingDir=recordingDir) ),
+                                     menuStopRecording(menuController, recordingDir=recordingDir) ),
         MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
                                      menuScreenShot(instrument=sgen,captureDir=captureDir,prefix="UTG-" )),
         "list_resources"         : ( "List pyvisa resources (=pyvisa list_resources() wrapper)'", None, list_resources ),

@@ -204,12 +204,16 @@ Commands:
 
 *TBD*
 
+
 ** Documentation references
 
 - Hello World example:  [[file:HELLO.org]]
 - Hello World example integrated with ~ebMenu~: [[file:EBMENU.org]]
 - BDD testig document for ~ebUnit~ -tool: [[file:ebUnit.org]]
-- ~ebench~ -toolset
+- A short story of slowly climbing the hill from interactive use,
+  command line use, configuration file use to Python scripting:
+  [[file:GENTLE_SLOPE.org]]
+
 
 
 ** Installation
