@@ -42,8 +42,12 @@
     collection with the help of scripts
 
 - with gently sloping adoption curve
-  - incorporatin  instrument at the time, when need arises
-  - without too much need of upfront investments in infrastructure
+  - where instruments can be operated using interactive interface
+  - or command line interface
+  - and individual tools can be configured to work together in user
+    and API interfaces
+  - allowing tool sessions to be exported for scripting for advanced
+    use
 
 - be prepared for implementation as on-going work to integrate tools
   created by
