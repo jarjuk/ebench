@@ -4,10 +4,11 @@
 :END:
 
 This example continues with ~hello2~ -example presented in
-[[file:HELLO.org]] and demonstrates "gentle" slope from using an ~ebench~
--application interactives, from command line, using ~ebMenu~ to access
-API interfaces, and using recording from interactive use to copy-paste
-API calls to Python scripts.
+[[file:HELLO.org]] and demonstrates "gentle" slope using an ~ebench~
+-application interactively, from command line, integrated with
+~ebMenu~ with access to API interfaces configured in YAML, and,
+finally, how to use recording from interactive session to create
+copy-paste API calls for Python scripts.
 
 :CONTENTS:
 - [[#gentle-slope-from-interactive-cli-yaml-api-use][Gentle slope from Interactive-CLI-YAML-API use]]
@@ -60,9 +61,9 @@ interactive session to directory pointed by command line option
 In this example, recording of interactive use is saved into a file in
 directory ~examples/hello3~. Interactive use is simulated HERE
 -document, which, first invokes ~greet~ prompting for two
-parameters. When application prompts for a new command user enters ~.~
-to select start recording. Application prompts for file name, and user
-enters ~rec.sh~. The last command ~q~ exists interactive session
+arguments. When application prompts for a new command, user enters ~.~
+to save recording, followed by the answer to application prompting for
+file name. The last command, ~q~, quits interactive session
 
 #+name: step1-run
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -92,8 +93,8 @@ In the output, expect to see
 : [?=help,q=quit] > Filename to save recording (.= show current recording) > [?=help,q=quit] > 
 
 
-and the recording written into ~examples/hello3/rec.sh~ to show
-command invoked interacively translated to CLI -parameters
+The recording in file ~examples/hello3/rec.sh~ shows CLI commands
+needed to replicate the interactive session:
 
 #+BEGIN_SRC bash :eval no-export :results output :expors results
 cat examples/hello3/rec.sh
@@ -106,8 +107,9 @@ cat examples/hello3/rec.sh
 *** Step 2: CLI use 
 
 The second step in the gentle slope, is to replay the recording
-created for the interactive sesssion. Add execution permissions to the
-file created in step 1:
+created for the interactive sesssion. 
+
+Add execution permissions to the file created in step 1:
 
 #+BEGIN_SRC bash :eval no-export :results output
 chmod +x examples/hello3/rec.sh
@@ -121,8 +123,8 @@ and execute the the recorded script
 examples/hello3/rec.sh
 #+END_SRC
 
-Notice that command line returns the same greeting that was used in
-interactive session, in step 1:
+Notice that command line returns the same greeting that was made
+during interactive session:
 
 #+RESULTS: step2-run
 : HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
@@ -169,7 +171,7 @@ ebMenu --syspath=$(pwd) --config examples/hello3/hello3.yaml
 
 List available menu commands and notice command ~hello3~ and ~ap1~ in the list:
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 <<ebMenu>> ?
 #+END_SRC
 
@@ -193,11 +195,15 @@ Commands:
 
 Runing  ~api1~ menu command results to 
 
+#+name: api1-call
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 <<ebMenu>> api1
 #+END_SRC
 
-#+RESULTS:
+to observe JSON document mapping keys in YAML-configuration to value
+returned by the API.
+
+#+RESULTS: api1-call
 : {'multiverse': "HELLO: 'multiverse' FROM: 'me'",
 :  'universe': "HELLO: 'universe' FROM: 'me'",
 :  'world': "HELLO: 'world' FROM: 'me'"}
@@ -230,7 +236,7 @@ configuration parameter says
 :     execute cmds)
 
 
-As the result of running 
+Using this option in script parameter
 
 #+name: runu-api
 #+BEGIN_SRC bash :eval no-export :results output :exports both
@@ -270,7 +276,7 @@ Output of the script shows
 #+RESULTS:
 : hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
 
-To give an idea, how to use these API calls, the example below creates
+To give an idea, how to use these API calls, the example below shows
 a Python script, which imports ~HelloInstrument~ class and
 instantiates object ~hello3_main~ for this class, followed by
 copy-paste of the output of ~examples/hello3/rec.sh~ script
@@ -335,7 +341,7 @@ Executing this script in Python intepreter
 python examples/hello3/api-demo.py
 #+END_SRC
 
-results:
+result of API  calls emebbed into script context:
 
 #+RESULTS: python-run
 : Instantiatig hello3_main
@@ -413,27 +419,24 @@ rm -f tmp/demo.sh
 #+RESULTS:
 : HELLO: 'test case' FROM: 'sub menu hello3'
 
-Expect to see recording corresponding the CLI command above. *Notice*:
-recording actions  is not registered in the script.
+In file ~demo.sh~, expect to see recording corresponding the CLI
+command above.
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
-ls -ltr tmp/demo.sh
 cat tmp/demo.sh
 #+END_SRC
 
 #+RESULTS:
-: -rw-rw-r-- 1 jj jj 84 huhti 29 13:22 tmp/demo.sh
 : /home/jj/.local/bin/ebMenu $1 hello3 greet whom="test case" who="sub menu hello3" q
 
 
-Make the recording exectutable, and execute. We need to pass itc the
-configuration options, ~--syspath~ and ~--config~, which were used for
-the original CLI call. Expect to see the same greeting as for the
-CLI-use.
+Make the recording executable, and execute it using configuration
+options, ~--syspath~ and ~--config~, which were used for the original
+CLI call. Expect to see the same greeting as for the CLI-use.
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 chmod +x tmp/demo.sh
-tmp/demo.sh "--syspath=$(pwd) --config examples/hello3/hello3.yaml"
+tmp/demo.sh "--syspath=$(pwd) --config=examples/hello3/hello3.yaml" 2>&1
 #+END_SRC
 
 #+RESULTS:
@@ -476,16 +479,16 @@ Error message, if invalid value is passed
 
  #+RESULTS:
  : total 24
- : -rw-rw-r-- 1 jj jj 2927 huhti 29 13:19 hello3.py
- : -rw-rw-r-- 1 jj jj  346 huhti 29 13:19 hello3.yaml
- : -rwxr-xr-x 1 jj jj  631 huhti 29 13:19 hello3_main.py
- : -rwxrwxr-x 1 jj jj  126 huhti 29 13:22 rec.sh
- : -rw-rw-r-- 1 jj jj  562 huhti 29 13:22 api-demo.py
+ : -rwxrwxr-x 1 jj jj  126 huhti 29 13:37 rec.sh
+ : -rw-rw-r-- 1 jj jj  531 huhti 29 13:37 hello3.yaml
+ : -rw-rw-r-- 1 jj jj 2927 huhti 29 13:37 hello3.py
+ : -rwxrwxr-x 1 jj jj  631 huhti 29 13:37 hello3_main.py
+ : -rw-rw-r-- 1 jj jj  562 huhti 29 13:50 api-demo.py
 
 
 *** Example application =hello3.py=
 
-#+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python*  :tangle examples/hello3/hello3.py :exports none
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*  :tangle examples/hello3/hello3.py :exports none
   from ebench import MenuCtrl
 
   from ebench import Instrument
@@ -574,27 +577,6 @@ Error message, if invalid value is passed
        return menuController
 
 #+END_SRC
-
-#+RESULTS:
-#+begin_example
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-  File "/tmp/babel-t1yA75/python-CswBQG", line 1, in <module>
-    from ebench import MenuCtrl
-  File "/home/jj/work/ebench/ebench/__init__.py", line 2, in <module>
-    from .ebench import version, MenuCtrl, Instrument
-  File "/home/jj/work/ebench/ebench/ebench.py", line 24, in <module>
-    flags.DEFINE_integer('debug', -1, '-3=fatal, -1=warning, 0=info, 1=debug')
-  File "/home/jj/.local/lib/python3.9/site-packages/absl/flags/_defines.py", line 410, in DEFINE_integer
-    result = DEFINE(
-  File "/home/jj/.local/lib/python3.9/site-packages/absl/flags/_defines.py", line 104, in DEFINE
-    return DEFINE_flag(
-  File "/home/jj/.local/lib/python3.9/site-packages/absl/flags/_defines.py", line 140, in DEFINE_flag
-    fv[flag.name] = flag
-  File "/home/jj/.local/lib/python3.9/site-packages/absl/flags/_flagvalues.py", line 438, in __setitem__
-    raise _exceptions.DuplicateFlagError.from_flag(name, self)
-absl.flags._exceptions.DuplicateFlagError: The flag 'debug' is defined twice. First from , Second from ebench.ebench.  Description from first occurrence: -3=fatal, -1=warning, 0=info, 1=debug
-#+end_example
 
 
  Source code of the example application  =hello3.py=
@@ -696,7 +678,7 @@ absl.flags._exceptions.DuplicateFlagError: The flag 'debug' is defined twice. Fi
 
 *** Example application =hello3_main.py=
 
-#+BEGIN_SRC python :eval no-export :results output :noweb no :session *Python* :tangle examples/hello3/hello3_main.py :shebang "#!/usr/bin/env python3" :exports none
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello3/hello3_main.py :shebang "#!/usr/bin/env python3" :exports none
 #!/usr/bin/env python3
 from hello3 import run
 
@@ -727,12 +709,6 @@ if __name__ == '__main__':
     main()
 #+END_SRC
 
-#+RESULTS:
-: Traceback (most recent call last):
-:   File "<stdin>", line 1, in <module>
-:   File "/tmp/babel-t1yA75/python-eW3g2O", line 2, in <module>
-:     from hello3 import run
-: ModuleNotFoundError: No module named 'hello3'
 
 Application main passes configuration variables to ~hello3.run()~
 method, and calls ~menuController.close()~, when control returns from
