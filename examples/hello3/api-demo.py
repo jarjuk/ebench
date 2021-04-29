@@ -10,7 +10,8 @@ hello3_main = HelloInstrument()
 
 print( "\n\nHere follows the output from API calls:")
 
-# This following this line was copy-pasted from the output of examples/hello3/rec.sh
+# This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+# parameter ='--outputTemplate API')
 hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
 # End of copy-paste
 
