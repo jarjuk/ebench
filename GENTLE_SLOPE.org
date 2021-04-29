@@ -96,7 +96,7 @@ In the output, expect to see
 The recording in file ~examples/hello3/rec.sh~ shows CLI commands
 needed to replicate the interactive session:
 
-#+BEGIN_SRC bash :eval no-export :results output :expors results
+#+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/hello3/rec.sh
 #+END_SRC
 
@@ -161,8 +161,8 @@ integrate ~hello3.py~ with ebMenu.
 #+END_SRC
 
 Ebmenu is invoked using configuration options pointing to the YAML
-file created and setting Python path to locate ~hello3~ application
-code:
+file and setting Python path to locate ~hello3~ application
+code. Subsequetly, ~<<ebMenu>>~ refers to 
 
 #+name: ebMenu
 #+BEGIN_SRC cpp :exports code :eval no
@@ -236,7 +236,7 @@ configuration parameter says
 :     execute cmds)
 
 
-Using this option in script parameter
+Passing this option to script parameter
 
 #+name: runu-api
 #+BEGIN_SRC bash :eval no-export :results output :exports both
@@ -265,9 +265,8 @@ in Python scripts.
 
 Step 4 in the previous chapter demonstrated, how interactive session
 script can be converted to Python API calls using a command line
-parameter  ~'--outputTemplate API'~:
+parameter  ~--outputTemplate API~:
 
-Output of the script shows
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
   examples/hello3/rec.sh '--outputTemplate API'
@@ -296,7 +295,8 @@ copy-paste of the output of ~examples/hello3/rec.sh~ script
 
   print( "\n\nHere follows the output from API calls:")
 
-  # This following this line was copy-pasted from the output of examples/hello3/rec.sh
+  # This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+  # parameter $1='--outputTemplate API')
   EOF
 
   # copy paste the output  (here just apped to $FILE)
@@ -325,7 +325,8 @@ hello3_main = HelloInstrument()
 
 print( "\n\nHere follows the output from API calls:")
 
-# This following this line was copy-pasted from the output of examples/hello3/rec.sh
+# This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+# parameter ='--outputTemplate API')
 hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
 # End of copy-paste
 
@@ -481,9 +482,9 @@ Error message, if invalid value is passed
  : total 24
  : -rwxrwxr-x 1 jj jj  126 huhti 29 13:37 rec.sh
  : -rw-rw-r-- 1 jj jj  531 huhti 29 13:37 hello3.yaml
- : -rw-rw-r-- 1 jj jj 2927 huhti 29 13:37 hello3.py
  : -rwxrwxr-x 1 jj jj  631 huhti 29 13:37 hello3_main.py
- : -rw-rw-r-- 1 jj jj  562 huhti 29 13:50 api-demo.py
+ : -rw-rw-r-- 1 jj jj 2927 huhti 29 14:07 hello3.py
+ : -rw-rw-r-- 1 jj jj  607 huhti 29 14:14 api-demo.py
 
 
 *** Example application =hello3.py=
@@ -822,7 +823,8 @@ cat examples/hello3/hello3.yaml
 
  print( "\n\nHere follows the output from API calls:")
 
- # This following this line was copy-pasted from the output of examples/hello3/rec.sh
+ # This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+ # parameter ='--outputTemplate API')
  hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
  # End of copy-paste
 
