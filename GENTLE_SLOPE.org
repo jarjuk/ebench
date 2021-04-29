@@ -48,7 +48,7 @@ In step1, we will use ~examples/hello3~ interactively and save
 interactive session to directory pointed by command line option
 ~recordingDir~ 
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<hello3Cmd>> --helpfull | sed -n '/--recordingDir/p'
 <<hello3Cmd>> --helpfull | sed -n '/--recordingDir/{n;p}'
 #+END_SRC
@@ -57,12 +57,12 @@ interactive session to directory pointed by command line option
 :   --recordingDir: Directory where command line recordings are saved into
 :     (default: 'tmp')
 
-In this example interactive use recordings are saved to directory
-~examples/hello3~. Interactive use is simulated using HERE -document,
-which, first invokes ~greet~ prompting for two parameters. When
-application prompts for a new command user enters ~.~ to select start
-recording. Application prompts for file name, and user enters
-~rec.sh~. The last command ~q~ exists interactive session
+In this example, recording of interactive use is saved into a file in
+directory ~examples/hello3~. Interactive use is simulated HERE
+-document, which, first invokes ~greet~ prompting for two
+parameters. When application prompts for a new command user enters ~.~
+to select start recording. Application prompts for file name, and user
+enters ~rec.sh~. The last command ~q~ exists interactive session
 
 #+name: step1-run
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -92,9 +92,10 @@ In the output, expect to see
 : [?=help,q=quit] > Filename to save recording (.= show current recording) > [?=help,q=quit] > 
 
 
-and in the recording file ~examples/hello3/rec.sh~ contains
+and the recording written into ~examples/hello3/rec.sh~ to show
+command invoked interacively translated to CLI -parameters
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :expors results
 cat examples/hello3/rec.sh
 #+END_SRC
 
@@ -104,9 +105,9 @@ cat examples/hello3/rec.sh
 
 *** Step 2: CLI use 
 
-The second step in the gentle slope is replay the recording created
-for interactive sesssion. For this purpose add execution permissions
-to the file created in step 1:
+The second step in the gentle slope, is to replay the recording
+created for the interactive sesssion. Add execution permissions to the
+file created in step 1:
 
 #+BEGIN_SRC bash :eval no-export :results output
 chmod +x examples/hello3/rec.sh
@@ -116,12 +117,12 @@ chmod +x examples/hello3/rec.sh
 
 and execute the the recorded script
 #+name: step2-run
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports both
 examples/hello3/rec.sh
 #+END_SRC
 
-and notice that command line use returns the same greeting as for the
-interactive use in step 1:
+Notice that command line returns the same greeting that was used in
+interactive session, in step 1:
 
 #+RESULTS: step2-run
 : HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
@@ -129,8 +130,8 @@ interactive use in step 1:
 
 *** Step 3: YAML use (ebMenu integration)
 
-Configuration in ~examples/hello3/hello3.yaml~ integrates ~hello3.py~
-to ebMenu. 
+Create following YAML -file into ~examples/hello3/hello3.yaml~ to
+integrate ~hello3.py~ with ebMenu.
 
 #+BEGIN_SRC yaml :tangle examples/hello3/hello3.yaml :exports code :eval no
     # Tangled from GENTLE_SLOPE.org - modification will be overridden
@@ -157,13 +158,16 @@ to ebMenu.
 
 #+END_SRC
 
+Ebmenu is invoked using configuration options pointing to the YAML
+file created and setting Python path to locate ~hello3~ application
+code:
+
 #+name: ebMenu
 #+BEGIN_SRC cpp :exports code :eval no
 ebMenu --syspath=$(pwd) --config examples/hello3/hello3.yaml
 #+END_SRC
 
-Using this configuration adds ~hello3~ and ~ap1~ to list of availeble
-menu commands:
+List available menu commands and notice command ~hello3~ and ~ap1~ in the list:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes
 <<ebMenu>> ?
@@ -187,9 +191,9 @@ Commands:
               .  : Stop recording
 #+end_example
 
-Choosing menu command results to
+Runing  ~api1~ menu command results to 
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 <<ebMenu>> api1
 #+END_SRC
 
@@ -201,22 +205,22 @@ Choosing menu command results to
 
 *** Step 4: API use
 
-Recall recording of interactive use saved in file 
+Recall recording of interactive use saved in file ~rec.sh~ in step 1:
 
 #+name: cat-koe
 #+BEGIN_SRC bash :eval no-export :results output :exports both
 cat examples/hello3/rec.sh
 #+END_SRC
 
-which allows replicating interactive session as command line script
 
 #+RESULTS: cat-koe
 : examples/hello3/hello3_main.py $1 greet whom="value entered to first promted value" who="value given to second promted value"
 
-The script may be used to generate Python api calls by adding command
-line parameter ~--outputTemplate=API~. Documentation of this configuration parameter says
+The same script may be used to generate Python api calls using command
+line parameter ~--outputTemplate=API~. Documentation of this
+configuration parameter says
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/p'
 <<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
 #+END_SRC
@@ -226,26 +230,29 @@ line parameter ~--outputTemplate=API~. Documentation of this configuration param
 :     execute cmds)
 
 
-Call the script with argument ~'--outputTemplate=API'~ to output
-Python API calls:
+As the result of running 
 
-#+BEGIN_SRC bash :eval no-export :results output :exports results
+#+name: runu-api
+#+BEGIN_SRC bash :eval no-export :results output :exports both
   examples/hello3/rec.sh '--outputTemplate=API'
 #+END_SRC
 
-#+RESULTS:
+does not execute CLI, but maps maps CLI parameters to Python API
+calls, instead:
+
+#+RESULTS: runu-api
 : hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
 
-In the output above, expect to see
+
+In the output above, we see
 - method call ~greet~ 
 - on instance ~hello3_main~
 - and named method parameters, ~whom~ and ~who~
 - with arguments correspoding values recorded in interactive use.
 
-One of the objectives of ~ebench~ toolset is to bringe the gap between
-instrument interactive use and scripting, and the use of the API calls
-in scripts is outside ~ebench~ -toolset scope. However, next section
-demonstrates, how these API calls can be used in Python scripts. 
+
+Next chapter demonstrates, how these API calls can be used
+in Python scripts.
 
 
 *** Demo: Using API snippets from step 4
@@ -324,7 +331,7 @@ print( "\n\nThats all Folks - Happy coding!!")
 Executing this script in Python intepreter
 
 #+name: python-run
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports both
 python examples/hello3/api-demo.py
 #+END_SRC
 
@@ -398,7 +405,7 @@ usage
 
 Expect to see greeting ~test case~ from ~sub menu hello3~
 
-#+BEGIN_SRC bash :eval no-export :results output1 :noweb yes
+#+BEGIN_SRC bash :eval no-export :results output1 :noweb yes :exports both
 rm -f tmp/demo.sh
 <<ebMenu>> hello3 greet whom="test case" who='sub menu hello3' q . fileName=demo.sh
 #+END_SRC
@@ -409,7 +416,7 @@ rm -f tmp/demo.sh
 Expect to see recording corresponding the CLI command above. *Notice*:
 recording actions  is not registered in the script.
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports results
 ls -ltr tmp/demo.sh
 cat tmp/demo.sh
 #+END_SRC
@@ -424,7 +431,7 @@ configuration options, ~--syspath~ and ~--config~, which were used for
 the original CLI call. Expect to see the same greeting as for the
 CLI-use.
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exports results
 chmod +x tmp/demo.sh
 tmp/demo.sh "--syspath=$(pwd) --config examples/hello3/hello3.yaml"
 #+END_SRC
@@ -437,7 +444,7 @@ tmp/demo.sh "--syspath=$(pwd) --config examples/hello3/hello3.yaml"
 
 Option ~--outputTemplate~ accepts only
 
-#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
 <<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/p'
 <<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
 #+END_SRC
@@ -774,7 +781,7 @@ parameters.
 
 *** Configuration integrating ~hello3.py~ with ~ebMenu~
 
-#+BEGIN_SRC bash :eval no-export :results output
+#+BEGIN_SRC bash :eval no-export :results output :exporst results
 cat examples/hello3/hello3.yaml
 #+END_SRC
 
