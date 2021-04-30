@@ -72,6 +72,7 @@ from absl import logging
 
 *** Instrument ~<<t_InstrumentBase>>~ and ~<<t_Instrument>>~
 
+*~<<t_InstrumentBase>>~*
 #+name: t_InstrumentBase
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 
@@ -191,6 +192,7 @@ from absl import logging
 
 #+END_SRC
 
+*<<t_Instrument>>* 
 #+name: t_Instrument
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
   class MyInstrument(MyBase):
@@ -246,6 +248,7 @@ from absl import logging
 
 *** Menu ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
+*<<t_MenuElements>>*
 #+name: t_MenuElements
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 CMD_RESET= "reset"
@@ -268,7 +271,7 @@ defaults = {
 }
 #+END_SRC
 
-
+*<<t_MenuRows>>*
 #+name: t_MenuRows
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
           CMD_RESET                : ( "Send reset to Scope", None, instrument.reset),
@@ -278,12 +281,14 @@ defaults = {
 
 *** Instrument constructor ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
 
+*<<t_constructorParam>>*
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 ip:str=None
 #+END_SRC
 
 
+*<<t_constructorCall>>*
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 instrument = MyInstrument(ip=ip)
@@ -403,6 +408,8 @@ if __name__ == '__main__':
 
 
 ** Application code
+
+This chater present the two application modules generated:
 
 *** ~examples/template/example.py~
 
@@ -730,6 +737,7 @@ Command to execute tests
 #+BEGIN_SRC bash :eval no
 examples/template/example_main.py --ip=skooppi
 #+END_SRC
+
 
 *** Usage ~?~
 
