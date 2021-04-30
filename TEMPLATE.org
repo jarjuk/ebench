@@ -1,4 +1,4 @@
-* Ebech  implelementation template
+* ~ebech~ implementation template
 :PROPERTIES:
 :TOC:      :include all
 :END:
@@ -75,10 +75,11 @@ services.
 
 *** Instrument ~<<t_InstrumentBase>>~ and ~<<t_Instrument>>~
 
-Instrument controller is separate in two classes
-~<<t_InstrumentBase>>~ uses API accessing instrument, and
-~<<t_Instrument>>~ defines actions meaningful to user and implemented
-using elementary services in ~<<t_InstrumentBase>>~.
+Instrument controller is separated in two classes ~MyBase~ and
+~MyInstrument~. Class ~MyBase~ in ~<<t_InstrumentBase>>~ provides API
+for accessing instrument, and class ~MyInstrument~ in
+~<<t_Instrument>>~ provides facade to user and is implemented using
+elementary services in ~MyBase~.
 
 *<<t_InstrumentBase>>*
 
@@ -257,7 +258,11 @@ using elementary services in ~<<t_InstrumentBase>>~.
 
 *** Menu ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
+
 *<<t_MenuElements>>*
+
+Define elements used to construct menu.
+
 #+name: t_MenuElements
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 CMD_RESET= "reset"
@@ -281,6 +286,9 @@ defaults = {
 #+END_SRC
 
 *<<t_MenuRows>>*
+
+~<<t_MenuRows>>~ is a list key-values pairs added later into a
+dictionary defining application menu.
 #+name: t_MenuRows
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
           CMD_RESET                : ( "Send reset to Scope", None, instrument.reset),
@@ -292,8 +300,8 @@ defaults = {
 
 *<<t_constructorParam>>*
 
-Define paramters on ~run~ method need in instrument controller
-construction.
+Define parameters added ~run~ -method parameter list, which are used
+in instrument controller below.
 
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -303,9 +311,7 @@ ip:str=None
 
 *<<t_constructorCall>>*
 
-Instrument controller construction using parameters from above in 
-~<<t_constructorParam>>~ -element.
-
+Instrument controller construction uses parameters from above. 
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 instrument = MyInstrument(ip=ip)
