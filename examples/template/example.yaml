@@ -1,0 +1,23 @@
+# example.yaml - tangled from TEMPLATE.org
+# 
+# Do not edit!! Changes will be overridden
+
+- 
+  type: subMenu
+  menu: scope
+  prompt: Example oscilloscope 
+  module: examples.template.example
+  kwargs:
+      ip: skooppi
+
+# Just add second example from HELLO.org
+# Python module 'examples.hello2.hello2'. Instrument constructor receives
+# parameter 'greetCount= 100'
+
+- 
+  type: subMenu
+  menu: instance2
+  prompt: Start example Hello (instance 2)
+  module: examples.hello2.hello2
+  kwargs:
+      greetCount: 100

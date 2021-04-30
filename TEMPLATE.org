@@ -317,7 +317,23 @@ Instrument controller construction uses parameters from above.
 instrument = MyInstrument(ip=ip)
 #+END_SRC
 
+*** Configuration ~<<t_confDef>>~ and ~<<t_confParam>>~
 
+
+*<<t_confDef>>*
+#+name: t_confDef
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+flags.DEFINE_string('ip', None, "IP -address of device")
+#+END_SRC
+
+*<<t_confParam>>*
+
+#+name: t_confParam
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+ip=FLAGS.ip
+#+END_SRC
+
+    
 ** Template
 
 *** App.py
@@ -409,11 +425,11 @@ from example import run
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
-flags.DEFINE_string('ip', None, "IP -address of device")
+<<t_confDef>>
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv, ip=FLAGS.ip, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir, outputTemplate=FLAGS.outputTemplate  )
+    menuController = run( _argv, <<t_confParam>>, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir, outputTemplate=FLAGS.outputTemplate  )
     menuController.close()
 
 
@@ -887,6 +903,62 @@ Expect screenshot:
 - channel 2 offset -5V
 
 [[file:pics/exampleSetup.png]]
+
+
+*** Embed into ~ebMenu~
+
+Create configuration file ~examples/template/example.yaml~, which
+binds ~example~ instrument with example ~hello2~ created in
+[[file:HELLO.org]].
+
+#+BEGIN_SRC yaml :tangle examples/template/example.yaml
+   # example.yaml - tangled from TEMPLATE.org
+   # 
+   # Do not edit!! Changes will be overridden
+
+   # Example created in this document
+   - 
+     type: subMenu
+     menu: scope
+     prompt: Example oscilloscope 
+     module: examples.template.example
+     kwargs:
+         ip: skooppi
+
+   # Just add second example from HELLO.org
+   - 
+     type: subMenu
+     menu: hello2
+     prompt: Start example Hello (instance 2)
+     module: examples.hello2.hello2
+     kwargs:
+         greetCount: 100
+
+
+#+END_SRC
+
+#+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
+ebMenu --config examples/template/example.yaml --syspath $(pwd) ?
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+ebMenu: Menu of ebench toolset
+
+Usage: ebMenu [options] [commands and parameters] 
+
+Commands:
+
+          scope  : Example oscilloscope
+      instance2  : Start example Hello (instance 2)
+              q  : Exit
+----------   Other    ----------
+              ?  : List commands
+             ??  : List command parameters
+              !  : Start recording
+              .  : Stop recording
+#+end_example
+
 
 
 * Fin                                                              :noexport:
