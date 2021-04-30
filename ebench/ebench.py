@@ -96,7 +96,6 @@ class Instrument:
 
     def close(self):
         logging.info( "Instrument: close called")
-        pass
 
     # timestamp when measurement taken
     MEASUREMENT_TS="timestamp"
@@ -155,7 +154,7 @@ class Instrument:
         raise NotImplementedError("screenShotImplementation not implmemented for class {}".format( self.__class__.__name__))
         
 
-    def validate(self, value, validValues, context=None):
+    def instrumentValidate(self, value, validValues, context=None):
         """
         Validate 'value' is in 'validValues'
 
@@ -166,16 +165,19 @@ class Instrument:
             logging.error( msg )
             raise MenuValueError(msg)
     
-    def valUnit( self, valUnitStr, validValues:List[str]=None ):
-        """Extract value and unit from 'valUnitStr' using VAL_UNIT_REGEXP
+    def instrumentValUnit( self, valUnitStr, validValues:List[str]=None ):
+        """Extract value and unit from 'valUnitStr' 
+        
+        Extract done using VAL_UNIT_REGEXP
         
         VAL_UNIT_REGEXP=r"(?P<value>-?[0-9\.]+)(?P<unit>[a-zA-Z%]+)"
 
-        :valUnitStr: string from which to extrac valid value
+        :valUnitStr: string from which to extrac valid value eg. 5V -> (5,V)
 
         :validValues: list of valid unit string
 
-        :return: (val,unit)
+        :return: (val,unit)  E.g. "5V" -> ("5","V")
+
         """
 
         # Extract value/unit
@@ -187,13 +189,9 @@ class Instrument:
             raise MenuValueError(msg)
         (val,unit) = ( match.group('value'), match.group('unit') )
 
-        # Validate - if validation requested
-        self.validate( value=unit, validValues=validValues, context=valUnitStr)
-        # if validValues is not None and unit not in  validValues:
-        #     msg = "{} > expecting one of {} - got '{}'".format( valUnitStr, validValues, unit  )
-        #     logging.error( msg )
-        #     raise MenuValueError(msg)
-             
+        # EbValidate - if validation requested
+        self.instrumentValidate( value=unit, validValues=validValues, context=valUnitStr)
+        
         return (val,unit)
 
     def instrumentAppendCvsFile( self, csvFile, measurementRow:dict ):
@@ -546,7 +544,7 @@ class MenuCtrl:
         """
         if recordingDir is None: recordingDir = FLAGS.recordingDir
         if self.isChildMenu:
-            self.parentMenu.stopRecording( pgm=pgm, fileName=fileName, recordingDir=recordingDir)
+            self.parentMenu.stopRecording( pgm=self.pgm, fileName=fileName, recordingDir=recordingDir)
         else:
             logging.info( "stopRecording: {} to be into '{}'".format(self.recording,fileName))
             if not self.anyRecordings():
@@ -1095,8 +1093,13 @@ class PyInstrument(Instrument):
 
         
     def close(self):
+        if self.instrument is not None:
+            logging.info( "Close instrument: {}".format(self.instrument))
+            self.instrument.close()
+            self.instrument = None
         super().close()
         PyInstrument.closetti()
+        
 
     # ------------------------------------------------------------------
     # properties
@@ -1166,6 +1169,9 @@ class PyInstrument(Instrument):
        return( self.query( "*IDN?"))
 
     def pyvisaReset(self):
+        # lazy init may open instrument at this point - do not remove
+        self.instrument
+        logging.info( "Reset instrument {}".format(self.instrument))
         self.write( "*RST" )
 
 class Osciloscope(PyInstrument):

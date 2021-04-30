@@ -28,6 +28,8 @@ class RigolScope(Osciloscope):
     def screenShotImplementation( self, filePath):
         """Screenshot implementation
 
+        :filePath: path where to save screen shot
+
         :return: filePath in success, None in error
         """
         cmd = "lxi  screenshot  {} --address {} >/dev/null".format( filePath, self.ip )
@@ -109,7 +111,7 @@ class RigolScope(Osciloscope):
         return  self.write(cmd)
     
     def rigolChannelProbe( self, ch, probe ):
-        (val,unit) = self.valUnit(probe, validValues=["x"])
+        (val,unit) = self.instrumentValUnit(probe, validValues=["x"])
         cmd = ":CHAN{}:PROB {}".format( ch, probe)
         self.write( cmd )
 
@@ -123,7 +125,7 @@ class RigolScope(Osciloscope):
         :type: 20M|OFF
 
         """
-        self.validate( value=type, validValues = ["OFF", "20M" ], context="Channel {} bandwidth {}".format(ch,type))
+        self.instrumentValidate( value=type, validValues = ["OFF", "20M" ], context="Channel {} bandwidth {}".format(ch,type))
         cmd = ":CHAN{}:BWLimit {}".format( ch, type)
         self.write( cmd )
 
@@ -228,7 +230,7 @@ class RigolScope(Osciloscope):
             "ms": 10**-3,
             "s": 1,
         }
-        (val,unit) = self.valUnit(timebase, validValues=list(valToMult.keys()))
+        (val,unit) = self.instrumentValUnit(timebase, validValues=list(valToMult.keys()))
         self.rigolSetTimebase( scale = float(val)*valToMult[unit])
         
 

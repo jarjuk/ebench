@@ -213,7 +213,8 @@ Commands:
 - A short story of slowly climbing the hill from interactive use,
   command line use, configuration file use to Python scripting:
   [[file:GENTLE_SLOPE.org]]
-
+- Template with an example of instrument controller for Rigol
+  MSO1104Z: [[file:TEMPLATE.org]]
 
 
 ** Installation

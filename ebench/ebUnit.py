@@ -116,42 +116,42 @@ class UTG962(UnitSignalGenerator):
             # Without down would toggle Periosd
             self.llDown()
             self.ilWave1Props( "Freq")
-            self.ilFreq( *self.valUnit( freq ) )
+            self.ilFreq( *self.instrumentValUnit( freq ) )
         # Amplification (sine, square, pulse, arb)
         if amp is not None and not not amp:
             logging.info( "amp value:'{}'".format(amp))
             self.ilWave1Props( "Amp")
-            self.ilAmp( *self.valUnit( amp ) )
+            self.ilAmp( *self.instrumentValUnit( amp ) )
         # Offset (sine, square, pulse)
         if offset is not None and not not offset:
             self.ilWave1Props( "Offset")
-            self.ilOffset( *self.valUnit(offset))
+            self.ilOffset( *self.instrumentValUnit(offset))
         # Phase (sine, square, pulse)
         if phase is not None and not not phase:
             self.ilWave1Props( "Phase")
-            self.ilPhase( *self.valUnit( phase ))
+            self.ilPhase( *self.instrumentValUnit( phase ))
         # Duty (square, pulse)
         if duty is not None and not not duty:
             self.ilWave1Props( "Duty")
-            self.ilDuty( *self.valUnit( duty ))
+            self.ilDuty( *self.instrumentValUnit( duty ))
         # Ramp (only)
         if symmetry is not None and not not symmetry:
             self.ilSymmetryProps( "Symmetry")
-            self.ilDuty( *self.valUnit(symmetry))
+            self.ilDuty( *self.instrumentValUnit(symmetry))
         # Raise (pulse)
         if raised is not None and not not raised:
             self.ilWave1Props( "Page Down")
             self.llDown()
             self.ilWave2Props( "Raise")
             # Expecting immediatelly raised value
-            self.ilRaiseFall( *self.valUnit( raised ))
+            self.ilRaiseFall( *self.instrumentValUnit( raised ))
             self.ilWave2Props( "Page Up")
         # Fall (pulse)
         if fall is not None and not not fall:
             self.ilWave1Props( "Page Down")
             # Switch to fall section
             self.ilWave2Props( "Fall")
-            self.ilRaiseFall( *self.valUnit( fall ))
+            self.ilRaiseFall( *self.instrumentValUnit( fall ))
             self.ilWave2Props( "Page Up")
         # Activate
         self.delay(2)
@@ -230,20 +230,20 @@ class UTG962(UnitSignalGenerator):
         # Frequencey (sine, square, pulse,arb)
         if freq is not None and not not freq:
             self.ilWaveArbProps( "Freq")
-            self.ilFreq( *self.valUnit( freq ) )
+            self.ilFreq( *self.instrumentValUnit( freq ) )
         # Amplification (sine, square, pulse, arb)
         if amp is not None and not not amp:
             logging.info( "amp value:'{}'".format(amp))
             self.ilWaveArbProps( "Amp")
-            self.ilAmp( *self.valUnit( amp ) )
+            self.ilAmp( *self.instrumentValUnit( amp ) )
         # Offset (sine, square, pulse)
         if offset is not None and not not offset:
             self.ilWaveArbProps( "Offset")
-            self.ilOffset( *self.valUnit(offset))
+            self.ilOffset( *self.instrumentValUnit(offset))
         # Phase (sine, square, pulse)
         if phase is not None and not not phase:
             self.ilWaveArbProps( "Phase")
-            self.ilPhase( *self.valUnit( phase ))
+            self.ilPhase( *self.instrumentValUnit( phase ))
         # Activate
         self.delay(2)
         # self.llOpen()

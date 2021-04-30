@@ -3,7 +3,7 @@ from absl.flags import FLAGS
 
 flags.DEFINE_string('ip', "skooppi", "IP address of pyvisa instrument")
 
-from .Rigol import run
+from .ebRigol import run
 
 def _main( _argv ):
     # Run standalone,

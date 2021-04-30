@@ -3,6 +3,6 @@
 import ebench
 import os
 print( "{} - {}".format(os.path.basename(__file__), ebench.version()))
-ebench.ebRigol.main()
+ebench.ebRigol_main.main()
 
 

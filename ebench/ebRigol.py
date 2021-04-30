@@ -88,11 +88,11 @@ class MSO1104(RigolScope):
             probe = "10x"
         self.rigolChannelProbe( channel, probe )
         if scale is not None and not not scale:
-            (val,siUnit) = self.valUnit(scale)
+            (val,siUnit) = self.instrumentValUnit(scale)
             self.rigolChannelScale(channel,val)
             self.rigolChannelDisplayUnit(channel,siUnit)
         if offset is not None and not not offset:
-            (val,siUnit) = self.valUnit(offset)
+            (val,siUnit) = self.instrumentValUnit(offset)
             self.rigolChannelOffset(channel,val)
             self.rigolChannelDisplayUnit(channel,siUnit)
         if bwlimit is None or not bwlimit: bwlimit = "OFF"

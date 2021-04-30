@@ -2,7 +2,8 @@
 
 - Features added:
   - `--outputTemplate` option added
-
+  - API fixes: valUnit -> ebValunit
+  - documentation: GENTLE-SLOPE, TEMPLATE, lots of typos && wordings
 
 ## 0.0.9/20210415-14:55:29
 
