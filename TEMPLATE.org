@@ -3,15 +3,15 @@
 :TOC:      :include all
 :END:
 
-
 :CONTENTS:
-- [[#ebech--implelementation-template][Ebech  implelementation template]]
+- [[#ebech-implementation-template][ebech implementation template]]
   - [[#elements-in-example-application][Elements in example application]]
     - [[#imports-t_imports][Imports: <<t_imports>>]]
     - [[#usage-and-help-text-t_usage][Usage and help text: <<t_USAGE>>]]
     - [[#instrument-t_instrumentbase-and-t_instrument][Instrument <<t_InstrumentBase>> and <<t_Instrument>>]]
     - [[#menu-t_menuelements-and-t_menurows][Menu <<t_MenuElements>> and <<t_MenuRows>>]]
     - [[#instrument-constructor-t_constructorparam-and-t_constructorcall][Instrument constructor <<t_constructorParam>> and <<t_constructorCall>>]]
+    - [[#configuration-t_confdef-and-t_confparam][Configuration <<t_confDef>> and <<t_confParam>>]]
   - [[#template][Template]]
     - [[#apppy][App.py]]
     - [[#app-mainpy][app-main.py]]
@@ -25,6 +25,7 @@
       - [[#help-on-commandsetup][Help on command=setup]]
     - [[#command-reset][Command reset]]
     - [[#command-setup-and-screen][Command setup and screen]]
+    - [[#embed-into-ebmenu][Embed into ebMenu]]
 :END:
 
 
