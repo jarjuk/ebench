@@ -35,9 +35,9 @@ angle brackets: ~<<>>~
 
 *** Imports: ~<<t_imports>>~
 
+
 #+name: t_imports
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-
 
 from ebench import PyInstrument
 from ebench import MenuCtrl
@@ -51,6 +51,9 @@ from absl import logging
 
 
 *** Usage and help text: ~<<t_USAGE>>~
+
+Define name, short description and a description of application
+services.
 
 #+name: t_USAGE
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -72,7 +75,13 @@ from absl import logging
 
 *** Instrument ~<<t_InstrumentBase>>~ and ~<<t_Instrument>>~
 
-*~<<t_InstrumentBase>>~*
+Instrument controller is separate in two classes
+~<<t_InstrumentBase>>~ uses API accessing instrument, and
+~<<t_Instrument>>~ defines actions meaningful to user and implemented
+using elementary services in ~<<t_InstrumentBase>>~.
+
+*<<t_InstrumentBase>>*
+
 #+name: t_InstrumentBase
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 
@@ -282,6 +291,10 @@ defaults = {
 *** Instrument constructor ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
 
 *<<t_constructorParam>>*
+
+Define paramters on ~run~ method need in instrument controller
+construction.
+
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 ip:str=None
@@ -289,6 +302,10 @@ ip:str=None
 
 
 *<<t_constructorCall>>*
+
+Instrument controller construction using parameters from above in 
+~<<t_constructorParam>>~ -element.
+
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 instrument = MyInstrument(ip=ip)
