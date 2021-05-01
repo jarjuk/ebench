@@ -3,11 +3,12 @@
 :TOC:      :include all
 :END:
 
+
 This example continues with ~hello2~ -example presented in
 [[file:HELLO.org]] and demonstrates "gentle" slope using an ~ebench~
--application 1) interactively, 2) from command line, 3) integrated with
-~ebMenu~ with access to API interfaces configured in YAML, and,
-finally, 4) how to use recording from interactive session to create
+-application 1) interactively, 2) from command line, 3) integrated
+with ~ebMenu~ with access to API interfaces configured in YAML, and,
+finally, 4) how to use recordings from interactive session to create
 copy-paste API calls for Python scripts.
 
 :CONTENTS:

@@ -1,3 +1,6 @@
+# Tangled from TEMPLATE.org - changes will be overridden
+
+
 from ebench import PyInstrument
 from ebench import MenuCtrl
 
@@ -7,9 +10,9 @@ import os
 from time import sleep
 from absl import logging
 
+
 # ------------------------------------------------------------------
 # Usage 
-
 CMD="example"
 
 SYNOPSIS="Example to setup oscilloscope"
@@ -25,24 +28,24 @@ Tested on Rigol MSO1104Z.
 
 
 # ------------------------------------------------------------------
-# Base
+# Acces instrument API
 
-class MyBaseException(Exception):
+class InstrumentApiException(Exception):
       pass
 
-class MyConfigurationError(MyBaseException):
+class MyConfigurationError(InstrumentApiException):
       pass
-class MyRuntimeError(MyBaseException):
+class MyRuntimeError(InstrumentApiException):
       pass
 
-class MyBase(PyInstrument):
+class InstrumentApi(PyInstrument):
     """Abstract base class, which inherits from 'PyInstrument' i.e.
     can be controlled using pyvisa.
     """
 
     # Constructor && setup
     def __init__(self, ip=None):
-        logging.info( "MyBase: ip={}".format(ip))
+        logging.info( "InstrumentApi: ip={}".format(ip))
         if ip is None:
             raise MyConfigurationError( "Missing configuration 'ip'")
         self.ip = ip
@@ -52,7 +55,7 @@ class MyBase(PyInstrument):
 
     # Destructor && close stuff
     def close(self):
-        logging.info( "MyBase: closing all my resources, pass to super")
+        logging.info( "InstrumentApi: closing all my resources, pass to super")
         super().close()
 
     # Template implementation
@@ -78,7 +81,7 @@ class MyBase(PyInstrument):
 
     # Elementary services 
     def baseDelay(self, delay=1):
-        """API actions wait allow instrument to settle before next action
+        """Allow instrument to settle before next action.
 
         :delay: number of base units to wait before next action
 
@@ -140,11 +143,9 @@ class MyBase(PyInstrument):
         cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, channel)
         self.write( cmd )
 
-
-
 # ------------------------------------------------------------------
-# Instrument
-class MyInstrument(MyBase):
+# Facade presented to user
+class InstrumentFacade(InstrumentApi):
     def __init__( self, ip=None):
         super().__init__( ip=ip )
 
@@ -215,31 +216,34 @@ defaults = {
    }
 }
 
-
 # ------------------------------------------------------------------
-# Main
+# Bind instrument controller classes to ebench toolset
 def run( _argv, ip:str=None
      , runMenu:bool = True
      , outputTemplate=None, captureDir=None, recordingDir=None ):
     """Examaple template 
 
-    :outputTemplate: CLI configuration, None(default): =execute
-    cmds/args, not None: map menu actions to strings using
-    'outputTemplate',
-
-    :captureDir: directory where screen shot is mage, defaults to
-    'FLAGS.captureDir'
-
     :runMenu: default True, standalone application call REPL-loop
     'menuController.mainMenu()', subMenu constructs 'menuController'
     without executing the loop
 
-    :return: MenuCtrl (wrapping instrument )
+    :outputTemplate: if None(default): execute cmds/args, else (not
+    None): map menu actions to strings using 'outputTemplate'
+
+    :recordingDir: directory where interactive session recordings are
+    saved to (defaults to 'FLAGS.recordingDir')
+
+    :captureDir: directory where screenshots are made, defaults to
+    'FLAGS.captureDir'
+
+    :return: MenuCtrl (wrapping instrument)
 
     """
 
     # 'instrument' controlled by application 
-    instrument = MyInstrument(ip=ip) 
+    instrument = InstrumentFacade(ip=ip) 
+
+    # Wrap instrument with 'MenuCtrl'
     menuController = MenuCtrl( args=_argv,instrument=instrument
                              , prompt="[q=quit,?=commands,??=help on command]"
                              , outputTemplate=outputTemplate )
@@ -259,15 +263,18 @@ def run( _argv, ip:str=None
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=USAGE_TEXT)),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
+
         "Quit"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+
         # Hidden commands
         MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
     }
 
-
     menuController.setMenu( menu = mainMenu, defaults = defaults)
 
+    # Interactive use starts REPL-loop
     if runMenu: menuController.mainMenu()
 
+    # menuController.close() call after returning from run()
     return menuController

@@ -5,19 +5,20 @@
 
 :CONTENTS:
 - [[#ebech-implementation-template][ebech implementation template]]
+  - [[#ebench-template-overview][ebench Template Overview]]
   - [[#elements-in-example-application][Elements in example application]]
-    - [[#imports-t_imports][Imports: <<t_imports>>]]
-    - [[#usage-and-help-text-t_usage][Usage and help text: <<t_USAGE>>]]
-    - [[#instrument-t_instrumentbase-and-t_instrument][Instrument <<t_InstrumentBase>> and <<t_Instrument>>]]
-    - [[#menu-t_menuelements-and-t_menurows][Menu <<t_MenuElements>> and <<t_MenuRows>>]]
-    - [[#instrument-constructor-t_constructorparam-and-t_constructorcall][Instrument constructor <<t_constructorParam>> and <<t_constructorCall>>]]
-    - [[#configuration-t_confdef-and-t_confparam][Configuration <<t_confDef>> and <<t_confParam>>]]
-  - [[#template][Template]]
-    - [[#apppy][App.py]]
-    - [[#app-mainpy][app-main.py]]
+    - [[#imports-services-from-ebench-t_imports_ebench][Imports services from ebench: <<t_imports_ebench>>]]
+    - [[#define-usage-and-help-texts-t_usage][Define usage and help texts: <<t_USAGE>>]]
+    - [[#implement-instrument-controller-classes-t_instrumentapi-and-t_instrumentfacade][Implement Instrument controller classes: <<t_InstrumentApi>> and <<t_InstrumentFacade>>]]
+    - [[#define-menu-command-and-parameters-t_menuelements-and-t_menurows][Define menu command and parameters: <<t_MenuElements>> and <<t_MenuRows>>]]
+    - [[#implement-run--function--t_constructorparam-and-t_constructorcall][Implement run -function:  <<t_constructorParam>> and <<t_constructorCall>>]]
+    - [[#define-runtime-configuration-and-main--function-t_confdef-and-t_confparam][Define runtime configuration and main -function: <<t_confDef>> and <<t_confParam>>]]
+  - [[#templates-to-produce-instrument-controller-application][Templates to produce instrument controller application]]
+    - [[#instrument-controller-classes-and-run-function-apppy][Instrument controller classes and run function: app.py]]
+    - [[#run-time-configuration-and-standalone-main-app-mainpy][Run time configuration and standalone main: app-main.py]]
   - [[#application-code][Application code]]
-    - [[#examplestemplateexamplepy][examples/template/example.py]]
-    - [[#examplestemplateexample_mainpy][examples/template/example_main.py]]
+    - [[#instrument-controller-classes-and-run-function-examplestemplateexamplepy][Instrument controller classes and run function: examples/template/example.py]]
+    - [[#run-time-configuration-and-standalone-main-examplestemplateexample_mainpy][Run time configuration and standalone main: examples/template/example_main.py]]
   - [[#testing-example][Testing example]]
     - [[#usage-][Usage ?]]
     - [[#command-help----][Command help  - ??]]
@@ -28,30 +29,72 @@
     - [[#embed-into-ebmenu][Embed into ebMenu]]
 :END:
 
+** ebench Template Overview
+
+This example presents a template for implementing instrument
+controllers on ~ebench~ -toolset and demonstrates this template with
+instrument controller for Rigol oscilloscope.
+
+Elements required to add an instrument controller on ~ebench~ toolset:
+
+1) import services from ~ebench~ -module into Python implementation.
+
+2) define usage and help texts.
+
+3) implement instrument controller classes. For example, Rigol
+   controller uses two classes ~InstrumentApi~ and ~InstrumentFacade~,
+   where ~InstrumentApi~ access [[https://beyondmeasure.rigoltech.com/acton/attachment/1579/f-0386/1/-/-/-/-/DS1000Z_Programming%2520Guide_EN.pdf][Api]] on Rigol oscilloscope and
+   ~InstrumentFacade~ defines service facade for user.
+
+4) define menu commands and command parameters for application menu.
+
+5) implement ~run~ -function to bridge controller application with
+   ~ebench~ toolset. 
+
+6) define run time configuration parameters and implement ~main~ to
+   make instrument controller as a standalone application
+
+These application elements are used by two templates to produce two
+Python modules:
+
+1) module for instrument controller classes and ~run~ function:
+   ~app.py~
+
+2) module for run time configuration and standalone ~main~:
+   ~app-main.py~
+
 
 ** Elements in ~example~ application
 
 This chapter defines template place holders = names inside double
 angle brackets: ~<<>>~
 
-*** Imports: ~<<t_imports>>~
+*** Imports services from ~ebench~: ~<<t_imports_ebench>>~
 
+Import services provided by ~ebench~: 
+- ~PyInstrument~: interface with instrument [[https://pypi.org/project/PyVISA-py/][PyVisa-py]] -package,
+  (Virtual Instrument Software Architecture” (VISA) in pure Python
+- ~MenuCtrl~: wraps instruments, accepts menu configurations and binds
+  instrument controller to ~ebench~ - context
+- Infrastrcture services for:
+  - ~usage~: list command and present overview of application
+  - ~usageCommand~: help on command
+  - ~menuStartRecording~: start recording interactive commands
+  - ~menuStopRecording~: save interactive commands
+  - ~menuScreenShot~: take a screenshot from instrument 
+  - ~version~: ebench version number
 
-#+name: t_imports
+#+name: t_imports_ebench
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 
 from ebench import PyInstrument
 from ebench import MenuCtrl
 
 from ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
-
-import os
-from time import sleep
-from absl import logging
 #+END_SRC
 
 
-*** Usage and help text: ~<<t_USAGE>>~
+*** Define usage and help texts: ~<<t_USAGE>>~
 
 Define name, short description and a description of application
 services.
@@ -74,35 +117,35 @@ services.
 #+END_SRC
 
 
-*** Instrument ~<<t_InstrumentBase>>~ and ~<<t_Instrument>>~
+*** Implement Instrument controller classes: ~<<t_InstrumentApi>>~ and ~<<t_InstrumentFacade>>~
 
-Instrument controller is separated in two classes ~MyBase~ and
-~MyInstrument~. Class ~MyBase~ in ~<<t_InstrumentBase>>~ provides API
-for accessing instrument, and class ~MyInstrument~ in
-~<<t_Instrument>>~ provides facade to user and is implemented using
-elementary services in ~MyBase~.
+Instrument controller is separated in two classes ~InstrumentApi~ and
+~InstrumentFacade~. Class ~InstrumentApi~ in ~<<t_InstrumentApi>>~ provides API
+for accessing instrument, and class ~InstrumentFacade~ in
+~<<t_InstrumentFacade>>~ provides facade to user and is implemented using
+elementary services in ~InstrumentApi~.
 
-*<<t_InstrumentBase>>*
+*<<t_InstrumentApi>>*
 
-#+name: t_InstrumentBase
+#+name: t_InstrumentApi
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 
-  class MyBaseException(Exception):
+  class InstrumentApiException(Exception):
         pass
 
-  class MyConfigurationError(MyBaseException):
+  class MyConfigurationError(InstrumentApiException):
         pass
-  class MyRuntimeError(MyBaseException):
+  class MyRuntimeError(InstrumentApiException):
         pass
- 
-  class MyBase(PyInstrument):
+
+  class InstrumentApi(PyInstrument):
       """Abstract base class, which inherits from 'PyInstrument' i.e.
       can be controlled using pyvisa.
       """
 
       # Constructor && setup
       def __init__(self, ip=None):
-          logging.info( "MyBase: ip={}".format(ip))
+          logging.info( "InstrumentApi: ip={}".format(ip))
           if ip is None:
               raise MyConfigurationError( "Missing configuration 'ip'")
           self.ip = ip
@@ -112,7 +155,7 @@ elementary services in ~MyBase~.
 
       # Destructor && close stuff
       def close(self):
-          logging.info( "MyBase: closing all my resources, pass to super")
+          logging.info( "InstrumentApi: closing all my resources, pass to super")
           super().close()
 
       # Template implementation
@@ -138,7 +181,7 @@ elementary services in ~MyBase~.
 
       # Elementary services 
       def baseDelay(self, delay=1):
-          """API actions wait allow instrument to settle before next action
+          """Allow instrument to settle before next action.
 
           :delay: number of base units to wait before next action
 
@@ -199,14 +242,12 @@ elementary services in ~MyBase~.
           """
           cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, channel)
           self.write( cmd )
-
-
 #+END_SRC
 
-*<<t_Instrument>>* 
-#+name: t_Instrument
+*<<t_InstrumentFacade>>* 
+#+name: t_InstrumentFacade
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-  class MyInstrument(MyBase):
+  class InstrumentFacade(InstrumentApi):
       def __init__( self, ip=None):
           super().__init__( ip=ip )
 
@@ -257,7 +298,7 @@ elementary services in ~MyBase~.
 #+END_SRC
 
 
-*** Menu ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
+*** Define menu command and parameters: ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
 
 *<<t_MenuElements>>*
@@ -297,7 +338,25 @@ dictionary defining application menu.
 #+END_SRC
 
 
-*** Instrument constructor ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
+*** Implement ~run~ -function:  ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
+
+It basically creates an instrument controller
+   object and wraps it together with menu configurations within
+   ~ebench.MenuCtrl~. The result allows managing instrument in various
+   execution modes presented in [[file:GENTLE_SLOPE.org]] using interface
+   provided by ~MenuCtrl~.
+
+10) Brigde with ~ebench~ is implemented in ~run~ -function, which
+    instantiates instrument controller and wraps it inside
+    ~ebench.MenuCtrl~ object. This setup allows "gentle-slope",
+    explained in [[file:GENTLE_SLOPE.org]], of 
+    - using the tool interactively
+    - using the tool the from command line
+    - combining otherwise separate tools into a common menu and merging
+      API calls together for collecting measurements the intrument
+    - to use recording from interactive session to create
+copy-paste API calls for Python scripts
+
 
 *<<t_constructorParam>>*
 
@@ -315,10 +374,17 @@ ip:str=None
 Instrument controller construction uses parameters from above. 
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
-instrument = MyInstrument(ip=ip)
+instrument = InstrumentFacade(ip=ip)
 #+END_SRC
 
-*** Configuration ~<<t_confDef>>~ and ~<<t_confParam>>~
+
+*** Define runtime configuration and ~main~ -function: ~<<t_confDef>>~ and ~<<t_confParam>>~
+
+*<<t_import_app>>*
+#+name: t_import_app
+#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+from example import run
+#+END_SRC
 
 
 *<<t_confDef>>*
@@ -335,56 +401,78 @@ ip=FLAGS.ip
 #+END_SRC
 
     
-** Template
+** Templates to produce instrument controller application
 
-*** App.py
+Application elements presentes in previous chapter are used in two
+templates to produce two Python modules:
+
+1) module for instrument controller classes and ~run~ function:
+   ~app.py~
+
+2) module for run time configuration and standalone ~main~:
+   ~app-main.py~
+
+*** Instrument controller classes and ~run~ function: ~app.py~ 
+
+This template creates Python module implemeting instrument controller
+classes and ~run~ function.
+
 
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes :tangle examples/template/example.py :noweb yes :exports code
-  <<t_imports>>
+  # Tangled from TEMPLATE.org - changes will be overridden
 
+  <<t_imports_ebench>>
+
+  import os
+  from time import sleep
+  from absl import logging
+
+  <<t_imports_os>>
   # ------------------------------------------------------------------
   # Usage 
-
   <<t_USAGE>>
 
   # ------------------------------------------------------------------
-  # Base
-  <<t_InstrumentBase>>
-  
+  # Acces instrument API
+  <<t_InstrumentApi>>
+
   # ------------------------------------------------------------------
-  # Instrument
-  <<t_Instrument>>
+  # Facade presented to user
+  <<t_InstrumentFacade>>
 
 
   # ------------------------------------------------------------------
   # Menu
   <<t_MenuElements>>
 
-
   # ------------------------------------------------------------------
-  # Main
+  # Bind instrument controller classes to ebench toolset
   def run( _argv, <<t_constructorParam>>
        , runMenu:bool = True
        , outputTemplate=None, captureDir=None, recordingDir=None ):
       """Examaple template 
 
-      :outputTemplate: CLI configuration, None(default): =execute
-      cmds/args, not None: map menu actions to strings using
-      'outputTemplate',
-
-      :captureDir: directory where screen shot is mage, defaults to
-      'FLAGS.captureDir'
-
       :runMenu: default True, standalone application call REPL-loop
       'menuController.mainMenu()', subMenu constructs 'menuController'
       without executing the loop
 
-      :return: MenuCtrl (wrapping instrument )
+      :outputTemplate: if None(default): execute cmds/args, else (not
+      None): map menu actions to strings using 'outputTemplate'
+
+      :recordingDir: directory where interactive session recordings are
+      saved to (defaults to 'FLAGS.recordingDir')
+
+      :captureDir: directory where screenshots are made, defaults to
+      'FLAGS.captureDir'
+
+      :return: MenuCtrl (wrapping instrument)
 
       """
 
       # 'instrument' controlled by application 
       <<t_constructorCall>> 
+
+      # Wrap instrument with 'MenuCtrl'
       menuController = MenuCtrl( args=_argv,instrument=instrument
                                , prompt="[q=quit,?=commands,??=help on command]"
                                , outputTemplate=outputTemplate )
@@ -403,34 +491,47 @@ ip=FLAGS.ip
                                       lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=USAGE_TEXT)),
           MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
+
           "Quit"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
           MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+
           # Hidden commands
           MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
       }
 
-
       menuController.setMenu( menu = mainMenu, defaults = defaults)
 
+      # Interactive use starts REPL-loop
       if runMenu: menuController.mainMenu()
 
+      # menuController.close() call after returning from run()
       return menuController
 #+END_SRC
 
 
-*** app-main.py
+*** Run time configuration and standalone ~main~: ~app-main.py~
 
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes :tangle examples/template/example_main.py :noweb yes :exports code :noweb yes :shebang "#!/usr/bin/env python3"
-from example import run
+# Tangled from TEMPLATE.org - changes will be overridden
+
+# main for instrument controller define in module
+<<t_import_app>>
 
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
+# Run time configurations of instrument controller
 <<t_confDef>>
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv, <<t_confParam>>, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir, outputTemplate=FLAGS.outputTemplate  )
+    menuController = run(
+           _argv
+          , <<t_confParam>>   # pass run time configuration parameters to controller
+          , captureDir=FLAGS.captureDir
+          , recordingDir=FLAGS.recordingDir
+          , outputTemplate=FLAGS.outputTemplate 
+          )
     menuController.close()
 
 
@@ -449,9 +550,10 @@ if __name__ == '__main__':
 
 ** Application code
 
-This chater present the two application modules generated:
+This chater present the two application modules generated using
+templates in previous chapter:
 
-*** ~examples/template/example.py~
+*** Instrument controller classes and ~run~ function: ~examples/template/example.py~
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/template/example.py
@@ -459,6 +561,9 @@ cat examples/template/example.py
 
 #+RESULTS:
 #+begin_example
+# Tangled from TEMPLATE.org - changes will be overridden
+
+
 from ebench import PyInstrument
 from ebench import MenuCtrl
 
@@ -468,9 +573,9 @@ import os
 from time import sleep
 from absl import logging
 
+
 # ------------------------------------------------------------------
 # Usage 
-
 CMD="example"
 
 SYNOPSIS="Example to setup oscilloscope"
@@ -486,24 +591,24 @@ Tested on Rigol MSO1104Z.
 
 
 # ------------------------------------------------------------------
-# Base
+# Acces instrument API
 
-class MyBaseException(Exception):
+class InstrumentApiException(Exception):
       pass
 
-class MyConfigurationError(MyBaseException):
+class MyConfigurationError(InstrumentApiException):
       pass
-class MyRuntimeError(MyBaseException):
+class MyRuntimeError(InstrumentApiException):
       pass
 
-class MyBase(PyInstrument):
+class InstrumentApi(PyInstrument):
     """Abstract base class, which inherits from 'PyInstrument' i.e.
     can be controlled using pyvisa.
     """
 
     # Constructor && setup
     def __init__(self, ip=None):
-        logging.info( "MyBase: ip={}".format(ip))
+        logging.info( "InstrumentApi: ip={}".format(ip))
         if ip is None:
             raise MyConfigurationError( "Missing configuration 'ip'")
         self.ip = ip
@@ -513,7 +618,7 @@ class MyBase(PyInstrument):
 
     # Destructor && close stuff
     def close(self):
-        logging.info( "MyBase: closing all my resources, pass to super")
+        logging.info( "InstrumentApi: closing all my resources, pass to super")
         super().close()
 
     # Template implementation
@@ -539,7 +644,7 @@ class MyBase(PyInstrument):
 
     # Elementary services 
     def baseDelay(self, delay=1):
-        """API actions wait allow instrument to settle before next action
+        """Allow instrument to settle before next action.
 
         :delay: number of base units to wait before next action
 
@@ -601,11 +706,9 @@ class MyBase(PyInstrument):
         cmd = ":MEAS:STAT:ITEM {},CHAN{}".format( item, channel)
         self.write( cmd )
 
-
-
 # ------------------------------------------------------------------
-# Instrument
-class MyInstrument(MyBase):
+# Facade presented to user
+class InstrumentFacade(InstrumentApi):
     def __init__( self, ip=None):
         super().__init__( ip=ip )
 
@@ -676,31 +779,34 @@ defaults = {
    }
 }
 
-
 # ------------------------------------------------------------------
-# Main
+# Bind instrument controller classes to ebench toolset
 def run( _argv, ip:str=None
-     , runMenu:bool = True, 
+     , runMenu:bool = True
      , outputTemplate=None, captureDir=None, recordingDir=None ):
     """Examaple template 
-
-    :outputTemplate: CLI configuration, None(default): =execute
-    cmds/args, not None: map menu actions to strings using
-    'outputTemplate',
-
-    :captureDir: directory where screen shot is mage, defaults to
-    'FLAGS.captureDir'
 
     :runMenu: default True, standalone application call REPL-loop
     'menuController.mainMenu()', subMenu constructs 'menuController'
     without executing the loop
 
-    :return: MenuCtrl (wrapping instrument )
+    :outputTemplate: if None(default): execute cmds/args, else (not
+    None): map menu actions to strings using 'outputTemplate'
+
+    :recordingDir: directory where interactive session recordings are
+    saved to (defaults to 'FLAGS.recordingDir')
+
+    :captureDir: directory where screenshots are made, defaults to
+    'FLAGS.captureDir'
+
+    :return: MenuCtrl (wrapping instrument)
 
     """
 
     # 'instrument' controlled by application 
-    instrument = MyInstrument(ip=ip) 
+    instrument = InstrumentFacade(ip=ip) 
+
+    # Wrap instrument with 'MenuCtrl'
     menuController = MenuCtrl( args=_argv,instrument=instrument
                              , prompt="[q=quit,?=commands,??=help on command]"
                              , outputTemplate=outputTemplate )
@@ -720,22 +826,25 @@ def run( _argv, ip:str=None
                                     lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=USAGE_TEXT)),
         MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
                                  lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
+
         "Quit"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
+
         # Hidden commands
         MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
     }
 
-
     menuController.setMenu( menu = mainMenu, defaults = defaults)
 
+    # Interactive use starts REPL-loop
     if runMenu: menuController.mainMenu()
 
+    # menuController.close() call after returning from run()
     return menuController
 #+end_example
 
 
-*** ~examples/template/example_main.py~
+*** Run time configuration and standalone ~main~: ~examples/template/example_main.py~
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/template/example_main.py
@@ -744,16 +853,26 @@ cat examples/template/example_main.py
 #+RESULTS:
 #+begin_example
 #!/usr/bin/env python3
+# Tangled from TEMPLATE.org - changes will be overridden
+
+# main for instrument controller define in module
 from example import run
 
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
+# Run time configurations of instrument controller
 flags.DEFINE_string('ip', None, "IP -address of device")
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-    menuController = run( _argv, ip=FLAGS.ip, captureDir=FLAGS.captureDir, recordingDir=FLAGS.recordingDir, outputTemplate=FLAGS.outputTemplate  )
+    menuController = run(
+           _argv
+          , ip=FLAGS.ip   # pass run time configuration parameters to controller
+          , captureDir=FLAGS.captureDir
+          , recordingDir=FLAGS.recordingDir
+          , outputTemplate=FLAGS.outputTemplate 
+          )
     menuController.close()
 
 

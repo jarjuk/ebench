@@ -2,6 +2,7 @@
 # 
 # Do not edit!! Changes will be overridden
 
+# Example created in this document
 - 
   type: subMenu
   menu: scope
@@ -11,12 +12,9 @@
       ip: skooppi
 
 # Just add second example from HELLO.org
-# Python module 'examples.hello2.hello2'. Instrument constructor receives
-# parameter 'greetCount= 100'
-
 - 
   type: subMenu
-  menu: instance2
+  menu: hello2
   prompt: Start example Hello (instance 2)
   module: examples.hello2.hello2
   kwargs:
