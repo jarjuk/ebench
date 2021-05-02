@@ -19,7 +19,7 @@
   - [[#rigol-example-instrument-controller-python-code][Rigol example instrument controller Python code]]
     - [[#instrument-controller-implementation-and-run-function-examplestemplateexamplepy][Instrument controller implementation and run function: examples/template/example.py]]
     - [[#instrument-controller-run-time-configuration-and-standalone-main-examplestemplateexample_mainpy][Instrument controller run time configuration and standalone main: examples/template/example_main.py]]
-  - [[#rigol-example-instrument-controller-testing][Rigol example instrument controller testing]]
+  - [[#testing-rigol-example-instrument-controller][Testing Rigol example instrument controller]]
     - [[#usage-][Usage ?]]
     - [[#command-help----][Command help  - ??]]
       - [[#help-on-commandreset][Help on command=reset]]
@@ -117,11 +117,10 @@ services.
 
 *** Implement Instrument controller classes: ~<<t_InstrumentApi>>~ and ~<<t_InstrumentFacade>>~
 
-Instrument controller implemented using two classes ~InstrumentApi~
-and ~InstrumentFacade~. Class ~InstrumentApi~ in ~<<t_InstrumentApi>>~
-accesses Rigol oscilloscope over [[https://www.rigolna.com/products/digital-oscilloscopes/1000z/#ds1000Z/ds1104zplus][API]] instrument, and class
-~InstrumentFacade~ in ~<<t_InstrumentFacade>>~ provides facade for
-user to use scope functions.
+Instrument controller is implemented using two classes ~InstrumentApi~
+and ~InstrumentFacade~. Class ~InstrumentApi~ accesses Rigol
+oscilloscope over [[https://www.rigolna.com/products/digital-oscilloscopes/1000z/#ds1000Z/ds1104zplus][instrument API]], and class ~InstrumentFacade~
+provides facade for user to access oscilloscope functions.
 
 *<<t_InstrumentApi>>*
 
@@ -188,6 +187,8 @@ user to use scope functions.
           sleep(delay*delayUnit)
 
       # API services
+      # Ref:  https://www.rigolna.com/products/digital-oscilloscopes/1000z/#ds1000Z/ds1104zplus
+
       def baseReset(self):
           self.pyvisaReset()
 
@@ -298,7 +299,8 @@ user to use scope functions.
 
 *** Define menu commands and parameters: ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
-Menu commands and parameters are configed ~<<t_MenuElements>>~ element.
+Menu commands and parameters are configured using ~<<t_MenuElements>>~
+element.
 
 *<<t_MenuElements>>*
 
@@ -347,8 +349,8 @@ controller object using configuration parameters.
 
 *<<t_constructorParam>>*
 
-<<t_constructorParam>> parameters added are included in ~run~
--function parameter list. 
+<<t_constructorParam>> parameters are included in ~run~ -function
+parameter list.
 
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -358,9 +360,8 @@ ip:str=None
 
 *<<t_constructorCall>>*
 
-Instrument controller construction passes parameters defined in
-<<t_constructorParam>> to class implementing facade providing services
-to user to operate instrument.
+Instantiate object =instrument= for =InstrumentFacade= passing
+parameters defined in <<t_constructorParam>> to the constructor.
 
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -373,29 +374,33 @@ instrument = InstrumentFacade(ip=ip)
 Instrument runtime configuration and ~main~ -function are implemented
 in a serate class to avoid conflicts in runtime configuration
 parameter names, when different instrument controllers are merged
-together within one program.
+together within one program (~ebMenu~).
 
-Runtime configuration and ~main~ -function uses three template elements:
-- ~<<t_import_app>>~: import ~run~ function from instrument controller
-  implementation module
-- ~<<t_confDef>>~: define command line configuration parameters for instrument controller
-- ~<<t_confParam>>~: add command line configuration arguments to ~run~
-  -function argument list. This template elements reflect the caller
-  side of template element ~<<t_constructorParam>>~ presented above
+Runtime configuration and ~main~ -function uses three template elements
 
 *<<t_import_app>>*
+
+Import ~run~ function from instrument controller  implementation module.
 #+name: t_import_app
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 from example import run
 #+END_SRC
 
 *<<t_confDef>>*
+
+Define command line configuration parameters for instrument controller.
+
 #+name: t_confDef
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 flags.DEFINE_string('ip', None, "IP -address of device")
 #+END_SRC
 
 *<<t_confParam>>*
+
+Add command line configuration arguments to ~run~ -function argument
+list. This template elements reflect the caller side of template
+element ~<<t_constructorParam>>~ presented above.
+
 #+name: t_confParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 ip=FLAGS.ip
@@ -419,10 +424,12 @@ This template creates Python module implemeting instrument controller
 classes and ~run~ function.
 
 ~run~ -function instantiates ~intrument~ -variable, constructs
-~menuController~, sets up application ~mainMenu~. Parameter ~runMenu~
-guards call to ~menuController.mainMenu()~, which starts application
-[[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop. Parameter ~runMenu~ is set ~True~ for
-interactive use, for command line use and for API use it is ~False~.
+~menuController~, and sets up application ~mainMenu~. 
+
+Parameter ~runMenu~ guards call to ~menuController.mainMenu()~, which
+starts application [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop. Parameter ~runMenu~ is
+set ~True~ for interactive use, for command line use and for API use
+it is ~False~.
 
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes :tangle examples/template/example.py :noweb yes :exports code
   # Tangled from TEMPLATE.org - changes will be overridden
@@ -475,10 +482,10 @@ interactive use, for command line use and for API use it is ~False~.
 
       """
 
-      # 'instrument' controlled by application 
+      # Instantiate 'instrument' controlled by application 
       <<t_constructorCall>> 
 
-      # Wrap instrument with 'MenuCtrl'
+      # Wrap instrument within 'MenuCtrl'
       menuController = MenuCtrl( args=_argv,instrument=instrument
                                , prompt="[q=quit,?=commands,??=help on command]"
                                , outputTemplate=outputTemplate )
@@ -504,6 +511,7 @@ interactive use, for command line use and for API use it is ~False~.
           # Hidden commands
           MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
       }
+
 
       menuController.setMenu( menu = mainMenu, defaults = defaults)
 
@@ -895,7 +903,7 @@ if __name__ == '__main__':
 #+end_example
 
 
-** Rigol example instrument controller testing
+** Testing Rigol example instrument controller
 
 This chapter uses <<exampleCmd>> to refer the following code snippet:
 

@@ -88,6 +88,8 @@ class InstrumentApi(PyInstrument):
         sleep(delay*delayUnit)
 
     # API services
+    # Ref:  https://www.rigolna.com/products/digital-oscilloscopes/1000z/#ds1000Z/ds1104zplus
+
     def baseReset(self):
         self.pyvisaReset()
 
@@ -240,10 +242,10 @@ def run( _argv, ip:str=None
 
     """
 
-    # 'instrument' controlled by application 
+    # Instantiate 'instrument' controlled by application 
     instrument = InstrumentFacade(ip=ip) 
 
-    # Wrap instrument with 'MenuCtrl'
+    # Wrap instrument within 'MenuCtrl'
     menuController = MenuCtrl( args=_argv,instrument=instrument
                              , prompt="[q=quit,?=commands,??=help on command]"
                              , outputTemplate=outputTemplate )

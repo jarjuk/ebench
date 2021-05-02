@@ -143,7 +143,6 @@ user and application REPL cycle is executed within ~mainMenu()~
 
      # start executing
      menuController.mainMenu()
-
  #+END_SRC
 
 Finalize application with following code, which basically calls
@@ -157,10 +156,8 @@ Finalize application with following code, which basically calls
      except SystemExit:
          pass
     
-    
  if __name__ == '__main__':
      main()
-
  #+END_SRC
 
 
@@ -185,17 +182,14 @@ Finalize application with following code, which basically calls
 
 Complete ~hello~ example is shown below:
 
-#+BEGIN_SRC bash :eval no :results output :exports results
+#+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/hello/hello.py
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
 #!/usr/bin/env python3
-import ebench
 from ebench import MenuCtrl
-
-
 
 import os
 from absl import app, flags, logging
@@ -211,28 +205,27 @@ helloPar = {
 
 mainMenu = {
     "hello"                 : ( "Say hello", helloPar, hello),
-    MenuCtrl.MENU_QUIT      : ( "Exit", None, None),
+    MenuCtrl.MENU_QUIT      : MenuCtrl.MENU_QUIT_TUPLE,
 }
 
 def _main( _argv ):
-    # global gSkooppi
+    # configure logger
     logging.set_verbosity(FLAGS.debug)
 
-    cmdController = MenuCtrl()
+    # Construct 'menuController' 
+    menuController = MenuCtrl(args=_argv,prompt="[hello, q=quit]")
 
-    cmdController.mainMenu( _argv, menu=mainMenu, mainPrompt="[hello, q=quit]")
+    # and configure menu
+    menuController.setMenu(mainMenu)
 
-
-
-
-
+    # start executing
+    menuController.mainMenu()
 
 def main():
     try:
         app.run(_main)
     except SystemExit:
         pass
-
 
 if __name__ == '__main__':
     main()
@@ -284,12 +277,15 @@ if __name__ == '__main__':
 
 * Hello World as an Instrument Controller - ~hello2.py~ 
 
-~hello2~ example uses same template structure as a more involved
-example presented in [[file:TEMPLATE.org]]. The difference between these
-two examples being that ~hello2~ -example does require a physical
-instrument for execution.
+~hello2~ example uses the same template structure as a more involved
+example presented in [[file:TEMPLATE.org]]. The main difference between
+these two examples being that ~hello2~ -example does not require a
+physical instrument for execution.
 
 This Hello World -version demonstrates
+- separating instrument controller implementation into two classes: a
+  class accessing instrument API and a class for providing facade for
+  user interface
 - maintaining and accessing instrument state (in this example count
   number of greets made)
 - help to list commands 
@@ -300,7 +296,7 @@ This Hello World -version demonstrates
 - proviso to integrate ~hello2~ to menu system ~ebMenu~ (ref
   [[file:EBMENU.org]])
 
-~hello2~ example continues in [[file:GENTLE_SLOPE.org]] with a
+~hello2~ example is further elaborated in [[file:GENTLE_SLOPE.org]] with a
 demonstration of a "gentle slope" to use an ~ebench~ -application 1)
 interactively, 2) from command line, 3) integrated with ~ebMenu~ with
 access to API interfaces configured in YAML, and, finally, 4) how to
@@ -379,7 +375,7 @@ services.
  Define ~HelloApi~, which keeps tract of ~greetCount~. method
  ~HelloApi.greetCount~ provides interface to access instrument
  state. Parameter ~fake~ will be later used to demontrate, how YAML
- configuration may pass literal constants to API call.
+ configuration may pass literal constants to API calls.
 
 *<<t_InstrumentApi>>*
 
@@ -403,7 +399,7 @@ services.
         return self._greetCount + int(fake)
 
     def hello( self, whom:str, who:str ) -> str:
-      """:return: JSON -document"""
+      """:return: dict -document for parameters"""
       return  { 'HELLO' : whom, 'FROM': who }
 
 
@@ -429,7 +425,7 @@ in ~HelloApi~ class.
         """Hello -command just demonstrates simple menu action.
 
         It receives to parameters 'whom' and 'who' and prints greeting
-        and increments 'greetCount' (just to demonstrate that Intrument
+        and increments 'greetCount' (just to demonstrate that Instrument
         MAY maintain internal state).
 
         :who: default value is of 'who' parameter is logged in user, its
@@ -437,8 +433,8 @@ in ~HelloApi~ class.
 
         :whom: object to be greeted
 
-        sayHello just creates a facadea uses uses API provided by
-        HelloApi to contruct the greeting
+        sayHello is a facade and uses uses API provided by HelloApi to
+        create the greeting HELLO and FROM properties
 
         """
         self.greetDone()
@@ -450,15 +446,16 @@ in ~HelloApi~ class.
 
 *** Define menu commands and parameters: ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
-Menu commands and parameters are configed ~<<t_MenuElements>>~ element.
+Menu commands and parameters are configured in ~<<t_MenuElements>>~
+element.
 
-Dictionary ~greetPar~ names the the paramerters ~sayHello~ method
+Dictionary ~greetPar~ names the the parameters ~sayHello~ method
 accepts, and maps these variable names from prompt string presented to
 user.
 
-Dictionary ~defaults~ is used to provide default values to menu
-parameters. In this example, hello menu selection parameter ~who~ gets
-default value from environment variable ~$USER~.
+Dictionary ~defaults~ provides default values to menu parameters. In
+this example, hello menu selection parameter ~who~ defaults to a value
+taken from environment variable ~$USER~.
 
 *<<t_MenuElements>>*
 
@@ -496,16 +493,13 @@ defining application menu.
 
 *** Construct instrument controller:  ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
 
-Contructing instrument uses two template elements:
-<<t_constructorParam>> defines parameters configuring instrument
-controller, and <<t_constructorCall>> instantiates instrument
-controller object using configuration parameters.
+Contructing instrument uses two template elements
 
 
 *<<t_constructorParam>>*
 
-<<t_constructorParam>> parameters added are included in ~run~
--function parameter list. 
+<<t_constructorParam>> parameters are included in ~run~ -function
+parameter list.
 
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -525,6 +519,7 @@ instrument = HelloInstrument(greetCount=greetCount)
 #+END_SRC
 
 
+
 *** Define runtime configuration and ~main~ -function: ~<<t_confDef>>~ and ~<<t_confParam>>~
 
 Instrument runtime configuration and ~main~ -function are implemented
@@ -532,27 +527,33 @@ in a serate class to avoid conflicts in runtime configuration
 parameter names, when different instrument controllers are merged
 together within one program.
 
-Runtime configuration and ~main~ -function uses three template elements:
-- ~<<t_import_app>>~: import ~run~ function from instrument controller
-  implementation module
-- ~<<t_confDef>>~: define command line configuration parameters for instrument controller
-- ~<<t_confParam>>~: add command line configuration arguments to ~run~
-  -function argument list. This template elements reflect the caller
-  side of template element ~<<t_constructorParam>>~ presented above
+Runtime configuration and ~main~ -function uses three template
+elements.
 
 *<<t_import_app>>*
+
+Import ~run~ function from instrument controller   implementation module.
+
 #+name: t_import_app
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 from hello2 import run
 #+END_SRC
 
 *<<t_confDef>>*
+
+Define command line configuration parameters for instrument controller.
+
 #+name: t_confDef
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made")
 #+END_SRC
 
 *<<t_confParam>>*
+
+Add command line configuration arguments to ~run~ -function argument
+list. This template elements reflect the caller side of template
+element ~<<t_constructorParam>>~ presented above.
+
 #+name: t_confParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 greetCount=FLAGS.greetCount
@@ -561,7 +562,7 @@ greetCount=FLAGS.greetCount
 
 ** Templates to produce instrument controller application
 
-Application elements presentes in previous chapter are used in two
+Application elements presented in the previous chapter are used in two
 templates producing Python code:
 
 1) module for instrument controller implementation and ~run~ function:
@@ -575,7 +576,7 @@ templates producing Python code:
 This template creates Python module implemeting instrument controller
 classes and ~run~ function.
 
-~run~ -function instantiates ~intrument~ -variable, constructs
+~run~ -function instantiates ~instrument~ -variable, constructs
 ~menuController~, sets up application ~mainMenu~. Parameter ~runMenu~
 guards call to ~menuController.mainMenu()~, which starts application
 [[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop. Parameter ~runMenu~ is set ~True~ for
@@ -808,7 +809,7 @@ sections:
        """Hello -command just demonstrates simple menu action.
 
        It receives to parameters 'whom' and 'who' and prints greeting
-       and increments 'greetCount' (just to demonstrate that Intrument
+       and increments 'greetCount' (just to demonstrate that Instrument
        MAY maintain internal state).
 
        :who: default value is of 'who' parameter is logged in user, its
@@ -1084,7 +1085,7 @@ sayHello - Say hello
 Hello -command just demonstrates simple menu action.
 
 It receives to parameters 'whom' and 'who' and prints greeting
-and increments 'greetCount' (just to demonstrate that Intrument
+and increments 'greetCount' (just to demonstrate that Instrument
 MAY maintain internal state).
 
 :who: default value is of 'who' parameter is logged in user, its
@@ -1165,10 +1166,10 @@ echo USER=$USER
  
 * Fin                                                              :noexport:
 
-Example continues in [[file:GENTLE_SLOPE.org]] with a demonstration, how
-intrument API may be accessed using YAML configuration and how Python
-scripting may be supported using intercative use session recording to
-craete API -call snippets.
+This example continues in [[file:GENTLE_SLOPE.org]] with a demonstration,
+how instrument API may be accessed using YAML configuration and how
+Python scripting may be supported using interactive use session
+recording to create API -call snippets.
 
    # Local Variables:
    # org-confirm-babel-evaluate: nil

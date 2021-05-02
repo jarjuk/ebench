@@ -31,13 +31,11 @@ def _main( _argv ):
     # start executing
     menuController.mainMenu()
 
-
 def main():
     try:
         app.run(_main)
     except SystemExit:
         pass
-
 
 if __name__ == '__main__':
     main()
