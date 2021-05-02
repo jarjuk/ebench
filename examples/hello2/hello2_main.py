@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
+# Tangled from TEMPLATE.org - changes will be overridden
+
+# main for instrument controller define in module
 from hello2 import run
 
 from absl import app, flags, logging
-from absl.flags import FLAGS 
+from absl.flags import FLAGS
 
-# --------------------------------------
-# Command line configurations
-
-flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made") 
-
-# --------------------------------------
-# Application main - call hello2.run()
-
+# Run time configurations of instrument controller
+flags.DEFINE_integer('greetCount', 0, "Initial number of greets already made")
 
 def _main( _argv ):
     logging.set_verbosity(FLAGS.debug)
-
-    # Start standalone application
-    menuController = run( _argv, greetCount = FLAGS.greetCount, outputTemplate=FLAGS.outputTemplate )
-
-    # q from menu or end of CLI parameters
+    menuController = run(
+           _argv
+          , greetCount=FLAGS.greetCount   # pass run time configuration parameters to controller
+          , captureDir=FLAGS.captureDir
+          , recordingDir=FLAGS.recordingDir
+          , outputTemplate=FLAGS.outputTemplate 
+          )
     menuController.close()
-
-
 
 
 def main():
@@ -30,7 +27,7 @@ def main():
         app.run(_main)
     except SystemExit:
         pass
-
-
+    
+    
 if __name__ == '__main__':
     main()

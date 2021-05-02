@@ -15,14 +15,12 @@ from absl import logging
 # Usage 
 CMD="example"
 
-SYNOPSIS="Example to setup oscilloscope"
+SYNOPSIS="Instrument Controller Example for Rigol MSO1104Z Oscilloscope"
 
 USAGE_TEXT=f""" 
-A minimal running example ebench tool for setting up oscilloscope
-configuration.
+A small example of an ebench instrument controller 
 
 Tested on Rigol MSO1104Z. 
-
 
 """
 
@@ -197,19 +195,21 @@ class InstrumentFacade(InstrumentApi):
 
 # ------------------------------------------------------------------
 # Menu
+
+# Menu commands 
 CMD_RESET= "reset"
 CMD_SETUP= "setup"
 
-channelPar = {
-    "channel"  : "Channel 1-4 to act upon"
-}
 
-setupPar = channelPar | {
+# Parameters to menu command CMD_SETUP
+setupPar = {
+    "channel"  : "Channel 1-4 to act upon",
     "scale"    : "Channel scale, value + unit[V,A,W]",
     "offset"   : "Channel offset, value + unit[V,A,W]",
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 
+# Initial values for menu command parameters
 defaults = {
    CMD_SETUP: {
         "offset": "0V"

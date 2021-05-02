@@ -1,15 +1,48 @@
-from ebench import MenuCtrl
+# Tangled from TEMPLATE.org - changes will be overridden
+
 
 from ebench import Instrument
+from ebench import MenuCtrl
 
-from ebench import usage, usageCommand, version
+from ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
 
 import os
+from time import sleep
+from absl import logging
 
-# --------------------------------------
-# Example instrument "HelloInstrument"
 
-class HelloInstrument(Instrument):
+# ------------------------------------------------------------------
+# Usage 
+CMD="hello2"
+
+SYNOPSIS="Hello -command just demonstrates simple menu action"
+
+USAGE_TEXT = """
+
+This demo presents:
+
+ - maintaining instrument state: counting number of greetings made
+
+ - command 'hello' accepting two parameters, one of the parameters
+   (whom) is prompted for every command call, the other paremeter (who)
+   defaults to to login-name, and its value is rememebered from
+   previous call
+
+ - menu separator
+
+ - help to list command (and to show this text)
+
+ - more detailed help on menu commands
+
+ - hidden command: _version
+
+ - proviso for integrating ~hello2~ with ebMenu
+
+"""
+
+# ------------------------------------------------------------------
+# Acces instrument API
+class HelloApi(Instrument):
 
   def __init__(self, greetCount=0):
       self._greetCount = greetCount
@@ -26,6 +59,18 @@ class HelloInstrument(Instrument):
 
       return self._greetCount + int(fake)
 
+  def greetDone(self):
+      self._greetCount = self._greetCount + 1
+
+
+
+# ------------------------------------------------------------------
+# Facade presented to user
+class HelloInstrument(HelloApi):
+
+  def __init__(self, greetCount=0):
+      super().__init__(greetCount)
+
   def sayHello( self, whom:str, who:str ):
       """Hello -command just demonstrates simple menu action.
 
@@ -40,112 +85,88 @@ class HelloInstrument(Instrument):
       :whom: object to be greeted
 
       """
-      self._greetCount = self._greetCount + 1
+      self.greetDone()
       print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
 
-# --------------------------------------
-# Menu interagration
 
+# ------------------------------------------------------------------
+# Menu
+
+# Menu commands 
+CMD_GREET = "greet"
+
+
+# Parameters to menu command CMD_GREET
 greetPar = {
-   "whom": "Whom to greet?",
-   "who":  "Who is the greeter? Ret accepts default value: ",
+    "whom": "Whom to greet?",
+    "who":  "Who is the greeter? Ret accepts default value: ",
 }
 
-
+# Initial values for menu command parameters
 defaults = {
-"greet" : {
-             "who": os.environ['USER']
-          }
+    CMD_GREET : {
+        "who": os.environ['USER']
+    }
 }
 
+# ------------------------------------------------------------------
+# Bind instrument controller classes to ebench toolset
+def run( _argv, greetCount=None
+     , runMenu:bool = True
+     , outputTemplate=None, captureDir=None, recordingDir=None ):
+    """Examaple template 
 
+    :runMenu: default True, standalone application call REPL-loop
+    'menuController.mainMenu()', subMenu constructs 'menuController'
+    without executing the loop
 
+    :outputTemplate: if None(default): execute cmds/args, else (not
+    None): map menu actions to strings using 'outputTemplate'
 
-usageText = """
+    :recordingDir: directory where interactive session recordings are
+    saved to (defaults to 'FLAGS.recordingDir')
 
-This demo presents:
+    :captureDir: directory where screenshots are made, defaults to
+    'FLAGS.captureDir'
 
-- maintaining instrument state: counting number of greetings made
+    :return: MenuCtrl (wrapping instrument)
 
-- command 'hello' accepting two parameters, one of the parameters
-  (whom) is prompted for every command call, the other paremeter (who)
-  defaults to to login-name, and its value is rememebered from
-  previous call
+    """
 
-- menu separator
+    # 'instrument' controlled by application 
+    instrument = HelloInstrument(greetCount=greetCount) 
 
-- help to list command (and to show this text)
+    # Wrap instrument with 'MenuCtrl'
+    menuController = MenuCtrl( args=_argv,instrument=instrument
+                             , prompt="[q=quit,?=commands,??=help on command]"
+                             , outputTemplate=outputTemplate )
 
-- more detailed help on menu commands
+    mainMenu = {
+        CMD                      : MenuCtrl.MENU_SEPATOR_TUPLE,
+        # Application menu 
+        CMD_GREET                : ( "Say hello", greetPar, instrument.sayHello ),
 
-- hidden command: _version
+        "Util"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, recordingDir=recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
+                                     menuScreenShot(instrument=instrument,captureDir=captureDir,prefix="Capture-" )),
+        MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=USAGE_TEXT)),
+        MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                 lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
-- proviso for integrating ~hello2~ with ebMenu
+        "Quit"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
 
-"""
+        # Hidden commands
+        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
+    }
 
+    menuController.setMenu( menu = mainMenu, defaults = defaults)
 
+    # Interactive use starts REPL-loop
+    if runMenu: menuController.mainMenu()
 
-# --------------------------------------
-# Application run && ebMenu integration
-
-
-def run( _argv, runMenu:bool = True, greetCount = 0, outputTemplate:str = None  ):
-     """Run hello2 as a standalone interactive or CLI application with the
-     proviso to integrate 'hello2' with ~ebench.ebMenu~ tool.
-
-     :_argv: list of command line arguments. In interactive mode, this
-     is just the name of script. In CLI mode, name is followed by
-     command line arguments
-
-     :runMenu: defaults True = running standalone application. ebMenu
-     sets this to 'False'.
-
-     :greetCount: In this contrived example, 'greetCount' is the
-     number greetings already made. It is passed to 'HelloInstrument'
-     -constructor. For real world use, 'greetCount' represents
-     parameters needed in instruments constructor.
-
-     :outputTemplate: controls how '_argv'/REPL input in processed,
-     default None: they are executed, any other value is mapped to
-     template to produce API reprensentation of menu actions. Here
-     just pass it trough.
-
-     """
-     helloController = HelloInstrument( greetCount = greetCount )
-
-     mainMenu = {
-     
-         # First section: application commands
-         "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
-         "greet"                  : ( "Say hello", greetPar, helloController.sayHello ),
-     
-         # Second section: getting help
-         "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-         MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                    lambda : usage(cmd=os.path.basename(__file__)
-                                                         , mainMenu=mainMenu
-                                                         , synopsis="Demo hello v2"
-                                                         , usageText=usageText )),
-         MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
-                                    lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-     
-         # Third section: exiting
-         "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-         MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
-     
-         # Hidden
-         "_version"               : ("Version number", None, lambda **argv: print(version())),
-         # Line above makes following line visible
-         # MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
-     }
-     
-
-     menuController = MenuCtrl( args=_argv
-                        , prompt="[hello, q=quit]"
-                        , instrument=helloController
-                        , outputTemplate=outputTemplate )
-     menuController.setMenu(menu=mainMenu, defaults=defaults)
-     if runMenu: menuController.mainMenu()
-
-     return menuController
+    # menuController.close() call after returning from run()
+    return menuController

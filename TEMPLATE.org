@@ -7,19 +7,19 @@
 - [[#ebech-implementation-template][ebech implementation template]]
   - [[#ebench-template-overview][ebench Template Overview]]
   - [[#elements-in-example-application][Elements in example application]]
-    - [[#imports-services-from-ebench-t_imports_ebench][Imports services from ebench: <<t_imports_ebench>>]]
+    - [[#import-services-from-ebench-t_imports_ebench][Import services from ebench: <<t_imports_ebench>>]]
     - [[#define-usage-and-help-texts-t_usage][Define usage and help texts: <<t_USAGE>>]]
     - [[#implement-instrument-controller-classes-t_instrumentapi-and-t_instrumentfacade][Implement Instrument controller classes: <<t_InstrumentApi>> and <<t_InstrumentFacade>>]]
-    - [[#define-menu-command-and-parameters-t_menuelements-and-t_menurows][Define menu command and parameters: <<t_MenuElements>> and <<t_MenuRows>>]]
-    - [[#implement-run--function--t_constructorparam-and-t_constructorcall][Implement run -function:  <<t_constructorParam>> and <<t_constructorCall>>]]
+    - [[#define-menu-commands-and-parameters-t_menuelements-and-t_menurows][Define menu commands and parameters: <<t_MenuElements>> and <<t_MenuRows>>]]
+    - [[#construct-instrument-controller--t_constructorparam-and-t_constructorcall][Construct instrument controller:  <<t_constructorParam>> and <<t_constructorCall>>]]
     - [[#define-runtime-configuration-and-main--function-t_confdef-and-t_confparam][Define runtime configuration and main -function: <<t_confDef>> and <<t_confParam>>]]
   - [[#templates-to-produce-instrument-controller-application][Templates to produce instrument controller application]]
-    - [[#instrument-controller-classes-and-run-function-apppy][Instrument controller classes and run function: app.py]]
-    - [[#run-time-configuration-and-standalone-main-app-mainpy][Run time configuration and standalone main: app-main.py]]
-  - [[#application-code][Application code]]
-    - [[#instrument-controller-classes-and-run-function-examplestemplateexamplepy][Instrument controller classes and run function: examples/template/example.py]]
-    - [[#run-time-configuration-and-standalone-main-examplestemplateexample_mainpy][Run time configuration and standalone main: examples/template/example_main.py]]
-  - [[#testing-example][Testing example]]
+    - [[#instrument-controller-implementation-apppy][Instrument controller implementation: app.py]]
+    - [[#instrument-controller-run-time-configuration-and-standalone-main-app-mainpy][Instrument controller run time configuration and standalone main: app-main.py]]
+  - [[#rigol-example-instrument-controller-python-code][Rigol example instrument controller Python code]]
+    - [[#instrument-controller-implementation-and-run-function-examplestemplateexamplepy][Instrument controller implementation and run function: examples/template/example.py]]
+    - [[#instrument-controller-run-time-configuration-and-standalone-main-examplestemplateexample_mainpy][Instrument controller run time configuration and standalone main: examples/template/example_main.py]]
+  - [[#rigol-example-instrument-controller-testing][Rigol example instrument controller testing]]
     - [[#usage-][Usage ?]]
     - [[#command-help----][Command help  - ??]]
       - [[#help-on-commandreset][Help on command=reset]]
@@ -48,8 +48,7 @@ Elements required to add an instrument controller on ~ebench~ toolset:
 
 4) define menu commands and command parameters for application menu.
 
-5) implement ~run~ -function to bridge controller application with
-   ~ebench~ toolset. 
+5) construct instrument controller
 
 6) define run time configuration parameters and implement ~main~ to
    make instrument controller as a standalone application
@@ -69,20 +68,21 @@ Python modules:
 This chapter defines template place holders = names inside double
 angle brackets: ~<<>>~
 
-*** Imports services from ~ebench~: ~<<t_imports_ebench>>~
+*** Import services from ~ebench~: ~<<t_imports_ebench>>~
 
 Import services provided by ~ebench~: 
-- ~PyInstrument~: interface with instrument [[https://pypi.org/project/PyVISA-py/][PyVisa-py]] -package,
-  (Virtual Instrument Software Architecture” (VISA) in pure Python
-- ~MenuCtrl~: wraps instruments, accepts menu configurations and binds
-  instrument controller to ~ebench~ - context
-- Infrastrcture services for:
-  - ~usage~: list command and present overview of application
-  - ~usageCommand~: help on command
-  - ~menuStartRecording~: start recording interactive commands
-  - ~menuStopRecording~: save interactive commands
-  - ~menuScreenShot~: take a screenshot from instrument 
-  - ~version~: ebench version number
+- ~PyInstrument~: class interfacing electronic instrument over
+  "Virtual Instrument Software Architecture” (VISA) interface using
+  Python [[https://pypi.org/project/PyVISA-py/][PyVisa-py]] -package,
+- ~MenuCtrl~: ~ebench~ menu implementation
+- ~ebench~ infrastrcture service functions:
+  - ~usage~: helper output listing menu commands and presenting
+    appliaction overview
+  - ~usageCommand~: help on menu command in application
+  - ~menuStartRecording~: start recording of interactive use menu commands
+  - ~menuStopRecording~: save recording of interactive menu commands
+  - ~menuScreenShot~: take a screenshot from the instrument
+  - ~version~: output ~ebench~ toolset version number
 
 #+name: t_imports_ebench
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -103,14 +103,12 @@ services.
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
   CMD="example"
 
-  SYNOPSIS="Example to setup oscilloscope"
+  SYNOPSIS="Instrument Controller Example for Rigol MSO1104Z Oscilloscope"
 
   USAGE_TEXT=f""" 
-  A minimal running example ebench tool for setting up oscilloscope
-  configuration.
+  A small example of an ebench instrument controller 
 
   Tested on Rigol MSO1104Z. 
-  
   
   """
 
@@ -119,11 +117,11 @@ services.
 
 *** Implement Instrument controller classes: ~<<t_InstrumentApi>>~ and ~<<t_InstrumentFacade>>~
 
-Instrument controller is separated in two classes ~InstrumentApi~ and
-~InstrumentFacade~. Class ~InstrumentApi~ in ~<<t_InstrumentApi>>~ provides API
-for accessing instrument, and class ~InstrumentFacade~ in
-~<<t_InstrumentFacade>>~ provides facade to user and is implemented using
-elementary services in ~InstrumentApi~.
+Instrument controller implemented using two classes ~InstrumentApi~
+and ~InstrumentFacade~. Class ~InstrumentApi~ in ~<<t_InstrumentApi>>~
+accesses Rigol oscilloscope over [[https://www.rigolna.com/products/digital-oscilloscopes/1000z/#ds1000Z/ds1104zplus][API]] instrument, and class
+~InstrumentFacade~ in ~<<t_InstrumentFacade>>~ provides facade for
+user to use scope functions.
 
 *<<t_InstrumentApi>>*
 
@@ -298,28 +296,29 @@ elementary services in ~InstrumentApi~.
 #+END_SRC
 
 
-*** Define menu command and parameters: ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
+*** Define menu commands and parameters: ~<<t_MenuElements>>~ and ~<<t_MenuRows>>~
 
+Menu commands and parameters are configed ~<<t_MenuElements>>~ element.
 
 *<<t_MenuElements>>*
 
-Define elements used to construct menu.
-
 #+name: t_MenuElements
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
+
+# Menu commands 
 CMD_RESET= "reset"
 CMD_SETUP= "setup"
 
-channelPar = {
-    "channel"  : "Channel 1-4 to act upon"
-}
 
-setupPar = channelPar | {
+# Parameters to menu command CMD_SETUP
+setupPar = {
+    "channel"  : "Channel 1-4 to act upon",
     "scale"    : "Channel scale, value + unit[V,A,W]",
     "offset"   : "Channel offset, value + unit[V,A,W]",
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 
+# Initial values for menu command parameters
 defaults = {
    CMD_SETUP: {
         "offset": "0V"
@@ -329,8 +328,8 @@ defaults = {
 
 *<<t_MenuRows>>*
 
-~<<t_MenuRows>>~ is a list key-values pairs added later into a
-dictionary defining application menu.
+~<<t_MenuRows>>~ is a list key-values pairs added into a dictionary
+defining application menu.
 #+name: t_MenuRows
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
           CMD_RESET                : ( "Send reset to Scope", None, instrument.reset),
@@ -338,30 +337,18 @@ dictionary defining application menu.
 #+END_SRC
 
 
-*** Implement ~run~ -function:  ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
+*** Construct instrument controller:  ~<<t_constructorParam>>~ and ~<<t_constructorCall>>~
 
-It basically creates an instrument controller
-   object and wraps it together with menu configurations within
-   ~ebench.MenuCtrl~. The result allows managing instrument in various
-   execution modes presented in [[file:GENTLE_SLOPE.org]] using interface
-   provided by ~MenuCtrl~.
-
-10) Brigde with ~ebench~ is implemented in ~run~ -function, which
-    instantiates instrument controller and wraps it inside
-    ~ebench.MenuCtrl~ object. This setup allows "gentle-slope",
-    explained in [[file:GENTLE_SLOPE.org]], of 
-    - using the tool interactively
-    - using the tool the from command line
-    - combining otherwise separate tools into a common menu and merging
-      API calls together for collecting measurements the intrument
-    - to use recording from interactive session to create
-copy-paste API calls for Python scripts
+Contructing instrument uses two template elements:
+<<t_constructorParam>> defines parameters configuring instrument
+controller, and <<t_constructorCall>> instantiates instrument
+controller object using configuration parameters.
 
 
 *<<t_constructorParam>>*
 
-Define parameters added ~run~ -method parameter list, which are used
-in instrument controller below.
+<<t_constructorParam>> parameters added are included in ~run~
+-function parameter list. 
 
 #+name: t_constructorParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
@@ -371,7 +358,10 @@ ip:str=None
 
 *<<t_constructorCall>>*
 
-Instrument controller construction uses parameters from above. 
+Instrument controller construction passes parameters defined in
+<<t_constructorParam>> to class implementing facade providing services
+to user to operate instrument.
+
 #+name: t_constructorCall
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 instrument = InstrumentFacade(ip=ip)
@@ -380,12 +370,24 @@ instrument = InstrumentFacade(ip=ip)
 
 *** Define runtime configuration and ~main~ -function: ~<<t_confDef>>~ and ~<<t_confParam>>~
 
+Instrument runtime configuration and ~main~ -function are implemented
+in a serate class to avoid conflicts in runtime configuration
+parameter names, when different instrument controllers are merged
+together within one program.
+
+Runtime configuration and ~main~ -function uses three template elements:
+- ~<<t_import_app>>~: import ~run~ function from instrument controller
+  implementation module
+- ~<<t_confDef>>~: define command line configuration parameters for instrument controller
+- ~<<t_confParam>>~: add command line configuration arguments to ~run~
+  -function argument list. This template elements reflect the caller
+  side of template element ~<<t_constructorParam>>~ presented above
+
 *<<t_import_app>>*
 #+name: t_import_app
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 from example import run
 #+END_SRC
-
 
 *<<t_confDef>>*
 #+name: t_confDef
@@ -394,7 +396,6 @@ flags.DEFINE_string('ip', None, "IP -address of device")
 #+END_SRC
 
 *<<t_confParam>>*
-
 #+name: t_confParam
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
 ip=FLAGS.ip
@@ -404,19 +405,24 @@ ip=FLAGS.ip
 ** Templates to produce instrument controller application
 
 Application elements presentes in previous chapter are used in two
-templates to produce two Python modules:
+templates producing Python code:
 
-1) module for instrument controller classes and ~run~ function:
+1) module for instrument controller implementation and ~run~ function:
    ~app.py~
 
-2) module for run time configuration and standalone ~main~:
+2) instrument controller run time configuration and standalone ~main~:
    ~app-main.py~
 
-*** Instrument controller classes and ~run~ function: ~app.py~ 
+*** Instrument controller implementation: ~app.py~ 
 
 This template creates Python module implemeting instrument controller
 classes and ~run~ function.
 
+~run~ -function instantiates ~intrument~ -variable, constructs
+~menuController~, sets up application ~mainMenu~. Parameter ~runMenu~
+guards call to ~menuController.mainMenu()~, which starts application
+[[https://codewith.mu/en/tutorials/1.1/repl][REPL]] (red-eval-print) -loop. Parameter ~runMenu~ is set ~True~ for
+interactive use, for command line use and for API use it is ~False~.
 
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes :tangle examples/template/example.py :noweb yes :exports code
   # Tangled from TEMPLATE.org - changes will be overridden
@@ -509,7 +515,7 @@ classes and ~run~ function.
 #+END_SRC
 
 
-*** Run time configuration and standalone ~main~: ~app-main.py~
+*** Instrument controller run time configuration and standalone ~main~: ~app-main.py~
 
 #+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :noweb yes :tangle examples/template/example_main.py :noweb yes :exports code :noweb yes :shebang "#!/usr/bin/env python3"
 # Tangled from TEMPLATE.org - changes will be overridden
@@ -548,12 +554,13 @@ if __name__ == '__main__':
 #+END_SRC
 
 
-** Application code
+** Rigol example instrument controller Python code
 
-This chater present the two application modules generated using
-templates in previous chapter:
+This chapter presents the two Python modules created using templates
+presented in the previous chapter:
 
-*** Instrument controller classes and ~run~ function: ~examples/template/example.py~
+
+*** Instrument controller implementation and ~run~ function: ~examples/template/example.py~
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/template/example.py
@@ -844,7 +851,7 @@ def run( _argv, ip:str=None
 #+end_example
 
 
-*** Run time configuration and standalone ~main~: ~examples/template/example_main.py~
+*** Instrument controller run time configuration and standalone ~main~: ~examples/template/example_main.py~
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 cat examples/template/example_main.py
@@ -888,9 +895,9 @@ if __name__ == '__main__':
 #+end_example
 
 
-** Testing ~example~ 
+** Rigol example instrument controller testing
 
-Command to execute tests
+This chapter uses <<exampleCmd>> to refer the following code snippet:
 
 #+name: exampleCmd
 #+BEGIN_SRC bash :eval no
@@ -906,7 +913,7 @@ examples/template/example_main.py --ip=skooppi
 
 #+RESULTS:
 #+begin_example
-example: Example to setup oscilloscope
+example: Instrument Controller Example for Rigol MSO1104Z Oscilloscope
 
 Usage: example [options] [commands and parameters] 
 
@@ -924,11 +931,9 @@ Commands:
 ----------    Quit    ----------
               q  : Exit
  
-A minimal running example ebench tool for setting up oscilloscope
-configuration.
+A small example of an ebench instrument controller 
 
 Tested on Rigol MSO1104Z. 
-
 
 
 #+end_example
