@@ -4,9 +4,9 @@
 # Add command 'hello3' menu
 - 
   type: subMenu
-  menu: hello3
-  prompt: Start sub menu for hello3.py
-  module: examples.hello3.hello3
+  menu: hello
+  prompt: Start sub menu for hello2.py
+  module: examples.hello2.hello2
 
 # Add command 'api1' to menu
 # It returns JSON with keys world, universe, and multiverse
@@ -15,6 +15,6 @@
   menu: api1
   prompt: Greet Realms
   apiCalls:
-      world: hello3.hello( whom="world", who="me" )
-      universe: hello3.hello( whom="universe", who="me" )
-      multiverse: hello3.hello( whom="multiverse", who="me" )
+      world: hello.hello( whom="world", who="me" )
+      universe: hello.hello( whom="universe", who="me" )
+      multiverse: hello.hello( whom="multiverse", who="me" )

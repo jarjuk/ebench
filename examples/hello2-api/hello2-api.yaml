@@ -1,0 +1,20 @@
+# Tangled from GENTLE_SLOPE.org - modification will be overridden
+
+
+# Add command 'hello2-api' menu
+- 
+  type: subMenu
+  menu: hello
+  prompt: Start sub menu for hello2.py
+  module: examples.hello2.hello2
+
+# Add command 'api1' to menu
+# It returns JSON with keys world, universe, and multiverse
+- 
+  type: apiCall
+  menu: api1
+  prompt: Greet Realms
+  apiCalls:
+      world: hello.hello( whom="world", who="me" )
+      universe: hello.hello( whom="universe", who="me" )
+      multiverse: hello.hello( whom="multiverse", who="me" )

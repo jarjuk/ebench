@@ -21,38 +21,50 @@ copy-paste API calls for Python scripts.
     - [[#demo-using-api-snippets-from-step-4][Demo: Using API snippets from step 4]]
   - [[#some-tests][Some tests]]
     - [[#show-ebench-version][Show ebench version]]
-    - [[#list-menu-commands-in-hello3][List menu commands in hello3]]
-    - [[#using-submenu-hello3---record-greeting][Using submenu hello3 - record greeting]]
+    - [[#list-menu-commands-in-hello2][List menu commands in hello2]]
+    - [[#using-submenu-hello---record-greeting][Using submenu hello - record greeting]]
     - [[#passing-invalid--command-line-option-outputtemplate][Passing invalid  command line option outputTemplate]]
   - [[#source-codes-and-configurations][Source codes and configurations]]
     - [[#source-code-and-configurations-files][Source code and configurations files]]
-    - [[#example-application-hello3py][Example application hello3.py]]
-    - [[#example-application-hello3_mainpy][Example application hello3_main.py]]
-    - [[#configuration-integrating-hello3py-with-ebmenu][Configuration integrating hello3.py with ebMenu]]
-    - [[#example-application-recsh][Example application rec.sh]]
-    - [[#example-api-demopy][Example api-demo.py]]
+    - [[#example-application-exampleshello2hello2py][Example application examples/hello2/hello2.py]]
+    - [[#configuration-exampleshello2-apihello2-apipy][Configuration examples/hello2-api/hello2-api.py]]
+    - [[#example-application-exampleshello2-apirecsh][Example application examples/hello2-api/rec.sh]]
+    - [[#example-exampleshello2-apiapi-demopy][Example examples/hello2-api/api-demo.py]]
   - [[#emacs-variables][Emacs variables]]
 :END:
 
 In this document,  ~<<hello3Cmd>>~ refers to following command
 
-#+name: hello3Cmd
+#+name: hello2Cmd
 #+BEGIN_SRC cpp :exports code :eval no
-PYTHONPATH=$(pwd)  python3 examples/hello3/hello3_main.py
+PYTHONPATH=$(pwd)  python3 examples/hello2/hello2_main.py
 #+END_SRC
 
 
 ** Bridging Interactive-CLI-YAML-API use
 
+This chapter demonstrates modes of using an ~ebench~ -application,
+command <<hello2Cmd>> in this example.  The modes demonstrated are
+
+1) interactive use
+
+2) command line (CLI) use
+
+3) using YAML configuration to embed the application as submenu for
+   user interface and to allow API access
+
+4) using recordings from interactive session to create API call
+   snippets, which can be copy-pasted into Python scripts.
+
 *** Step 1: Interactive use (and save recorded session)
 
-In step1, we will use ~examples/hello3~ interactively and save
+In step1, we will use ~examples/hello2~ interactively and save the
 interactive session to directory pointed by command line option
-~recordingDir~ 
+~recordingDir~
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<hello3Cmd>> --helpfull | sed -n '/--recordingDir/p'
-<<hello3Cmd>> --helpfull | sed -n '/--recordingDir/{n;p}'
+<<hello2Cmd>> --helpfull | sed -n '/--recordingDir/p'
+<<hello2Cmd>> --helpfull | sed -n '/--recordingDir/{n;p}'
 #+END_SRC
 
 #+RESULTS:
@@ -60,22 +72,23 @@ interactive session to directory pointed by command line option
 :     (default: 'tmp')
 
 In this example, recording of interactive use is saved into a file in
-directory ~examples/hello3~. Interactive use is simulated using a HERE
--document. At first, it invokes ~greet~ command, which prompts for two
-arguments. For the next command, user enters ~.~ to save recording,
-which prompts for a file name. The last command, ~q~, quits
-interactive session:
+directory ~examples/hello2-api~. Interactive use is simulated using a
+HERE -document. The HERE document:
+
+1) first invokes ~sayHello~ command prompting for two arguments. 
+2) for the next command, simualated user enters ~.~ to save recording,
+   which prompts for a file name. 
+3) The last command, ~q~, quits interactive session
 
 #+name: step1-run
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 
-# Cleanup any previous recordings in examples/hello3
-RECORDING_DIR=examples/hello3
+# Cleanup any previous recordings in examples/hello2-api
+RECORDING_DIR=examples/hello2-api
 rm -f $RECORDING_DIR/rec.sh
-
 # Simulate interactive session as HERE document
-cat <<EOF | PYTHONPATH=$(pwd)  python3 examples/hello3/hello3_main.py --recordingDir=$RECORDING_DIR
-greet
+cat <<EOF | PYTHONPATH=$(pwd)  python3 examples/hello2/hello2_main.py --recordingDir=$RECORDING_DIR
+sayHello
 value entered to first promted value
 value given to second promted value
 .
@@ -90,19 +103,20 @@ In the output, expect to see
 - Prompt for ~Filename...~
 
 #+RESULTS: step1-run
-: [?=help,q=quit] > Whom to greet? > Who is the greeter? Ret accepts default value:  > HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
-: [?=help,q=quit] > Filename to save recording (.= show current recording) > [?=help,q=quit] > 
+: [q=quit,?=commands,??=help on command] > Whom to greet? > Who is the greeter? Ret accepts default value:  (jj) > Hello #1 to value entered to first promted value from value given to second promted value
+: [q=quit,?=commands,??=help on command] > Filename to save recording (.= show current recording) > [q=quit,?=commands,??=help on command] > 
 
 
-The recording in file ~examples/hello3/rec.sh~ shows CLI commands
+
+The recording in file ~examples/hello2-api/rec.sh~ shows CLI commands
 needed to replicate the interactive session:
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
-cat examples/hello3/rec.sh
+cat examples/hello2-api/rec.sh
 #+END_SRC
 
 #+RESULTS:
-: examples/hello3/hello3_main.py $1 greet whom="value entered to first promted value" who="value given to second promted value"
+: examples/hello2/hello2_main.py $1 sayHello whom="value entered to first promted value" who="value given to second promted value"
 
 
 *** Step 2: CLI use 
@@ -113,7 +127,7 @@ created for the interactive sesssion.
 Add execution permissions to the file created in step 1:
 
 #+BEGIN_SRC bash :eval no-export :results output
-chmod +x examples/hello3/rec.sh
+chmod +x examples/hello2-api/rec.sh
 #+END_SRC
 
 #+RESULTS:
@@ -121,31 +135,31 @@ chmod +x examples/hello3/rec.sh
 and execute the the recorded script
 #+name: step2-run
 #+BEGIN_SRC bash :eval no-export :results output :exports both
-examples/hello3/rec.sh
+examples/hello2-api/rec.sh
 #+END_SRC
 
 The output prints, which is the same greeting that was made during
 interactive session:
 
 #+RESULTS: step2-run
-: HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
+: Hello #1 to value entered to first promted value from value given to second promted value
 
 
 *** Step 3: YAML use (ebMenu integration)
 
-Create following YAML -file into ~examples/hello3/hello3.yaml~ to
-integrate ~hello3.py~ with ebMenu.
+Create following YAML -file into ~examples/hello2-api/hello2-api.yaml~ to
+integrate ~hello2.py~ with ebMenu.
 
-#+BEGIN_SRC yaml :tangle examples/hello3/hello3.yaml :exports code :eval no
+#+BEGIN_SRC yaml :tangle examples/hello2-api/hello2-api.yaml :exports code :eval no
     # Tangled from GENTLE_SLOPE.org - modification will be overridden
  
 
-    # Add command 'hello3' menu
+    # Add command 'hello2-api' menu
     - 
       type: subMenu
-      menu: hello3
-      prompt: Start sub menu for hello3.py
-      module: examples.hello3.hello3
+      menu: hello
+      prompt: Start sub menu for hello2.py
+      module: examples.hello2.hello2
 
     # Add command 'api1' to menu
     # It returns JSON with keys world, universe, and multiverse
@@ -154,25 +168,25 @@ integrate ~hello3.py~ with ebMenu.
       menu: api1
       prompt: Greet Realms
       apiCalls:
-          world: hello3.hello( whom="world", who="me" )
-          universe: hello3.hello( whom="universe", who="me" )
-          multiverse: hello3.hello( whom="multiverse", who="me" )
+          world: hello.hello( whom="world", who="me" )
+          universe: hello.hello( whom="universe", who="me" )
+          multiverse: hello.hello( whom="multiverse", who="me" )
 
 
 #+END_SRC
 
 ~ebMenu~ is invoked using ~syspath~ option allowing Python to locate
-~hello3~ application code and configuration option pointing to the
+~hello2-api~ application code and configuration option pointing to the
 YAML file presented above. 
 
 Later, the notation ~<<ebMenu>>~ refers to following command
 
 #+name: ebMenu
 #+BEGIN_SRC cpp :exports code :eval no
-ebMenu --syspath=$(pwd) --config examples/hello3/hello3.yaml
+ebMenu --syspath=$(pwd) --config examples/hello2-api/hello2-api.yaml
 #+END_SRC
 
-Output the list of available menu commands to validadate that menu commands ~hello3~
+Output the list of available menu commands to validadate that menu commands ~hello2-api~
 and ~ap1~ are made available with the YAML -configuration:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
@@ -187,15 +201,17 @@ Usage: ebMenu [options] [commands and parameters]
 
 Commands:
 
-         hello3  : Start sub menu for hello3.py
+          hello  : Start sub menu for hello2.py
            api1  : Greet Realms
-              q  : Exit
-----------   Other    ----------
-              ?  : List commands
-             ??  : List command parameters
+----------    Util    ----------
               !  : Start recording
               .  : Stop recording
+              ?  : List commands
+             ??  : List command parameters
+----------    Quit    ----------
+              q  : Exit
 #+end_example
+
 
 Runing  ~api1~ menu command
 
@@ -208,9 +224,9 @@ results to a JSON document mapping keys in YAML-configuration to
 values returned by the API call.
 
 #+RESULTS: api1-call
-: {'multiverse': "HELLO: 'multiverse' FROM: 'me'",
-:  'universe': "HELLO: 'universe' FROM: 'me'",
-:  'world': "HELLO: 'world' FROM: 'me'"}
+: {'multiverse': {'FROM': 'me', 'HELLO': 'multiverse'},
+:  'universe': {'FROM': 'me', 'HELLO': 'universe'},
+:  'world': {'FROM': 'me', 'HELLO': 'world'}}
 
 
 *** Step 4: API use
@@ -219,12 +235,12 @@ Recall recording of interactive use saved in file ~rec.sh~ in step 1:
 
 #+name: cat-koe
 #+BEGIN_SRC bash :eval no-export :results output :exports both
-cat examples/hello3/rec.sh
+cat examples/hello2-api/rec.sh
 #+END_SRC
 
 
 #+RESULTS: cat-koe
-: examples/hello3/hello3_main.py $1 greet whom="value entered to first promted value" who="value given to second promted value"
+: examples/hello2/hello2_main.py $1 sayHello whom="value entered to first promted value" who="value given to second promted value"
 
 In addition to allowing user to reproduce interactive session over CLI
 -interface, this script may be used to generate Python API calls. This
@@ -235,8 +251,8 @@ is done passing command line parameter
 Documentation of ~outputTemplate~ configuration parameter says
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/p'
-<<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
+<<hello2Cmd>> --helpfull | sed -n '/--outputTemplate/p'
+<<hello2Cmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
 #+END_SRC
 
 #+RESULTS:
@@ -248,18 +264,18 @@ Running
 
 #+name: runu-api
 #+BEGIN_SRC bash :eval no-export :results output :exports both
-  examples/hello3/rec.sh '--outputTemplate=API'
+  examples/hello2-api/rec.sh '--outputTemplate=API'
 #+END_SRC
 
 maps maps CLI parameters to Python API calls:
 
 #+RESULTS: runu-api
-: hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
+: hello2_main.sayHello(whom="value entered to first promted value", who="value given to second promted value")
 
 
 In the output above, we see
-- method call ~greet~ 
-- on instance ~hello3_main~
+- method call ~sayHello~ 
+- on instance ~hello2-api_main~
 - and named method parameters, ~whom~ and ~who~
 - with arguments correspoding values recorded in interactive use.
 
@@ -276,38 +292,40 @@ parameter  ~--outputTemplate API~:
 
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
-  examples/hello3/rec.sh '--outputTemplate API'
+  examples/hello2-api/rec.sh '--outputTemplate API'
 #+END_SRC
 
 #+RESULTS:
-: hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
+: hello2_main.sayHello(whom="value entered to first promted value", who="value given to second promted value")
+
+
 
 To give an idea, how to use these API calls, the example below shows a
 Python script. It imports ~HelloInstrument~ class, instantiates object
-~hello3_main~ for this class, and uses copy-paste of the output of
-~examples/hello3/rec.sh~ script to execute Python API:
+~hello2-api_main~ for this class, and uses copy-paste of the output of
+~examples/hello2-api/rec.sh~ script to execute Python API:
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
-  FILE=examples/hello3/api-demo.py
-   cat <<EOF > $FILE
+  FILE=examples/hello2-api/api-demo.py
+  cat <<EOF > $FILE
   # api-demo.py - tangled from GENTLE_SLOPE.org to demonstrate 
   # an idea, how the interactive recording can be turned into
   # a Python script.
 
-  from hello3 import HelloInstrument
+  from hello2 import HelloInstrument
 
-  print( "Instantiatig hello3_main")
-  hello3_main = HelloInstrument()
+  print( "Instantiatig HelloInstrument as hello2_main")
+  hello2_main = HelloInstrument()
 
 
   print( "\n\nHere follows the output from API calls:")
 
-  # This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+  # This following this line was copy-pasted from the output of examples/hello2-api/rec.sh (using 
   # parameter $1='--outputTemplate API')
   EOF
 
   # copy paste the output  (here just apped to $FILE)
-  examples/hello3/rec.sh '--outputTemplate=API' >> $FILE
+  examples/hello2-api/rec.sh '--outputTemplate=API' >> $FILE
 
   cat <<EOF >> $FILE
   # End of copy-paste
@@ -324,17 +342,17 @@ Python script. It imports ~HelloInstrument~ class, instantiates object
 # an idea, how the interactive recording can be turned into
 # a Python script.
 
-from hello3 import HelloInstrument
+from hello2 import HelloInstrument
 
-print( "Instantiatig hello3_main")
-hello3_main = HelloInstrument()
+print( "Instantiatig HelloInstrument as hello2_main")
+hello2_main = HelloInstrument()
 
 
 print( "\n\nHere follows the output from API calls:")
 
-# This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+# This following this line was copy-pasted from the output of examples/hello2-api/rec.sh (using 
 # parameter ='--outputTemplate API')
-hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
+hello2_main.sayHello(whom="value entered to first promted value", who="value given to second promted value")
 # End of copy-paste
 
 
@@ -342,21 +360,24 @@ print( "\n\nThats all Folks - Happy coding!!")
 #+end_example
 
 
-Executing this script in Python intepreter
+Executing this script in Python intepreter with ~PYTHONPATH~ pointing
+to hello2 -module created in example [[file:HELLO.org]] 
 
 #+name: python-run
 #+BEGIN_SRC bash :eval no-export :results output :exports both
-python examples/hello3/api-demo.py
+PYTHONPATH=examples/hello2 python examples/hello2-api/api-demo.py
 #+END_SRC
 
-result of API  calls emebbed into script context:
+results API call output emebbed within script context:
 
 #+RESULTS: python-run
-: Instantiatig hello3_main
+
+
+: Instantiatig HelloInstrument as hello2_main
 : 
 : 
 : Here follows the output from API calls:
-: HELLO: 'value entered to first promted value' FROM: 'value given to second promted value'
+: Hello #1 to value entered to first promted value from value given to second promted value
 : 
 : 
 : Thats all Folks - Happy coding!!
@@ -370,62 +391,78 @@ Command ~_version~ outputs ~ebench~ -toolset version used to create
 this document:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
-<<hello3Cmd>> _version
+<<hello2Cmd>> _version
 #+END_SRC
 
 #+RESULTS:
-: 0.0.10-pre6
+: 0.0.10-pre7
 
 
-*** List menu commands in ~hello3~
+*** List menu commands in ~hello2~
 
 Menu command ~?~ lists available menu selections. The list of choices
 include ~gree : Say hello~ and ~. : Start recording~, which will be
 used below.
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
-<<hello3Cmd>> ?
+<<hello2Cmd>> ?
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
-hello3.py: Demo hello v2
+hello2: Hello -command just demonstrates simple menu action
 
-Usage: hello3.py [options] [commands and parameters] 
+Usage: hello2 [options] [commands and parameters] 
 
 Commands:
 
----------- Commands:  ----------
-          greet  : Say hello
----------- Recording: ----------
+----------   hello2   ----------
+       sayHello  : Say hello
+----------    Util    ----------
               !  : Start recording
               .  : Stop recording
-----------   Help:    ----------
+         screen  : Take screenshot
               ?  : List commands
              ??  : List command parameters
-----------   Exit:    ----------
+----------    Quit    ----------
               q  : Exit
 
-Demostrage gentle slope to bride gap between
 
-      interactive-CLI-yaml-API
+This demo presents:
 
-usage
+ - maintaining instrument state: counting number of greetings made
+
+ - command 'hello' accepting two parameters, one of the parameters
+   (whom) is prompted for every command call, the other paremeter (who)
+   defaults to to login-name, and its value is rememebered from
+   previous call
+
+ - menu separator
+
+ - help to list command (and to show this text)
+
+ - more detailed help on menu commands
+
+ - hidden command: _version
+
+ - proviso for integrating ~hello2~ with ebMenu
+
 
 #+end_example
 
 
-*** Using submenu ~hello3~ - record greeting
+*** Using submenu ~hello~ - record greeting
 
-Expect to see greeting ~test case~ from ~sub menu hello3~
+Expect to see greeting ~test case~ from ~sub menu hello2-api~
 
 #+BEGIN_SRC bash :eval no-export :results output1 :noweb yes :exports both
 rm -f tmp/demo.sh
-<<ebMenu>> hello3 greet whom="test case" who='sub menu hello3' q . fileName=demo.sh
+<<ebMenu>> hello sayHello whom="test case" who='sub menu hello' q . fileName=demo.sh
 #+END_SRC
 
 #+RESULTS:
-: HELLO: 'test case' FROM: 'sub menu hello3'
+: Hello #1 to test case from sub menu hello
+
 
 In file ~demo.sh~, expect to see recording corresponding the CLI
 command above.
@@ -435,7 +472,8 @@ cat tmp/demo.sh
 #+END_SRC
 
 #+RESULTS:
-: /home/jj/.local/bin/ebMenu $1 hello3 greet whom="test case" who="sub menu hello3" q
+: /home/jj/.local/bin/ebMenu $1 hello sayHello whom="test case" who="sub menu hello" q
+
 
 
 Make the recording executable, and execute it using configuration
@@ -444,11 +482,11 @@ CLI call. Expect to see the same greeting as for the CLI-use.
 
 #+BEGIN_SRC bash :eval no-export :results output :exports results
 chmod +x tmp/demo.sh
-tmp/demo.sh "--syspath=$(pwd) --config=examples/hello3/hello3.yaml" 2>&1
+tmp/demo.sh "--syspath=$(pwd) --config=examples/hello2-api/hello2-api.yaml" 2>&1
 #+END_SRC
 
 #+RESULTS:
-: HELLO: 'test case' FROM: 'sub menu hello3'
+: Hello #1 to test case from sub menu hello
 
 
 *** Passing invalid  command line option ~outputTemplate~
@@ -456,18 +494,16 @@ tmp/demo.sh "--syspath=$(pwd) --config=examples/hello3/hello3.yaml" 2>&1
 Option ~--outputTemplate~ accepts only
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports results
-<<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/p'
-<<hello3Cmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
+<<hello2-apiCmd>> --helpfull | sed -n '/--outputTemplate/p'
+<<hello2-apiCmd>> --helpfull | sed -n '/--outputTemplate/{n;p}'
 #+END_SRC
 
 #+RESULTS:
-:   --outputTemplate: <API>: API: convert cmds to API calls, default(None):
-:     execute cmds)
 
 Error message, if invalid value is passed
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
-<<hello3Cmd>>  --outputTemplate wronTemplate 2>&1 
+<<hello2Cmd>>  --outputTemplate wronTemplate 2>&1 
 #+END_SRC
 
 #+RESULTS:
@@ -482,291 +518,223 @@ Error message, if invalid value is passed
  This example uses following source and configuration files
 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
- ls -ltr examples/hello3 | grep -v __pycache__
+ ls -ltr examples/hello2-api examples/hello2  | grep -v __pycache__
  #+END_SRC
 
  #+RESULTS:
- : total 24
- : -rwxrwxr-x 1 jj jj  126 huhti 29 13:37 rec.sh
- : -rw-rw-r-- 1 jj jj  531 huhti 29 13:37 hello3.yaml
- : -rwxrwxr-x 1 jj jj  631 huhti 29 13:37 hello3_main.py
- : -rw-rw-r-- 1 jj jj 2927 huhti 29 14:07 hello3.py
- : -rw-rw-r-- 1 jj jj  607 huhti 29 14:14 api-demo.py
+ #+begin_example
+ examples/hello2:
+ total 24
+ -rw-rw-r-- 1 jj jj 1492 huhti 28 09:34 hello.yaml
+ -rw-rw-r-- 1 jj jj    1 huhti 28 16:50 __init__.py
+ -rw-rw-r-- 1 jj jj 5692 touko  2 12:45 hello2.py
+ -rwxr-xr-x 1 jj jj  854 touko  2 12:45 hello2_main.py
+
+ examples/hello2-api:
+ total 20
+ -rw-rw-r-- 1 jj jj  527 touko  2 12:48 hello3.yaml
+ -rwxrwxr-x 1 jj jj  129 touko  2 12:59 rec.sh
+ -rw-rw-r-- 1 jj jj  531 touko  2 13:01 hello2-api.yaml
+ -rw-rw-r-- 1 jj jj  633 touko  2 14:32 api-demo.py
+ #+end_example
 
 
-*** Example application =hello3.py=
+*** Example application =examples/hello2/hello2.py=
 
-#+BEGIN_SRC python :eval no :results output :noweb no :session *Python*  :tangle examples/hello3/hello3.py :exports none
-  from ebench import MenuCtrl
+#+BEGIN_SRC bash :eval no-export :results output
+cat examples/hello2/hello2.py
+#+END_SRC
 
-  from ebench import Instrument
-
-  from ebench import usage, usageCommand
-  from ebench import version
-  from ebench import menuStartRecording, menuStopRecording
+#+RESULTS:
+#+begin_example
+# Tangled from TEMPLATE.org - changes will be overridden
 
 
-  import os
+from ebench import Instrument
+from ebench import MenuCtrl
 
-  # --------------------------------------
-  # Example instrument "HelloInstrument"
+from ebench import usage, usageCommand, menuStartRecording, menuStopRecording, menuScreenShot, version
 
-  class HelloInstrument(Instrument):
-    """HelloInstrument class defines method 'greet', which made available
-    as a menu command.
+import os
+from time import sleep
+from absl import logging
+
+
+# ------------------------------------------------------------------
+# Usage 
+CMD="hello2"
+
+SYNOPSIS="Hello -command just demonstrates simple menu action"
+
+USAGE_TEXT = """
+
+This demo presents:
+
+ - maintaining instrument state: counting number of greetings made
+
+ - command 'hello' accepting two parameters, one of the parameters
+   (whom) is prompted for every command call, the other paremeter (who)
+   defaults to to login-name, and its value is rememebered from
+   previous call
+
+ - menu separator
+
+ - help to list command (and to show this text)
+
+ - more detailed help on menu commands
+
+ - hidden command: _version
+
+ - proviso for integrating ~hello2~ with ebMenu
+
+"""
+
+# ------------------------------------------------------------------
+# Acces instrument API
+class HelloApi(Instrument):
+
+  def __init__(self, greetCount=0):
+      self._greetCount = greetCount
+
+  def greetCount(self, fake=0 ):
+      """Access object state variable with API twist
+
+      :fake: parameter used to demonstrate passing literal parameter
+      value in API call
+
+      :return: current 'greetCount' + 'fake'
+
+      """
+
+      return self._greetCount + int(fake)
+
+  def hello( self, whom:str, who:str ) -> str:
+    """:return: JSON -document"""
+    return  { 'HELLO' : whom, 'FROM': who }
+
+
+  def greetDone(self):
+      self._greetCount = self._greetCount + 1
+
+
+
+# ------------------------------------------------------------------
+# Facade presented to user
+class HelloInstrument(HelloApi):
+
+  def __init__(self, greetCount=0):
+      super().__init__(greetCount)
+
+  def sayHello( self, whom:str, who:str ):
+      """Hello -command just demonstrates simple menu action.
+
+      It receives to parameters 'whom' and 'who' and prints greeting
+      and increments 'greetCount' (just to demonstrate that Intrument
+      MAY maintain internal state).
+
+      :who: default value is of 'who' parameter is logged in user, its
+      value is remembered between greetings
+
+      :whom: object to be greeted
+
+      sayHello just creates a facadea uses uses API provided by
+      HelloApi to contruct the greeting
+
+      """
+      self.greetDone()
+      hello = self.hello( whom=whom, who =who )
+      print( "Hello #{} to {} from {}".format( 
+          self._greetCount, hello["HELLO"], hello["FROM"]))
+
+
+# ------------------------------------------------------------------
+# Menu
+
+# Menu commands 
+CMD_GREET = "sayHello"
+
+
+# Parameters to menu command CMD_GREET
+greetPar = {
+    "whom": "Whom to greet?",
+    "who":  "Who is the greeter? Ret accepts default value: ",
+}
+
+# Initial values for menu command parameters
+defaults = {
+    CMD_GREET : {
+        "who": os.environ['USER']
+    }
+}
+
+# ------------------------------------------------------------------
+# Bind instrument controller classes to ebench toolset
+def run( _argv, greetCount=0
+     , runMenu:bool = True
+     , outputTemplate=None, captureDir=None, recordingDir=None ):
+    """Examaple template 
+
+    :runMenu: default True, standalone application call REPL-loop
+    'menuController.mainMenu()', subMenu constructs 'menuController'
+    without executing the loop
+
+    :outputTemplate: if None(default): execute cmds/args, else (not
+    None): map menu actions to strings using 'outputTemplate'
+
+    :recordingDir: directory where interactive session recordings are
+    saved to (defaults to 'FLAGS.recordingDir')
+
+    :captureDir: directory where screenshots are made, defaults to
+    'FLAGS.captureDir'
+
+    :return: MenuCtrl (wrapping instrument)
 
     """
 
-    def hello( self, whom:str, who:str ) -> str:
-        """Format string for greet"""
-        return  "HELLO: '{}' FROM: '{}'".format(whom, who)
+    # 'instrument' controlled by application 
+    instrument = HelloInstrument(greetCount=greetCount) 
 
-    def greet( self, whom:str, who:str ):
-        print(self.hello( whom=whom, who=who ) )
+    # Wrap instrument with 'MenuCtrl'
+    menuController = MenuCtrl( args=_argv,instrument=instrument
+                             , prompt="[q=quit,?=commands,??=help on command]"
+                             , outputTemplate=outputTemplate )
 
-  # --------------------------------------
-  # Menu interagration
+    mainMenu = {
+        CMD                      : MenuCtrl.MENU_SEPATOR_TUPLE,
+        # Application menu 
+        CMD_GREET                : ( "Say hello", greetPar, instrument.sayHello ),
 
-  greetPar = {
-     "whom": "Whom to greet?",
-     "who":  "Who is the greeter? Ret accepts default value: ",
-  }
+        "Util"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
+        MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM, menuStopRecording(menuController, recordingDir=recordingDir) ),
+        MenuCtrl.MENU_SCREEN     : ( "Take screenshot", MenuCtrl.MENU_SCREENSHOT_PARAM,
+                                     menuScreenShot(instrument=instrument,captureDir=captureDir,prefix="Capture-" )),
+        MenuCtrl.MENU_HELP       : ( "List commands", None,
+                                    lambda **argV: usage(cmd=CMD, mainMenu=mainMenu, synopsis=SYNOPSIS, usageText=USAGE_TEXT)),
+        MenuCtrl.MENU_HELP_CMD   : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
+                                 lambda **argV: usageCommand(mainMenu=mainMenu, **argV )),
 
-  usageText = """
-  Demostrage gentle slope to bride gap between
+        "Quit"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
+        MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
 
-        interactive-CLI-yaml-API
+        # Hidden commands
+        MenuCtrl.MENU_VERSION    : ( "Output version number", None, version ),
+    }
 
-  usage
-  """
+    menuController.setMenu( menu = mainMenu, defaults = defaults)
 
-  # --------------------------------------
-  # Application run && ebMenu integration
+    # Interactive use starts REPL-loop
+    if runMenu: menuController.mainMenu()
 
-  def run( _argv, runMenu:bool = True, outputTemplate:str = None, recordingDir=None  ):
+    # menuController.close() call after returning from run()
+    return menuController
+#+end_example
 
-       helloController = HelloInstrument()
-       menuController = MenuCtrl( args=_argv, prompt="[?=help,q=quit]"
-                     , instrument=helloController, outputTemplate=outputTemplate )
 
-       mainMenu = {
-           # First section: application commands
-           "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
-           "greet"                  : ( "Say hello", greetPar, helloController.greet ),
+*** Configuration ~examples/hello2-api/hello2-api.py~ 
 
-
-           # Second section: recording
-           "Recording:"             : MenuCtrl.MENU_SEPATOR_TUPLE,
-           MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
-           MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
-                                       menuStopRecording(menuController, recordingDir=recordingDir) ),
-
-           # Third section: help
-           "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-           MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                      lambda : usage(cmd=os.path.basename(__file__)
-                                                           , mainMenu=mainMenu
-                                                           , synopsis="Demo hello v2"
-                                                           , usageText=usageText )),
-           MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
-                                      lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-
-           # Fourth section: exiting
-           "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-           MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
-
-           # Hidden
-           MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
-       }
-
-       menuController.setMenu(menu=mainMenu)
-       if runMenu: menuController.mainMenu()
-
-       return menuController
-
-#+END_SRC
-
-
- Source code of the example application  =hello3.py=
-
- #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello3/hello3.py
- #+END_SRC
-
- #+RESULTS:
- #+begin_example
- from ebench import MenuCtrl
-
- from ebench import Instrument
-
- from ebench import usage, usageCommand
- from ebench import version
- from ebench import menuStartRecording, menuStopRecording
-
-
- import os
-
- # --------------------------------------
- # Example instrument "HelloInstrument"
-
- class HelloInstrument(Instrument):
-   """HelloInstrument class defines method 'greet', which made available
-   as a menu command.
-
-   """
-
-   def hello( self, whom:str, who:str ) -> str:
-       """Format string for greet"""
-       return  "HELLO: '{}' FROM: '{}'".format(whom, who)
-
-   def greet( self, whom:str, who:str ):
-       print(self.hello( whom=whom, who=who ) )
-
- # --------------------------------------
- # Menu interagration
-
- greetPar = {
-    "whom": "Whom to greet?",
-    "who":  "Who is the greeter? Ret accepts default value: ",
- }
-
- usageText = """
- Demostrage gentle slope to bride gap between
-
-       interactive-CLI-yaml-API
-
- usage
- """
-
- # --------------------------------------
- # Application run && ebMenu integration
-
- def run( _argv, runMenu:bool = True, outputTemplate:str = None, recordingDir=None  ):
-
-      helloController = HelloInstrument()
-      menuController = MenuCtrl( args=_argv, prompt="[?=help,q=quit]"
-                    , instrument=helloController, outputTemplate=outputTemplate )
-
-      mainMenu = {
-          # First section: application commands
-          "Commands:"              : MenuCtrl.MENU_SEPATOR_TUPLE,
-          "greet"                  : ( "Say hello", greetPar, helloController.greet ),
-
-
-          # Second section: recording
-          "Recording:"             : MenuCtrl.MENU_SEPATOR_TUPLE,
-          MenuCtrl.MENU_REC_START  : ( "Start recording", None, menuStartRecording(menuController) ),
-          MenuCtrl.MENU_REC_SAVE   : ( "Stop recording", MenuCtrl.MENU_REC_SAVE_PARAM,
-                                      menuStopRecording(menuController, recordingDir=recordingDir) ),
-
-          # Third section: help
-          "Help:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-          MenuCtrl.MENU_HELP       : ( "List commands", None,
-                                     lambda : usage(cmd=os.path.basename(__file__)
-                                                          , mainMenu=mainMenu
-                                                          , synopsis="Demo hello v2"
-                                                          , usageText=usageText )),
-          MenuCtrl.MENU_CMD_PARAM  : ( "List command parameters", MenuCtrl.MENU_HELP_CMD_PARAM,
-                                     lambda **argV: usageCommand(mainMenu=mainMenu, **argV)),
-
-          # Fourth section: exiting
-          "Exit:"                  : MenuCtrl.MENU_SEPATOR_TUPLE,
-          MenuCtrl.MENU_QUIT       : MenuCtrl.MENU_QUIT_TUPLE,
-
-          # Hidden
-          MenuCtrl.MENU_VERSION    : MenuCtrl.MENU_VERSION_TUPLE,
-      }
-
-      menuController.setMenu(menu=mainMenu)
-      if runMenu: menuController.mainMenu()
-
-      return menuController
- #+end_example
-
-
-*** Example application =hello3_main.py=
-
-#+BEGIN_SRC python :eval no :results output :noweb no :session *Python* :tangle examples/hello3/hello3_main.py :shebang "#!/usr/bin/env python3" :exports none
-#!/usr/bin/env python3
-from hello3 import run
-
-from absl import app, flags, logging
-from absl.flags import FLAGS 
-
-# --------------------------------------
-# Application main - call hello3.run()
-
-def _main( _argv ):
-    logging.set_verbosity(FLAGS.debug)
-
-    # Start standalone application
-    menuController = run( _argv, 
-          outputTemplate=FLAGS.outputTemplate, 
-          recordingDir=FLAGS.recordingDir )
-
-    # q from menu or end of CLI parameters
-    menuController.close()
-
-def main():
-    try:
-        app.run(_main)
-    except SystemExit:
-        pass
-
-if __name__ == '__main__':
-    main()
-#+END_SRC
-
-
-Application main passes configuration variables to ~hello3.run()~
-method, and calls ~menuController.close()~, when control returns from
-~run~ method after user ending interactive session with menu command
-~q~, or when command line use has processed all command line
-parameters.
-
-
- #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello3/hello3_main.py
- #+END_SRC
-
- #+RESULTS:
- #+begin_example
- #!/usr/bin/env python3
- #!/usr/bin/env python3
- from hello3 import run
-
- from absl import app, flags, logging
- from absl.flags import FLAGS 
-
- # --------------------------------------
- # Application main - call hello3.run()
-
- def _main( _argv ):
-     logging.set_verbosity(FLAGS.debug)
-
-     # Start standalone application
-     menuController = run( _argv, 
-           outputTemplate=FLAGS.outputTemplate, 
-           recordingDir=FLAGS.recordingDir )
-
-     # q from menu or end of CLI parameters
-     menuController.close()
-
- def main():
-     try:
-         app.run(_main)
-     except SystemExit:
-         pass
-
- if __name__ == '__main__':
-     main()
- #+end_example
-
-
-*** Configuration integrating ~hello3.py~ with ~ebMenu~
-
-#+BEGIN_SRC bash :eval no-export :results output :exporst results
-cat examples/hello3/hello3.yaml
+#+BEGIN_SRC bash :eval no-export :results output :exports results
+cat examples/hello2-api/hello2-api.yaml
 #+END_SRC
 
 #+RESULTS:
@@ -774,12 +742,12 @@ cat examples/hello3/hello3.yaml
 # Tangled from GENTLE_SLOPE.org - modification will be overridden
 
 
-# Add command 'hello3' menu
+# Add command 'hello2-api' menu
 - 
   type: subMenu
-  menu: hello3
-  prompt: Start sub menu for hello3.py
-  module: examples.hello3.hello3
+  menu: hello
+  prompt: Start sub menu for hello2.py
+  module: examples.hello2.hello2
 
 # Add command 'api1' to menu
 # It returns JSON with keys world, universe, and multiverse
@@ -788,32 +756,36 @@ cat examples/hello3/hello3.yaml
   menu: api1
   prompt: Greet Realms
   apiCalls:
-      world: hello3.hello( whom="world", who="me" )
-      universe: hello3.hello( whom="universe", who="me" )
-      multiverse: hello3.hello( whom="multiverse", who="me" )
+      world: hello.hello( whom="world", who="me" )
+      universe: hello.hello( whom="universe", who="me" )
+      multiverse: hello.hello( whom="multiverse", who="me" )
 #+end_example
 
 
-*** Example application =rec.sh=
+*** Example application =examples/hello2-api/rec.sh=
 
- ~rec.sh~ was saved from hello3 CLI use:
+ ~rec.sh~ was created when recording ~hello2_main.py~ interactive session: 
 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello3/rec.sh
+ cat examples/hello2-api/rec.sh
  #+END_SRC
 
  #+RESULTS:
- : examples/hello3/hello3_main.py $1 greet whom="value entered to first promted value" who="value given to second promted value"
+ : examples/hello2/hello2_main.py $1 sayHello whom="value entered to first promted value" who="value given to second promted value"
 
 
-*** Example =api-demo.py=
+*** Example =examples/hello2-api/api-demo.py=
 
- Example, how to embed API calls recorded with ebMenu into Python
- script. API calls were created using script ~rec.sh~ with parameter
- ~--outputTemplate=API~
+ =examples/hello2-api/api-demo.py= is an example of embedding API
+ calls into Python script, where embedded API calls were created
+ running ~examples/hello2-api/rec.sh~ with parameter
+ ~--outputTemplate=API~.  Script ~examples/hello2-api/rec.sh~ is a
+ file, where interactive session recording from
+ =examples/hello2/hello2_main.py= was saved into.
+
 
  #+BEGIN_SRC bash :eval no-export :results output :exports results
- cat examples/hello3/api-demo.py
+ cat examples/hello2-api/api-demo.py
  #+END_SRC
 
  #+RESULTS:
@@ -822,23 +794,22 @@ cat examples/hello3/hello3.yaml
  # an idea, how the interactive recording can be turned into
  # a Python script.
 
- from hello3 import HelloInstrument
+ from hello2 import HelloInstrument
 
- print( "Instantiatig hello3_main")
- hello3_main = HelloInstrument()
+ print( "Instantiatig HelloInstrument as hello2_main")
+ hello2_main = HelloInstrument()
 
 
  print( "\n\nHere follows the output from API calls:")
 
- # This following this line was copy-pasted from the output of examples/hello3/rec.sh (using 
+ # This following this line was copy-pasted from the output of examples/hello2-api/rec.sh (using 
  # parameter ='--outputTemplate API')
- hello3_main.greet(whom="value entered to first promted value", who="value given to second promted value")
+ hello2_main.sayHello(whom="value entered to first promted value", who="value given to second promted value")
  # End of copy-paste
 
 
  print( "\n\nThats all Folks - Happy coding!!")
  #+end_example
-
 
 
 * Fin                                                              :noexport:

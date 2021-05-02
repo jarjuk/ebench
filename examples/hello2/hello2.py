@@ -59,6 +59,11 @@ class HelloApi(Instrument):
 
       return self._greetCount + int(fake)
 
+  def hello( self, whom:str, who:str ) -> str:
+    """:return: JSON -document"""
+    return  { 'HELLO' : whom, 'FROM': who }
+
+
   def greetDone(self):
       self._greetCount = self._greetCount + 1
 
@@ -78,22 +83,26 @@ class HelloInstrument(HelloApi):
       and increments 'greetCount' (just to demonstrate that Intrument
       MAY maintain internal state).
 
-
       :who: default value is of 'who' parameter is logged in user, its
       value is remembered between greetings
 
       :whom: object to be greeted
 
+      sayHello just creates a facadea uses uses API provided by
+      HelloApi to contruct the greeting
+
       """
       self.greetDone()
-      print( "Hello #{} to {} from {}".format(self._greetCount, whom, who))
+      hello = self.hello( whom=whom, who =who )
+      print( "Hello #{} to {} from {}".format( 
+          self._greetCount, hello["HELLO"], hello["FROM"]))
 
 
 # ------------------------------------------------------------------
 # Menu
 
 # Menu commands 
-CMD_GREET = "greet"
+CMD_GREET = "sayHello"
 
 
 # Parameters to menu command CMD_GREET
@@ -111,7 +120,7 @@ defaults = {
 
 # ------------------------------------------------------------------
 # Bind instrument controller classes to ebench toolset
-def run( _argv, greetCount=None
+def run( _argv, greetCount=0
      , runMenu:bool = True
      , outputTemplate=None, captureDir=None, recordingDir=None ):
     """Examaple template 
