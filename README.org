@@ -216,11 +216,6 @@ Commands:
 
 
 
-** *TBD* Architecture 
-
-*TBD*
-
-
 ** Documentation references
 
 Hello World example in [[file:HELLO.org]]. The example continues in 
@@ -229,12 +224,17 @@ interactive use, command line use, configuration file use to Python
 scripting.
 
 A more realistic example of instrument controller for Rigol MSO1104Z:
-[[file:TEMPLATE.org]]. This example, and the example [[file:GENTLE_SLOPE.org]]
+[[file:TEMPLATE.org]]. This example, and the example [[file:HELLO.org]]
 present a template for instrument controller implementation.
 
 BDD testig document for ~ebUnit~ -tool in [[file:ebUnit.org]].
 
 *TBD*: Hello World example integrated with ~ebMenu~: [[file:EBMENU.org]]
+
+
+** *TBD* Architecture 
+
+*TBD*
 
 
 ** Installation
