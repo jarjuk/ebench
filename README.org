@@ -62,24 +62,35 @@
   - and high service value
 
 
-** Study of Viability in  ~ebench~ -Toolset
+** Viability Study in ~ebench~ -Toolset
 
    The vision presented in the previous chapter is abstract and it
    must be materialized for implementation.  Meet ~ebench~ -toolset, a
    viability study, which, at this time, comprises following three
    tools:
 
-   - ~ebMenu~ : Menu of ebench toolset
+   - ~ebMenu~ : Menu application using YAML configuration to integrate
+     separate instrument controllers together
    - ~ebUnit~ : Tool to control UNIT-T UTG962/932 Waveform generator
    - ~ebRigol~ : Tool to control Rigol MSO1104Z osciloscope
 
-   Characteristics of ~ebench~ toolset lists:
-   - scope core architecture to the minimum and identify a set of
-     infrastructure services
-   - interactive, command line and API -interfaces implementable in
-     one go
-   - use Python as core implementation language and existing libraries
-     for [[https://pyvisa.readthedocs.io/en/latest/][instrument integrations]] and [[https://pypi.org/project/absl-py/][configuration]] interfaces
+   ~ebench~ -toolset builds on *the core idea* of providing yet
+   another command line processing framework with a set of
+   infrastructure services. 
+
+   The objective of the viability study is to validate, whether *the
+   benefits* of the framework to be able
+     - to implement interactive, command line and API interfaces in
+       one go, and
+     - to configure user interfaces and API interface of otherwise
+       separate tools together
+   - balance the *downside* of
+     - the need to learn and to use yet another framework, and
+     - the lack of features in a generic framework, when compared to a
+       bespoken solution
+
+   ~ebench~ - uses Python -language and builds on existing libraries
+   for [[https://pyvisa.readthedocs.io/en/latest/][instrument integration]] and [[https://pypi.org/project/absl-py/][command line configuration]].
 
    List of features mainained in [[file:FEATURES.org]]
 
