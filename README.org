@@ -84,7 +84,8 @@
        one go, and
      - to configure user interfaces and API interface of otherwise
        separate tools together
-   - balance the *downside* of
+       
+   balance the *downside* of
      - the need to learn and to use yet another framework, and
      - the lack of features in a generic framework, when compared to a
        bespoken solution
