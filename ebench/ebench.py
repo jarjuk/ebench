@@ -975,9 +975,9 @@ class MenuCtrl:
                             # continue (debug print stacktrace)
                             print( "Error: {}".format(str(err)))
                             if logging.level_debug():
-                                raise err
+                                raise
                         else:
-                            raise err
+                            raise
                         
             return True
 

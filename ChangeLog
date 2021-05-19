@@ -1,3 +1,8 @@
+2021-05-19  jj  <jj@santtu>
+
+	* ebench/ebench.py (MenuCtrl.mainMenu.execMenuCommand): TypeError:
+	__init__() missing 1 required positional argument: 'msg'
+
 2021-04-29  jj  <jj@santtu>
 
 	* ebench/ebMenu.py (run): Fixed menuStopRecording
