@@ -75,6 +75,9 @@ line options from ~absl~
  #+END_SRC
 
  #+RESULTS: import-env
+ : Python 3.9.1 | packaged by conda-forge | (default, Jan 10 2021, 02:55:42) 
+ : [GCC 9.3.0] on linux
+ : Type "help", "copyright", "credits" or "license" for more information.
 
 
 ** Define ~hello~ -function and parameter prompt
@@ -84,8 +87,8 @@ whom to greet:
 
  #+name: hello
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
- def hello( whom:str ):
-     print( "Hello {}".format(whom))
+ def hello( whom:str, who:str="Application default" ):
+     print( f"{who} says 'Hello' to {whom}" )
  #+END_SRC
 
 For prompting ~"Whom to greet?"~ define a dictionary, which maps
@@ -94,7 +97,8 @@ For prompting ~"Whom to greet?"~ define a dictionary, which maps
  #+name: helloPar
  #+BEGIN_SRC python :eval no :results output :noweb no :session *Python*
  helloPar = {
-    "whom": "Whom to greet?"
+    "whom": "Whom to greet?",
+    "who": "Who is greeting?",
  }
  #+END_SRC
 
@@ -244,35 +248,48 @@ if __name__ == '__main__':
    cat <<EOF | examples/hello/hello.py
    hello
    moon
+   Me
    q
    EOF
  #+END_SRC
 
  #+RESULTS:
- : [hello, q=quit] > Whom to greet? > Hello moon
+ : [hello, q=quit] > Whom to greet? > Who is greeting? > Me says 'Hello' to moon
  : [hello, q=quit] > 
 
 
 *** =hello= CLI usage
 
- for Command line usage, menu command 'hello' is followed by key-value
- pair ~whom=World~. The result greets the world.
+ For Command line usage, menu command 'hello' is followed by key-value
+ pair ~whom=World~. The result show  'Example App' greeting the world.
 
  #+BEGIN_SRC bash :eval no-export :results output :exports both
- examples/hello/hello.py hello whom=World
+ examples/hello/hello.py hello whom=World who='Example App'
  #+END_SRC
 
  #+RESULTS:
- : Hello World
+ : Hello Example App says 'Hello' to World
+
+ Command line parameters can be given in any order. In the example
+ below, 'who' -parameter preced 'whom' -parameter
+
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ examples/hello/hello.py hello who='Example App2' whom='The Sun'
+ #+END_SRC
+
+ #+RESULTS:
+ : Example App2 says 'Hello' to The Sun
 
 
- :PROPERTIES:
- :TOC:      :include all
- :END:
+Parameter parsing is optional. The example below shows parameter ~who~
+being left out, and application using default value given in function
+definition.
+ #+BEGIN_SRC bash :eval no-export :results output :exports both
+ examples/hello/hello.py hello whom='Jupiter'
+ #+END_SRC
 
- :CONTENTS:
-
- :END:
+ #+RESULTS:
+ : Application default says 'Hello' to Jupiter
 
 
 * Hello World as an Instrument Controller - ~hello2.py~ 
@@ -469,7 +486,7 @@ taken from environment variable ~$USER~.
   # Parameters to menu command CMD_GREET
   greetPar = {
       "whom": "Whom to greet?",
-      "who":  "Who is the greeter? Ret accepts default value: ",
+      "who":  "Who is the greeter? (Ret accepts default value)",
   }
 
   # Initial values for menu command parameters
@@ -789,7 +806,7 @@ sections:
        return self._greetCount + int(fake)
 
    def hello( self, whom:str, who:str ) -> str:
-     """:return: JSON -document"""
+     """:return: dict -document for parameters"""
      return  { 'HELLO' : whom, 'FROM': who }
 
 
@@ -817,8 +834,8 @@ sections:
 
        :whom: object to be greeted
 
-       sayHello just creates a facadea uses uses API provided by
-       HelloApi to contruct the greeting
+       sayHello is a facade and uses uses API provided by HelloApi to
+       create the greeting HELLO and FROM properties
 
        """
        self.greetDone()
@@ -970,9 +987,9 @@ sections:
 
  #+RESULTS:
  : total 24
- : -rw-rw-r-- 1 jj jj 4335 huhti 27 12:22 hello2.py
- : -rwxr-xr-x 1 jj jj  705 huhti 27 12:22 hello2_main.py
- : -rw-rw-r-- 1 jj jj    1 huhti 27 12:22 __init__.py
+ : -rw-rw-r-- 1 jj jj    1 huhti 28 16:50 __init__.py
+ : -rw-rw-r-- 1 jj jj 5725 loka   7 10:27 hello2.py
+ : -rwxr-xr-x 1 jj jj  854 loka   7 10:27 hello2_main.py
 
 
 ** Running ~hello2~
@@ -1069,7 +1086,7 @@ previous chapter. However, running
 outputs version number of ebench -application
 
 #+RESULTS: hello2-version
-: 0.0.10-pre7
+: 0.0.11-pre2
 
 
 *** Help on a specific command: =??=
@@ -1093,11 +1110,11 @@ value is remembered between greetings
 
 :whom: object to be greeted
 
-sayHello just creates a facadea uses uses API provided by
-HelloApi to contruct the greeting
+sayHello is a facade and uses uses API provided by HelloApi to
+create the greeting HELLO and FROM properties
 
       whom  : Whom to greet?
-       who  : Who is the greeter? Ret accepts default value: 
+       who  : Who is the greeter? (Ret accepts default value)
 
 Notice:
 - parameters MUST be given in the order listed above
@@ -1113,7 +1130,7 @@ from environment variable.
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 echo USER=$USER
-<<hello2Cmd>> greet whom="world" 
+<<hello2Cmd>> sayHello whom="world" 
 #+END_SRC
 
 #+RESULTS:
@@ -1126,7 +1143,7 @@ Expect to see 'Hello earth from moon', where default value
 command line ~who="moon~:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
-<<hello2Cmd>> greet whom="earth" who="moon"
+<<hello2Cmd>> sayHello whom="earth" who="moon"
 #+END_SRC
 
 #+RESULTS:
@@ -1149,19 +1166,19 @@ maintained (=variable ~greetCount~ incremented for each greeting).
 
 *** Use command line configuration for intialization
 
-Use command CLI switch ~--greetCount=61~ to initialize application,
-and expect to see greetings counted starting from 62:
+Use command CLI switch ~--greetCount=41~ to initialize application,
+and expect to see greetings counted starting from 42:
 
 #+BEGIN_SRC bash :eval no-export :results output :noweb yes :exports both
 echo USER=$USER
-<<hello2Cmd>> --greetCount=61 sayHello whom="the world"  sayHello whom="the sun"   sayHello whom="the moon"  
+<<hello2Cmd>> --greetCount=41 sayHello whom="the world"  sayHello whom="the sun"   sayHello whom="the moon"  
 #+END_SRC
 
 #+RESULTS:
 : USER=jj
-: Hello #62 to the world from jj
-: Hello #63 to the sun from jj
-: Hello #64 to the moon from jj
+: Hello #42 to the world from jj
+: Hello #43 to the sun from jj
+: Hello #44 to the moon from jj
 
  
 * Fin                                                              :noexport:

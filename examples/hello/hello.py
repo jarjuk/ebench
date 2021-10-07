@@ -5,11 +5,12 @@ import os
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
-def hello( whom:str ):
-    print( "Hello {}".format(whom))
+def hello( whom:str, who:str="Application default" ):
+    print( f"{who} says 'Hello' to {whom}" )
 
 helloPar = {
-   "whom": "Whom to greet?"
+   "whom": "Whom to greet?",
+   "who": "Who is greeting?",
 }
 
 

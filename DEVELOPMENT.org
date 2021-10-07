@@ -8,11 +8,55 @@
 #+RESULTS:
 : Switched to conda environment: pdata
 
+
 * References
 
 Ref: https://github.com/vuthalab/RigolInstruments/blob/master/RigolInstruments.py
 Ref: [[file:~/work/data-sheets/skoopit/Rigol-mso1000z_series-programming-guide.pdf]]
 Ref: [[file:~/work/data-sheets/skoopit]]
+
+
+* Testing
+
+*Run from command line*
+
+#+BEGIN_SRC bash :eval no-export :results output
+python -m pytest || true
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+============================= test session starts ==============================
+platform linux -- Python 3.9.1, pytest-6.2.4, py-1.10.0, pluggy-0.13.1
+rootdir: /home/jj/work/ebench
+plugins: bdd-3.2.1, xdist-2.3.0, forked-1.2.0
+collected 4 items
+
+spec/test_ebench.py .F.                                                  [ 75%]
+spec/test_framework.py .                                                 [100%]
+
+=================================== FAILURES ===================================
+_________________________________ test_version _________________________________
+
+    def test_version():
+>       assert ebench.version() == "324234"
+E       AssertionError: assert '0.0.11-SNAPSHOT' == '324234'
+E         - 324234
+E         + 0.0.11-SNAPSHOT
+
+spec/test_ebench.py:14: AssertionError
+=========================== short test summary info ============================
+FAILED spec/test_ebench.py::test_version - AssertionError: assert '0.0.11-SNA...
+========================= 1 failed, 3 passed in 0.32s ==========================
+#+end_example
+
+
+*Continous test*
+#+BEGIN_SRC elisp :noweb yes :results output :eval no-export :exports none 
+(start-process "server" "buf-server" "xterm" "-fa" "monaco" "-fs" "15"  "-T" "EBENCH" "-hold" "-e"  "bash" "-c" "ptw  --runner 'python -m pytest'")
+#+END_SRC
+
+#+RESULTS:
 
 
 * Delivery                                                 
@@ -31,24 +75,36 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  #+begin_example
  /home/jj/bin/releaseit.sh - $Release:0.0.45$
  ------------------------------------------------------------------
- PREV_REL=0.0.8 --> REL=0.0.9-SNAPSHOT
+ PREV_REL=0.0.10 --> REL=0.0.11-SNAPSHOT
  ------------------------------------------------------------------
- ## 0.0.9-SNAPSHOT/20210404-22:49:46
+ ## 0.0.11-SNAPSHOT/20210519-18:38:51
 
- - Features implementing
-   - timebase: added
-
+ - Fixes: TypeError: __init__() missing 1 required positional argument: 'msg' ebench.py
  - Features added:
-   - measurement: add automagically measurement timestamp
-
- - Known issues/missing features
-   - ebRigol: setup triggering not implemented
-   - README.org: API -usage documentation should be enhanced
-   - `UTG900.py arb` external waveform, implementation not working
-   - `UTG900.py arb` external waveform file, format documentation missing
+   - command parameter may given in any order
  ------------------------------------------------------------------
  #+end_example
 
+
+*** Test
+
+#+BEGIN_SRC bash :eval no-export :results output
+python -m pytest
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+============================= test session starts ==============================
+platform linux -- Python 3.9.1, pytest-6.2.5, py-1.10.0, pluggy-0.13.1
+rootdir: /home/jj/work/ebench
+plugins: bdd-3.2.1, forked-1.2.0, xdist-2.4.0
+collected 16 items
+
+spec/test_ebench.py .s.............                                      [ 93%]
+spec/test_framework.py .                                                 [100%]
+
+======================== 15 passed, 1 skipped in 0.28s =========================
+#+end_example
 
 *** Create release 
 
@@ -59,11 +115,19 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  #+END_SRC
 
  #+RESULTS:
- : On branch master
- : Your branch is ahead of 'origin/master' by 1 commit.
- :   (use "git push" to publish your local commits)
- : 
- : nothing to commit, working tree clean
+ #+begin_example
+ On branch main
+ Your branch is ahead of 'gitti/main' by 5 commits.
+   (use "git push" to publish your local commits)
+
+ Changes not staged for commit:
+   (use "git add <file>..." to update what will be committed)
+   (use "git checkout -- <file>..." to discard changes in working directory)
+
+         modified:   DEVELOPMENT.org
+
+ no changes added to commit (use "git add" and/or "git commit -a")
+ #+end_example
 
 
  #+BEGIN_SRC sh :eval no-export :results output
@@ -87,7 +151,7 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  #+END_SRC
 
  #+RESULTS:
- : 0.0.10
+ : 0.0.11-pre1
 
 
  Ref: https://packaging.python.org/guides/distributing-packages-using-setuptools/
@@ -98,7 +162,7 @@ Ref: [[file:~/work/data-sheets/skoopit]]
 
  #+RESULTS:
  #+begin_example
- version 0.0.10 , packages ['ebench']
+ version 0.0.11-pre2 , packages ['ebench']
  running sdist
  running egg_info
  writing ebench.egg-info/PKG-INFO
@@ -109,53 +173,46 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  reading manifest file 'ebench.egg-info/SOURCES.txt'
  writing manifest file 'ebench.egg-info/SOURCES.txt'
  running check
- creating ebench-0.0.10
- creating ebench-0.0.10/ebench
- creating ebench-0.0.10/ebench.egg-info
- creating ebench-0.0.10/examples
- creating ebench-0.0.10/examples/hello
- creating ebench-0.0.10/tmp
- copying files to ebench-0.0.10...
- copying ebRigol -> ebench-0.0.10
- copying ebUnit -> ebench-0.0.10
- copying setup.py -> ebench-0.0.10
- copying ebench/CMDS.py -> ebench-0.0.10/ebench
- copying ebench/Rigol.py -> ebench-0.0.10/ebench
- copying ebench/Unit.py -> ebench-0.0.10/ebench
- copying ebench/__init__.py -> ebench-0.0.10/ebench
- copying ebench/ebMenu.py -> ebench-0.0.10/ebench
- copying ebench/ebMenu.yaml -> ebench-0.0.10/ebench
- copying ebench/ebRigol.py -> ebench-0.0.10/ebench
- copying ebench/ebRigol_main.py -> ebench-0.0.10/ebench
- copying ebench/ebUnit.py -> ebench-0.0.10/ebench
- copying ebench/ebUnit_main.py -> ebench-0.0.10/ebench
- copying ebench/ebench.py -> ebench-0.0.10/ebench
- copying ebench/hello.py -> ebench-0.0.10/ebench
- copying ebench.egg-info/PKG-INFO -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/SOURCES.txt -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/dependency_links.txt -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/entry_points.txt -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/requires.txt -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/top_level.txt -> ebench-0.0.10/ebench.egg-info
- copying ebench.egg-info/zip-safe -> ebench-0.0.10/ebench.egg-info
- copying ebench/../RELEASES.md -> ebench-0.0.10/ebench/..
- copying ebench/../VERSION -> ebench-0.0.10/ebench/..
- copying examples/hello/hello.py -> ebench-0.0.10/examples/hello
- copying tmp/apu.sh -> ebench-0.0.10/tmp
- Writing ebench-0.0.10/setup.cfg
+ creating ebench-0.0.11rc2
+ creating ebench-0.0.11rc2/ebench
+ creating ebench-0.0.11rc2/ebench.egg-info
+ creating ebench-0.0.11rc2/examples
+ creating ebench-0.0.11rc2/examples/hello
+ creating ebench-0.0.11rc2/tmp
+ copying files to ebench-0.0.11rc2...
+ copying ebRigol -> ebench-0.0.11rc2
+ copying ebUnit -> ebench-0.0.11rc2
+ copying setup.py -> ebench-0.0.11rc2
+ copying ebench/CMDS.py -> ebench-0.0.11rc2/ebench
+ copying ebench/Rigol.py -> ebench-0.0.11rc2/ebench
+ copying ebench/Unit.py -> ebench-0.0.11rc2/ebench
+ copying ebench/__init__.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebMenu.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebMenu.yaml -> ebench-0.0.11rc2/ebench
+ copying ebench/ebRigol.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebRigol_main.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebUnit.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebUnit_main.py -> ebench-0.0.11rc2/ebench
+ copying ebench/ebench.py -> ebench-0.0.11rc2/ebench
+ copying ebench/hello.py -> ebench-0.0.11rc2/ebench
+ copying ebench.egg-info/PKG-INFO -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/SOURCES.txt -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/dependency_links.txt -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/entry_points.txt -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/requires.txt -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/top_level.txt -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench.egg-info/zip-safe -> ebench-0.0.11rc2/ebench.egg-info
+ copying ebench/../RELEASES.md -> ebench-0.0.11rc2/ebench/..
+ copying ebench/../VERSION -> ebench-0.0.11rc2/ebench/..
+ copying examples/hello/hello.py -> ebench-0.0.11rc2/examples/hello
+ copying tmp/apu.sh -> ebench-0.0.11rc2/tmp
+ Writing ebench-0.0.11rc2/setup.cfg
  Creating tar archive
- removing 'ebench-0.0.10' (and everything under it)
+ removing 'ebench-0.0.11rc2' (and everything under it)
  running bdist_wheel
  running build
  running build_py
- copying ebench/Rigol.py -> build/lib/ebench
- copying ebench/ebRigol_main.py -> build/lib/ebench
- copying ebench/ebUnit.py -> build/lib/ebench
- copying ebench/ebRigol.py -> build/lib/ebench
- copying ebench/__init__.py -> build/lib/ebench
- copying ebench/ebench.py -> build/lib/ebench
  copying ebench/../VERSION -> build/lib/ebench/..
- copying ebench/../RELEASES.md -> build/lib/ebench/..
  installing to build/bdist.linux-x86_64/wheel
  running install
  running install_lib
@@ -185,10 +242,10 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  copying build/lib/VERSION -> build/bdist.linux-x86_64/wheel
  copying build/lib/RELEASES.md -> build/bdist.linux-x86_64/wheel
  running install_egg_info
- Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.10-py3.9.egg-info
+ Copying ebench.egg-info to build/bdist.linux-x86_64/wheel/ebench-0.0.11rc2-py3.9.egg-info
  running install_scripts
- creating build/bdist.linux-x86_64/wheel/ebench-0.0.10.dist-info/WHEEL
- creating 'dist/ebench-0.0.10-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+ creating build/bdist.linux-x86_64/wheel/ebench-0.0.11rc2.dist-info/WHEEL
+ creating 'dist/ebench-0.0.11rc2-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
  adding 'RELEASES.md'
  adding 'VERSION'
  adding 'ebench/CMDS.py'
@@ -210,12 +267,12 @@ Ref: [[file:~/work/data-sheets/skoopit]]
  adding 'examples/hello/__init__.py'
  adding 'examples/hello/hello.py'
  adding 'examples/hello/hello2.py'
- adding 'ebench-0.0.10.dist-info/METADATA'
- adding 'ebench-0.0.10.dist-info/WHEEL'
- adding 'ebench-0.0.10.dist-info/entry_points.txt'
- adding 'ebench-0.0.10.dist-info/top_level.txt'
- adding 'ebench-0.0.10.dist-info/zip-safe'
- adding 'ebench-0.0.10.dist-info/RECORD'
+ adding 'ebench-0.0.11rc2.dist-info/METADATA'
+ adding 'ebench-0.0.11rc2.dist-info/WHEEL'
+ adding 'ebench-0.0.11rc2.dist-info/entry_points.txt'
+ adding 'ebench-0.0.11rc2.dist-info/top_level.txt'
+ adding 'ebench-0.0.11rc2.dist-info/zip-safe'
+ adding 'ebench-0.0.11rc2.dist-info/RECORD'
  removing build/bdist.linux-x86_64/wheel
  #+end_example
 
@@ -230,26 +287,26 @@ Ref: [[file:~/work/data-sheets/skoopit]]
 
  #+RESULTS:
  #+begin_example
- VERSION_FILE=dist/ebench-0.0.10.tar.gz
- Processing ./dist/ebench-0.0.10.tar.gz
- Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.10) (0.5.2)
- Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.10) (0.12.0)
- Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench==0.0.10) (1.15.0)
- Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.10) (1.11.3)
- Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.10) (3.7.4.3)
+ VERSION_FILE=dist/ebench-0.0.11rc2.tar.gz
+ Processing ./dist/ebench-0.0.11rc2.tar.gz
+ Requirement already satisfied: pyvisa-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.11rc2) (0.5.2)
+ Requirement already satisfied: absl-py in /home/jj/.local/lib/python3.9/site-packages (from ebench==0.0.11rc2) (0.12.0)
+ Requirement already satisfied: six in /home/jj/.local/lib/python3.9/site-packages (from absl-py->ebench==0.0.11rc2) (1.15.0)
+ Requirement already satisfied: pyvisa>=1.11.0 in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.11rc2) (1.11.3)
+ Requirement already satisfied: typing-extensions in /home/jj/.local/lib/python3.9/site-packages (from pyvisa-py->ebench==0.0.11rc2) (3.7.4.3)
  Building wheels for collected packages: ebench
    Building wheel for ebench (setup.py): started
    Building wheel for ebench (setup.py): finished with status 'done'
-   Created wheel for ebench: filename=ebench-0.0.10-py3-none-any.whl size=37741 sha256=82ee391b09dddcec6b26d8bb78778c60d3c72bd79fc9e1f2df86c8c18b083460
-   Stored in directory: /home/jj/.cache/pip/wheels/22/1f/50/a5517be54fc93341bddfa00a9e3ef4a12423aa73eb8310aaeb
+   Created wheel for ebench: filename=ebench-0.0.11rc2-py3-none-any.whl size=38128 sha256=a6025e3c564cf76893d3602ca68544186d81647187ee4a4442c2852de4ee534e
+   Stored in directory: /home/jj/.cache/pip/wheels/f3/da/a6/29ddc2b0bf9ae036af6843431a2eb1afa5ab41c25b024ee86b
  Successfully built ebench
  Installing collected packages: ebench
    Attempting uninstall: ebench
-     Found existing installation: ebench 0.0.10rc7
-     Uninstalling ebench-0.0.10rc7:
-       Successfully uninstalled ebench-0.0.10rc7
- Successfully installed ebench-0.0.10
- installed dist/ebench-0.0.10.tar.gz
+     Found existing installation: ebench 0.0.11rc1
+     Uninstalling ebench-0.0.11rc1:
+       Successfully uninstalled ebench-0.0.11rc1
+ Successfully installed ebench-0.0.11rc2
+ installed dist/ebench-0.0.11rc2.tar.gz
  #+end_example
 
 
@@ -260,15 +317,13 @@ ebRigol _version
 #+END_SRC
 
 #+RESULTS:
-: 0.0.10
+: 0.0.11-pre2
 
 #+BEGIN_SRC bash :eval no-export :results output
 ebUnit _version
 #+END_SRC
 
 #+RESULTS:
-: ebUnit - 0.0.8
-: '0.0.8'
 
 
 ** Create snapshot

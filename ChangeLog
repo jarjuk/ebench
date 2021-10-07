@@ -1,3 +1,13 @@
+2021-10-07  jj  <jj@santtu>
+
+	* HELLO.org (mainMenu): demonstrated paremters order
+
+	* ebench/ebench.py (MenuCtrl.mainMenu.execMenuCommand): batch mode
+	peek cmds[0] for key value
+
+	* spec/test_ebench.py (test_simple_menu_twopars_unordered):
+	parameters not in order
+
 2021-05-19  jj  <jj@santtu>
 
 	* ebench/ebench.py (MenuCtrl.mainMenu.execMenuCommand): TypeError:

@@ -806,10 +806,15 @@ class MenuCtrl:
         """Three uses 1) prompt user for menuCommand, 2) prompt user for
         commandParameters, 3) ask user for measurement value
 
+        :prompt: string presented to user in interactive mode (cmd is None)
+
         :key: Lookding for key-value pair for commandParameters 
 
         :cmds: Command line parameters (in batch mode), which give
-        values to promts (instead of asking user)
+        values to promtps (instead of asking user)
+
+        :validValues: if given, ensure that result is list of
+        'validValues', None -> no check
 
         :defaultParameters: dict->value, use 'key' to check if promted
         value has default value. If default value defined: update the
@@ -867,7 +872,7 @@ class MenuCtrl:
             if ans is None and key in defaultParameters:
                 # Batch default
                 # value not in found 
-                logging.debug( "Bathc ans for key {} defaultValue {}".format(key, defaultParameters[key]))
+                logging.debug( "Batch ans for key {} defaultValue {}".format(key, defaultParameters[key]))
                 ans = defaultParameters[key]
 
             if key in defaultParameters:
@@ -890,9 +895,10 @@ class MenuCtrl:
         return ans
 
     def mainMenu( self ):
-        """For interactive usage, prompt user for menu command and command
-        parameters, for command line usage parse commands and
-        parameters from '_argv'. Invoke action for command.
+        """Menu REPL: For interactive usage, prompt user for menu command and
+        command parameters, for command line usage parse commands and
+        parameters from '_argv'. Invoke action for command until quit
+        (or no more 'cmds' from command line)
 
         :self.cmds: command line paramaters (in batch mode)
 
@@ -931,15 +937,34 @@ class MenuCtrl:
             commandParameters = {}
 
             if parameterPrompt is not None:
-                # Promp user/read CLI keyvalue parameters
-                commandParameters = {
-                    k: MenuCtrl.promptValue(
-                            v,key=k,
-                            cmds=cmds,
-                            defaultParameters=defaultParameters,
-                            promptIndentation=promptIndentation)
-                    for k,v in parameterPrompt.items()
-                }
+                if self.interactive:
+                    # Interctively Promp user/read CLI keyvalue parameters 
+                    commandParameters = {
+                        k: MenuCtrl.promptValue(
+                                v,key=k,
+                                cmds=cmds,
+                                defaultParameters=defaultParameters,
+                                promptIndentation=promptIndentation)
+                        for k,v in parameterPrompt.items()
+                    }
+                else:
+                    # Batch (not interactive) eats command line
+                    # arguments in 'cmds'
+                    while len(cmds) > 0:
+                        match = re.search( r"(?P<key>.+)=(?P<value>.*)", cmds[0] )
+                        if match is None or match.group('key') not in parameterPrompt.keys(): break
+                        k = match.group('key')
+                        v = match.group('value') # promt not used
+                        commandParameters[k] = MenuCtrl.promptValue(
+                                v,key=k,
+                                cmds=cmds,
+                                defaultParameters=defaultParameters,
+                                promptIndentation=promptIndentation)
+
+                    # apply defaultParameters
+                    for k,v in defaultParameters.items():
+                        if k not in commandParameters or commandParameters[k] is None:
+                            commandParameters[k] = v
 
             if menuAction is not None:
                 if not outputTemplate is None:
@@ -991,7 +1016,7 @@ class MenuCtrl:
         goon = True
         while goon:
             if not self.interactive and len(cmds) == 0:
-                # all commands consumed - quit batch
+                # all command line paramters consumed - quit batch
                 break
             menuCommand = MenuCtrl.promptValue(
                 self.prompt
@@ -1006,10 +1031,10 @@ class MenuCtrl:
                 goon = False
                 if self.isChildMenu:
                     # Main menu quit is not recorded (batch mode ends
-                    # automagically when all input consume)
-                    self.appendRecording( menuCommand )
+                    # automagically when all input consumed)
+                    self.appendRecording(menuCommand)
             else:
-                goon = execMenuCommand( menu, menuCommand,defaults
+                goon = execMenuCommand( menu, menuCommand, defaults
                                         , promptIndentation=promptIndentation , outputTemplate=self.outputTemplate)
 
         # Confirm whether save recording when exiting

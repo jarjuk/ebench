@@ -1,6 +1,9 @@
 ## 0.0.11-SNAPSHOT/20210519-18:38:51
 
 - Fixes: TypeError: __init__() missing 1 required positional argument: 'msg' ebench.py
+- Features added:
+  - command parameter may given in any order
+
 
 ## 0.0.10/20210519-18:38:16
 

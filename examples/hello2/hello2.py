@@ -60,7 +60,7 @@ class HelloApi(Instrument):
       return self._greetCount + int(fake)
 
   def hello( self, whom:str, who:str ) -> str:
-    """:return: JSON -document"""
+    """:return: dict -document for parameters"""
     return  { 'HELLO' : whom, 'FROM': who }
 
 
@@ -80,7 +80,7 @@ class HelloInstrument(HelloApi):
       """Hello -command just demonstrates simple menu action.
 
       It receives to parameters 'whom' and 'who' and prints greeting
-      and increments 'greetCount' (just to demonstrate that Intrument
+      and increments 'greetCount' (just to demonstrate that Instrument
       MAY maintain internal state).
 
       :who: default value is of 'who' parameter is logged in user, its
@@ -88,8 +88,8 @@ class HelloInstrument(HelloApi):
 
       :whom: object to be greeted
 
-      sayHello just creates a facadea uses uses API provided by
-      HelloApi to contruct the greeting
+      sayHello is a facade and uses uses API provided by HelloApi to
+      create the greeting HELLO and FROM properties
 
       """
       self.greetDone()
@@ -108,7 +108,7 @@ CMD_GREET = "sayHello"
 # Parameters to menu command CMD_GREET
 greetPar = {
     "whom": "Whom to greet?",
-    "who":  "Who is the greeter? Ret accepts default value: ",
+    "who":  "Who is the greeter? (Ret accepts default value)",
 }
 
 # Initial values for menu command parameters
