@@ -216,6 +216,9 @@ class MenuValueError(ValueError):
     pass
 class MenuNoRecording(Exception):
     pass
+class InitError(Exception):
+    pass
+
 
 TOOLNAME="ebench"
 
@@ -1106,15 +1109,18 @@ class PyInstrument(Instrument):
         except pyvisa.errors.VisaIOError as err:
             self._instrument = None
             logging.error(err)
+            return
         except ValueError as err:
             self._instrument = None
             logging.error(err)
+            return
+
         try:
             idn = self.instrument.query('*IDN?')
             logging.warning("Successfully connected  '{}' with '{}'".format(self.addr, idn))
         except:
             pass
-            
+
 
         
     def close(self):

@@ -1,3 +1,11 @@
+2021-10-12  jj  <jj@santtu>
+
+	* ebench/ebench.py (PyInstrument.initInstrument): core dump in no device found
+
+	* ebRigol: fix has no attribute 'ebRigol_main'
+
+	* ebUnit: Fixed ebUnit_main, core dumped when no device found
+
 2021-10-07  jj  <jj@santtu>
 
 	* HELLO.org (mainMenu): demonstrated paremters order

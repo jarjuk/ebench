@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import ebench
+from ebench import ebRigol_main
 import os
 print( "{} - {}".format(os.path.basename(__file__), ebench.version()))
-ebench.ebRigol_main.main()
+ebRigol_main.main()
 
 

@@ -1,4 +1,9 @@
 ## 0.0.12-SNAPSHOT/20211007-14:03:32
+
+- Fixes:
+  - ./ebUnit : ebUnit_main not found, core dump in no device found
+  - ./ebRigol: has no attribute 'ebRigol_main'
+
 ## 0.0.11/20211007-12:18:14
 
 - Fixes: TypeError: __init__() missing 1 required positional argument: 'msg' ebench.py
