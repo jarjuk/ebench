@@ -5,6 +5,7 @@
   - ./ebRigol: has no attribute 'ebRigol_main'
   - ?? command=CMD: help text changed parameters above can be in any order
   - ebUnit sine (=any waveform generate) should not toggle output
+  - ebRigol measurement add support to read statistics (AVER,...)
 
 ## 0.0.11/20211007-12:18:14
 

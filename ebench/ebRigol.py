@@ -106,12 +106,12 @@ class MSO1104(RigolScope):
 
 
     def measurement( self, measurements:str, csvFile:str=None, measurementSep=",", chMeasurementSep=":"):
-        """Make AVERAGE 'measurements' (:MEASure:ITEM? <item>,CHAN<ch>') from scope and
+        """Make 'measurements' (:MEASure:ITEM? <item>,CHAN<ch>') from scope and
         save result to 'csvFile'
 
 
-        :measurements: Comma separated list of 'ch:item' pairs. 
-          Where 
+        :measurements: Comma separated list of 'ch:item' pairs or 'ch:stat:item' triples
+        Where 
 
             ch: is channel number 1,2,3,4 or digical channel name
             D0,..D15.  Special ch -value 'USER' promps value from user
@@ -122,16 +122,18 @@ class MSO1104(RigolScope):
                NWIDth, PDUTy, NDUTy, TVMAX, TVMIN, PSLEWrate,
                NSLEWrate, VUPper, VMID, VLOWer, VARIance, PVRMS,
                PPULses, NPULses, PEDGes, and NEDGes
- 
-               For special ch 'USER' item is the name promped from
-               user
 
-        Example USER:Vdd,1:Vavg,D0:FREQ
+            stat is one of MAXimum|MINimum|CURRent|AVERages|DEViation
+ 
+            For special ch 'USER' item is the name promped from
+            User
+
+        Example USER:Vdd,1:Vavg,D0:FREQ,1:AVG:VPP
 
         :csvFile:  name of CSV file where to append the results
 
         """
-        def dispatchMeasurement( ch, item ):
+        def dispatchMeasurement( ch, item, statistic ):
             """Dispatch measuring 'item' to different input feed. Default uses
             'rigolMeasurement' -feed, but 'CHANNEL_USER' is dispathed to 
             'askUser' channel.
@@ -143,24 +145,20 @@ class MSO1104(RigolScope):
             else:
                 # Reading measurement AVERAGE from Rigol
                 # statistic = "AVER"
-                statistic = None
+                # statistic = None
                 return self.rigolMeasurement( ch, item=item.upper(), statistic=statistic )
 
             
         logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
 
-        # Expect 'measurements' to separeated by 'measurementSep'
-        # (comma). Split channel -'ch' and measurement 'item' name using
-        # chMeasurementSep (colon)
-        measuremenList = [ chItem.split(chMeasurementSep) for chItem  in measurements.split(measurementSep) ]
+        measuremenList  = MSO1104.extractMeasurements( measurements)
 
-        logging.debug( "measurement: measuremenList{}".format(measuremenList))
+        # Example id  '1:VPP' or '1:AVER:VPP'
+        measurementId = lambda ch,statistic,item: "{}:{}".format(ch,item.upper()) if statistic is None else "{}:{}:{}".format(ch,statistic.upper(), item.upper())
 
-        # Measurement row is mdict with list from
-        # 'measuremenList'.
         measurementRow =  {
-            "{}:{}".format(ch,item.upper()): dispatchMeasurement(ch,item )
-            for (ch,item) in measuremenList 
+            measurementId(ch,statistic,item): dispatchMeasurement(ch,item, statistic=statistic )
+            for (ch,statistic, item) in measuremenList 
         }
         if csvFile is not None and not not csvFile:
             self.instrumentAppendCvsFile( csvFile, measurementRow )
@@ -315,6 +313,33 @@ class MSO1104(RigolScope):
         if channel in ["1", "2", "3", "4", 1, 2, 3, 4]:
             return "CHAN{}".format(channel)
         return channel
+
+    def extractMeasurements( measurements:str, measurementSep=",", chMeasurementSep=":"):
+        """:measurements: comma separed list of 'CH:ITEM' or 'CH:STAT:ITEM'  where
+
+        CH channel number
+        
+        ITEM is measured item, one of VMAX, VMIN, VPP, VTOP, VBASe,
+               VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea, PREShoot,
+               PERiod, FREQuency, RTIMe, FTIMe, PWIDth, NWIDth, PDUTy,
+               NDUTy, TVMAX, TVMIN, PSLEWrate, NSLEWrate, VUPper,
+               VMID, VLOWer, VARIance, PVRMS, PPULses, NPULses,
+               PEDGes, and NEDGes
+
+        STAT is one of  {MAXimum|MINimum|CURRent|AVERages|DEViation}
+        """
+
+        # Expect 'measurements' to separeated by 'measurementSep'
+        # (comma). Split channel -'ch' and measurement 'item' name using
+        # chMeasurementSep (colon)
+        measuremenList = [ chItem.split(chMeasurementSep) for chItem  in measurements.split(measurementSep) ]
+        measuremenList = [ [ entry[0], None, entry[1 ]]  if len(entry) == 2 else entry  for entry in measuremenList ]
+        logging.debug( "measurement: measuremenList{}".format(measuremenList))
+        return measuremenList
+
+
+    
+
 
 
 # ------------------------------------------------------------------
