@@ -1,3 +1,10 @@
+2021-10-13  jj  <jj@santtu>
+
+	* ebench/ebUnit.py (UTG962): ebUnit sine (=any waveform generate)
+	should not toggle output
+
+	* ebench/ebench.py (subMenuHelp): parameters above can be in any order
+
 2021-10-12  jj  <jj@santtu>
 
 	* ebench/ebench.py (PyInstrument.initInstrument): core dump in no device found

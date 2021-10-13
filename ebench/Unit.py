@@ -247,6 +247,7 @@ class UnitSignalGenerator(SignalGenerator):
             self.delay()
             # 2
             self.llUtility()
+            # swithch to other channel
             self.ilUtilityCh( ch, other=True )
             self.delay()
             # 3

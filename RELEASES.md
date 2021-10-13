@@ -3,6 +3,8 @@
 - Fixes:
   - ./ebUnit : ebUnit_main not found, core dump in no device found
   - ./ebRigol: has no attribute 'ebRigol_main'
+  - ?? command=CMD: help text changed parameters above can be in any order
+  - ebUnit sine (=any waveform generate) should not toggle output
 
 ## 0.0.11/20211007-12:18:14
 

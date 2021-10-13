@@ -1381,7 +1381,7 @@ def subMenuHelp( command, menuText, commandParameters, menuAction = None ):
         print( "*No parameters*")
     print( "" )
     print( "Notice:")
-    print( "- parameters MUST be given in the order listed above")
+    print( "- parameters above can be in any order")
     print( "- parameters are optional and they MAY be left out")
 
 def usage( cmd, mainMenu, synopsis=None, command=None, usageText=None  ):

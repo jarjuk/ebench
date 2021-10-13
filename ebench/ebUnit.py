@@ -153,9 +153,10 @@ class UTG962(UnitSignalGenerator):
             self.ilWave2Props( "Fall")
             self.ilRaiseFall( *self.instrumentValUnit( fall ))
             self.ilWave2Props( "Page Up")
-        # Activate
-        self.delay(2)
-        self.on(channel, keyWave=False)
+        # # Activate
+        # ebUnit sine (=any waveform generate) should not toggle output
+        # self.delay(2)
+        # self.on(channel, keyWave=False)
 
     def sine( self, **argv ):
         """Generate sine wave on 'channel' """

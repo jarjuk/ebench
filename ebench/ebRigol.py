@@ -150,7 +150,7 @@ class MSO1104(RigolScope):
         logging.info( "measurement: measurements={}, csvFile={}".format(measurements, csvFile))
 
         # Expect 'measurements' to separeated by 'measurementSep'
-        # (comma). Split channen -'ch' and measurement 'item' name with
+        # (comma). Split channel -'ch' and measurement 'item' name using
         # chMeasurementSep (colon)
         measuremenList = [ chItem.split(chMeasurementSep) for chItem  in measurements.split(measurementSep) ]
 
