@@ -103,8 +103,13 @@ class RigolScope(Osciloscope):
         self.write( cmd )
         
     def rigolChannelOnOff( self, ch, onOff:None):
-        cmd = ":CHAN{}:DISP {}".format(ch,"ON" if onOff else "OFF" )
+        """Switch channel 'ch' 'onOff'
+
+        :channel: 1,2,3,4,MATH
+        """
+        cmd = ":{}:DISP {}".format(RigolScope.chanStr(ch),"ON" if onOff else "OFF" )
         return  self.write(cmd)
+    
 
     def setdChOnOff( self, dCh, onOff:bool= None):
         cmd = ":LA:DIGI{}:DISPLAY {}" .format(dCh,"ON" if onOff else "OFF" )
@@ -199,6 +204,85 @@ class RigolScope(Osciloscope):
                 pass
             return rigolUnit
         cmd = ":CHAN{}:UNIT {}".format( ch,si2RigolUnit(siUnit))
+        self.write(cmd)
+
+    # Math stuff
+
+    def rigolMathOperator( self, operator):
+        """Set or query the operator of the math operation.
+
+        When the parameter in :MATH:SOURce1 and/or :MATH:SOURce2 is FX, this command is
+        used to set the operator of the outer layer operation of compound operation. The range of
+        <opt> is {ADD|SUBTract|MULTiply|DIVision|INTG|DIFF|SQRT|LOG|LN|EXP|ABS}
+
+        :operator: ADD, SUBT, MULT, DIV, AND, OR, XOR, NOT, FFT, INTG,
+                   DIFF, SQRT, LOG, LN, EXP, ABS, or FILT
+        """
+        cmd=f":MATH:OPER {operator}"
+        self.write(cmd)
+
+    def rigolMathSource( self, source, ch):
+        """Set or query the source or source A of algebraic
+        operation/functional operation/the outer layer operation of
+        compound operation
+
+        For algebraic operations, this command is used to set source A.
+        
+        For functional operations, only this command is used to set
+        the source.
+
+        For compound operations, this command is used to set source A
+        of the outer layer operation when the outer layer operation is
+        algeriac operation and the range of <src> is
+        {CHANnel1|CHANnel2|CHANnel3|CHANnel4}; this command is used to
+        set the source of the outer layer operation when the outer
+        layer operation is functional operation and <src> can only be
+        FX.
+
+        Note: When the outer layer operation of compound operation is
+        algebraic operation, at least one of source A and source B of
+        the outer layer operation should be set to FX.
+
+        When "FX" is selected, you can send the
+        :MATH:OPTion:FX:SOURce1, :MATH:OPTion:FX:SOURce2, and
+        :MATH:OPTion:FX:OPERator commands to set the sources and
+        operator of the inner layer operation.
+
+        :source: 1,2
+
+        :ch: 1,2,3,4
+        """
+        cmd = f":MATH:SOUR{source} CHAN{ch}"
+        self.write(cmd)
+
+    def rigolMathScale( self, scale ):
+        """Set or query the vertical scale of the operation result. The unit
+        depends on the operator currently selected and the unit of the
+        source.
+
+        The range of the vertical scale is related to the operator
+        currently selected and the vertical scale of the source
+        channel. For the integration (intg) and differential (diff)
+        operations, it is also related to the current horizontal
+        timebase.
+
+        """
+        cmd = f":MATH:SCAL {scale}"
+        self.write(cmd)
+
+    def rigolMathOffset( self, offset ):
+        """Set or query the vertical offset of the operation result. The unit
+        depends on the operator currently selected and the unit of the source
+
+        MathVerticalScale is the vertical scale of the operation
+        result and can be set by the :MATH:SCALe command
+
+        :offset: Related to the vertical scale of the operation result
+        Range: (-1000 x MathVerticalScale) to (1000 x MathVerticalScale) Step:
+        MathVerticalScale/50
+
+        """
+        cmd = f":MATH:OFFS {offset}"
         self.write(cmd)
 
     # Timebase stuff

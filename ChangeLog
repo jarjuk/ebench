@@ -1,3 +1,9 @@
+2021-10-20  jj  <jj@santtu>
+
+	* ebench/ebRigol.py (MSO1104.math): added
+
+	* ebench/Rigol.py (RigolScope.rigolMathOnOff): added
+
 2021-10-13  jj  <jj@santtu>
 
 	* ebench/ebUnit.py (UTG962): ebUnit sine (=any waveform generate)

@@ -57,8 +57,36 @@ class MSO1104(RigolScope):
         self.rigolClear()
         self.delay()
 
+
+    def math(self, operator, source1, source2="", scale=1.0, offset=0.0, onOff=True ):
+        """Setup oscilloscope 'math' operation
+
+        
+        :operator: ADD, SUBT, MULT, DIV, AND, OR, XOR, NOT, FFT, INTG,
+                   DIFF, SQRT, LOG, LN, EXP, ABS, or FILT
+
+        :source1: Source 1 for 'operator'
+
+        :source2: Source for 'operator'
+
+        :scale: Scale of math operator result
+
+        :offset: Vertical position on display
+
+        """
+        channel="MATH"
+        self.rigolMathOperator( operator=operator)
+        self.rigolMathSource( source=1, ch=source1 )
+        if source2 is not None and not not source2:
+            self.rigolMathSource( source=2, ch=source2 )
+        if scale is not None and not not scale:            
+            self.rigolMathScale( scale = scale)
+        if offset is not None and not not offset:            
+            self.rigolMathOffset( offset = offset )
+        self.rigolChannelOnOff( ch=channel, onOff = onOff )
+
     def setup(self, channel, probe="10x", scale=None, offset=None, stats=None, bwlimit="OFF"):
-        """Setup osciloscope 'channel' probe attenuation, scale and offset, and
+        """Setup oscilloscope 'channel' probe attenuation, scale and offset, and
         statistic measurement collection.
 
         :probe: Attenuation factor of the probe used (default probe=10x). 
@@ -276,6 +304,9 @@ class MSO1104(RigolScope):
         
         
     def channelOff(self, channel ):
+        """
+        :channel: 1,2,3,4,MATH
+        """
         logging.info( "off ch: {}".format(channel))
         self.rigolChannelOnOff( ch=channel, onOff = False )
         self.delay()
@@ -346,6 +377,7 @@ class MSO1104(RigolScope):
 # Menu: command parameters
 
 CMD_MEASURE= "measure"
+CMD_MATH= "math"
 CMD_TIMEBASE= "timebase"
 CMD_SETUP_TRIGGER= "setupTrigger"
 CMD_TRIGGER_STATUS="_triggerStatus"
@@ -355,7 +387,7 @@ CMD_TRIGGER_STATUS="_triggerStatus"
 # }
 
 channelPar = {
-    "channel"  : "Channel 1-4 to act upon"
+    "channel"  : "Channel to act upon 1,2,3,4,MATH"
 }
 setupPar = channelPar | {
     "probe"    : "Probe value (default 10x) [x]",
@@ -371,6 +403,14 @@ triggerSetupPar = {
     "slope"    : "Trigger source POS,NEG,RFAL",
     "level"    : "Trigger level (without unit)",
     
+}
+
+mathPar = {
+    "operator" : "Operator ADD|SUBTract|MULTiply|DIVision|AND|OR|XOR|NOT|FFT|INTG|DIFF|SQRT|LOG|LN|EXP|ABS|FILTer",
+    "source1"  : "Source 1 for 'operator'",
+    "source2"  : "Source 2 for 'operator'",
+    "scale"    : "Scale of math operation result",
+    "offset"   : "Vertical position",
 }
 
 measurePar =  {
@@ -452,6 +492,7 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None, outputTemplate=None, ca
         "Init"                   : MenuCtrl.MENU_SEPATOR_TUPLE,
         "general"                : ( "General setup", generalPar, gSkooppi.general),
         "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
+        CMD_MATH                 : ( "Setup math channel", mathPar, gSkooppi.math ),
         CMD_SETUP_TRIGGER        : ( "Setup trigger", triggerSetupPar, gSkooppi.setupTrigger ),
         CMD_TIMEBASE             : ( "Setup timebase", timebasePar, gSkooppi.timebase ),
         "podSetup"               : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
