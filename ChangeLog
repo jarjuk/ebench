@@ -1,3 +1,7 @@
+2021-10-25  jj  <jj@santtu>
+
+	* ebench/ebRigol.py (MSO1104.setupTrigger): Added 'runMode'
+
 2021-10-20  jj  <jj@santtu>
 
 	* ebench/ebRigol.py (MSO1104.math): added

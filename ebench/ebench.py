@@ -159,11 +159,14 @@ class Instrument:
         Validate 'value' is in 'validValues'
 
         :validValues: List or None
+
+        :return: value
         """
         if validValues is not None and value not in validValues:
             msg = "{} > expecting one of {} - got '{}'".format( context, validValues, value  )
             logging.error( msg )
             raise MenuValueError(msg)
+        return value
     
     def instrumentValUnit( self, valUnitStr, validValues:List[str]=None ):
         """Extract value and unit from 'valUnitStr' 

@@ -360,6 +360,25 @@ class RigolScope(Osciloscope):
         """
         self.write( ":TRIG:EDGE:SLOPE {}".format(slope))
 
+    def rigolTriggerSweep( self, sweep:str ):
+        """Set or query the trigger mode.
+
+        AUTO: auto trigger. No matter whether the trigger condition is met, there is always
+        waveform display.
+
+        NORMal: normal trigger. Display waveform when the trigger
+        condition is met; otherwise, the oscilloscope holds the
+        original waveform and waits for the next trigger.
+
+        SINGle: single trigger. The oscilloscope waits for a trigger
+        and displays the waveform when the trigger condition is met and then stops
+
+        """
+        validSweeps = [ "AUTO", "NORMAL", "SINGLE"]
+        cmd = ":TRIG:SWEEP {}".format( self.instrumentValidate(
+            sweep.upper(), validSweeps, context=f"Trigger sweep {sweep}") )
+        self.write( cmd)
+    
         
     def rigolTriggerEdgeLevel( self, level):
         """Set :TRIGger:EDGe:LEVel <level>.

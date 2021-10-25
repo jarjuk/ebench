@@ -2,6 +2,7 @@
 
 - Features:
   - ebRigol math - setup math operator source1 source2 scale offset
+  - ebRigol setupTrigger sweep=AUTO/NORMAL/SINGLE
 
 - Fixes:
   - ./ebUnit : ebUnit_main not found, core dump in no device found

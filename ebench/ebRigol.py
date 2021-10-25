@@ -141,8 +141,8 @@ class MSO1104(RigolScope):
         :measurements: Comma separated list of 'ch:item' pairs or 'ch:stat:item' triples
         Where 
 
-            ch: is channel number 1,2,3,4 or digical channel name
-            D0,..D15.  Special ch -value 'USER' promps value from user
+            ch: is channel number 1,2,3,4 or digital channel name
+            D0,..D15, or MATH. Special ch -value 'USER' promps value from user
 
             item: is measured item, one of VMAX, VMIN, VPP, VTOP,
                VBASe, VAMP, VAVG, VRMS, OVERshoot, MARea, MPARea,
@@ -260,7 +260,7 @@ class MSO1104(RigolScope):
             self.rigolDigitalLabel(ch,label)
             self.delay(0.2)
 
-    def setupTrigger( self, source, slope, level ):
+    def setupTrigger( self, source, slope, level, sweep:None ):
         """Setup trigger level. This includes defining:
 
         - setup edge trigger  source
@@ -275,16 +275,18 @@ class MSO1104(RigolScope):
         :level: The unit is the same as the current amplitude unit of
         the signal source selected. 
 
+        :sweep: AUTO,NORMAL,SINGLE
         
         """
-        logging.info( "setupTrigger: source:{}, slope: {}, level:{}".format(
-            source, slope, level))
+        logging.info( f"setupTrigger: source:{source}, slope: {slope}, level:{level}, sweep:{sweep}" )
         if source is not None and not not source:
             self.rigolTriggerEdgeSource( source=MSO1104.channelToRigolSource(source))
         if slope is not None and not not slope:
             self.rigolTriggerEdgeSlope(slope)
         if level is not None and not not level:
             self.rigolTriggerEdgeLevel(level)
+        if sweep is not None and not not sweep:
+            self.rigolTriggerSweep( sweep=sweep )
         
     def triggerStatus( self ):
         """Return trigger status (:TRIG:STAT) 
@@ -397,11 +399,12 @@ setupPar = channelPar | {
     "stats"    : "Comma -separated list of stat measuremnts",
 }
 
-triggerSetupPar = {
+setupTriggerPar = {
 
     "source"   : "Trigger source 1,2,3,4,D0..D15",
     "slope"    : "Trigger source POS,NEG,RFAL",
     "level"    : "Trigger level (without unit)",
+    "sweep"    : "Trigger sweep (AUTO,NORMAL,SINGLE)",
     
 }
 
@@ -459,7 +462,7 @@ podSetupPar = podPar | {
 
 defaults = {
     CMD_MEASURE: measureDefaults,
-    CMD_SETUP_TRIGGER: { k: None for k in triggerSetupPar.keys()},
+    CMD_SETUP_TRIGGER: { k: None for k in setupTriggerPar.keys()},
     CMD_TIMEBASE: { k: None for k in timebasePar.keys()},
     "stat":  { "multiline": "OFF", "stats": None },
 }
@@ -493,7 +496,7 @@ def run( _argv, runMenu:bool = True, ip=None, addr=None, outputTemplate=None, ca
         "general"                : ( "General setup", generalPar, gSkooppi.general),
         "setup"                  : ( "Setup channel", setupPar, gSkooppi.setup ),
         CMD_MATH                 : ( "Setup math channel", mathPar, gSkooppi.math ),
-        CMD_SETUP_TRIGGER        : ( "Setup trigger", triggerSetupPar, gSkooppi.setupTrigger ),
+        CMD_SETUP_TRIGGER        : ( "Setup trigger", setupTriggerPar, gSkooppi.setupTrigger ),
         CMD_TIMEBASE             : ( "Setup timebase", timebasePar, gSkooppi.timebase ),
         "podSetup"               : ( "Setup digical channels", podSetupPar, gSkooppi.podSetup),
         "podOff"                 : ( "Setup digical channels", podOffPar, gSkooppi.digitalPodOff),
