@@ -1,12 +1,12 @@
 import setuptools
 
 import ebench.CMDS as CMDS
-
-
-with open("VERSION", "r") as fh:
-    version = fh.read().rstrip()
+import os
 
 name="ebench"
+
+with open(os.path.join(name, "VERSION"), "r") as fh:
+    version = fh.read().rstrip()
 
 
 print( "version", version, ", packages", setuptools.find_packages())
