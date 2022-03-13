@@ -25,13 +25,8 @@ setuptools.setup(
     url="https://github.com/jarjuk/ebench",
     include_package_data=True,
     package_data={
-        # "ebench": ['VERSION', 'RELEASES.md', "ebMenu.yaml" ]
-        "ebench": [ "ebMenu.yaml" ]
+        "ebench": ['VERSION', 'RELEASES.md', "ebMenu.yaml" ]
     },
-    data_files=[
-        ('', ['VERSION', 'RELEASES.md'] )
-    ],
-    
     #  scripts=[f"{CMDS.CMD_RIGOL}", f"{CMDS.CMD_UNIT}"],
     entry_points = {
         "console_scripts": [ f"{CMDS.CMD_RIGOL}=ebench.ebRigol_main:main"
