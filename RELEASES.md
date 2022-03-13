@@ -1,1 +1,1 @@
-/home/jj/work/ebench/ebench/RELEASES.md
+ebench/RELEASES.md
