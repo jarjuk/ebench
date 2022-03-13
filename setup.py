@@ -23,6 +23,7 @@ setuptools.setup(
     long_description="",
     long_description_content_type="text/markdown",
     url="https://github.com/jarjuk/ebench",
+    include_package_data=True,
     package_data={
         "ebench": ['VERSION', 'RELEASES.md', "ebMenu.yaml" ]
     },
