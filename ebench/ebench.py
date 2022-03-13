@@ -1127,7 +1127,8 @@ class PyInstrument(Instrument):
 
         
     def close(self):
-        if self.instrument is not None:
+        # if self.instrument is not None:
+        if self.instrumentInitialized:
             logging.info( "Close instrument: {}".format(self.instrument))
             self.instrument.close()
             self.instrument = None
@@ -1147,6 +1148,13 @@ class PyInstrument(Instrument):
     def addr( self, addr:str):
         self._addr = addr
 
+    @property
+    def instrumentInitialized(self):
+        """Peek if _instrument is initizlized
+        """
+        return not self._instrument is None
+
+        
     @property
     def instrument(self):
         if self._instrument is None:

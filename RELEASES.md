@@ -10,6 +10,7 @@
   - ?? command=CMD: help text changed parameters above can be in any order
   - ebUnit sine (=any waveform generate) should not toggle output
   - ebRigol measurement add support to read statistics (AVER,...)
+  - ebRigol/ebUnit: close only if `instrumentInitialized`
 
 ## 0.0.11/20211007-12:18:14
 

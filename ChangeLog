@@ -1,3 +1,8 @@
+2022-03-13  jj  <jj@santtu>
+
+	* ebench/ebench.py (PyInstrument.instrumentInitialized): new method
+	(PyInstrument.close): use instrumentInitialized check
+
 2021-10-25  jj  <jj@santtu>
 
 	* ebench/ebRigol.py (MSO1104.setupTrigger): Added 'runMode'
