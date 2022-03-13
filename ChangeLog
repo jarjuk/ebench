@@ -1,7 +1,10 @@
 2022-03-13  jj  <jj@santtu>
 
+	* VERSION: symlink to ebench directory
+
 	* ebench/ebench.py (PyInstrument.instrumentInitialized): new method
 	(PyInstrument.close): use instrumentInitialized check
+	(version): read VERSION from installation directory
 
 2021-10-25  jj  <jj@santtu>
 

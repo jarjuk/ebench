@@ -24,7 +24,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/jarjuk/ebench",
     package_data={
-        "ebench": ['../VERSION', '../RELEASES.md', "ebMenu.yaml" ]
+        "ebench": ['VERSION', 'RELEASES.md', "ebMenu.yaml" ]
     },
     #  scripts=[f"{CMDS.CMD_RIGOL}", f"{CMDS.CMD_UNIT}"],
     entry_points = {

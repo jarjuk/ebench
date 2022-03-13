@@ -11,6 +11,7 @@
   - ebUnit sine (=any waveform generate) should not toggle output
   - ebRigol measurement add support to read statistics (AVER,...)
   - ebRigol/ebUnit: close only if `instrumentInitialized`
+  - setup.py: install VERSION and RELEASES.md into installation directoyry
 
 ## 0.0.11/20211007-12:18:14
 
