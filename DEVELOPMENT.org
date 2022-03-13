@@ -365,19 +365,21 @@ ebRigol _version
 ** COmmand line test
 
 #+BEGIN_SRC bash :eval no-export :results output
-ebUTG900 ?
+ebUnit ?
 #+END_SRC
 
 #+RESULTS:
 #+begin_example
-ebUTG900 - 0.0.6-SNAPSHOT: Tool to control UNIT-T UTG900 Waveform generator
+ebUnit: Tool to control UNIT-T UTG962/932 Waveform generator
 
-Usage: ebUTG900 [options] [commands and parameters] 
+Usage: ebUnit [options] [commands and parameters] 
 
 Commands:
+
            sine  : Generate sine -wave on channel 1|2
          square  : Generate square -wave on channel 1|2
           pulse  : Generate pulse -wave on channel 1|2
+           ramp  : Generate ramp -wave on channel 1|2
             arb  : Upload wave file and use it to generate wave on channel 1|2
              on  : Switch on channel 1|2
             off  : Switch off channel 1|2
@@ -387,36 +389,52 @@ Commands:
               .  : Stop recording
          screen  : Take screenshot
  list_resources  : List pyvisa resources (=pyvisa list_resources() wrapper)'
-----------    Misc    ----------
-        version  : Output version number
 ----------    Help    ----------
               q  : Exit
               ?  : List commands
              ??  : List command parameters
 
 More help:
-  ebUTG900 --help                          : to list options
-  ebUTG900 ? command=<command>             : to get help on command <command> parameters
+  ebUnit --help                          : to list options
+  ebUnit ? command=<command>             : to get help on command <command> parameters
 
 Examples:
-  ebUTG900 ? command=sine                  : help on sine command parameters
-  ebUTG900 list_resources                  : Identify --addr option parameter
-  ebUTG900 --addr 'USB0::1::2::3::0::INSTR': Run interactively on device found in --addr 'USB0::1::2::3::0::INSTR'
-  ebUTG900 --captureDir=pics screen        : Take screenshot to pics directory (form device in default --addr)
-  ebUTG900 reset                           : Send reset to UTH900 waveform generator
-  ebUTG900 sine channel=2 freq=2kHz        : Generate 2 kHz sine signal on channel 2
-  ebUTG900 sine channel=1 square channel=2 : chaining sine generation on channel 1, and square generation on channel 2
+  ebUnit ? command=sine                  : help on sine command parameters
+  ebUnit list_resources                  : Identify --addr option parameter
+  ebUnit --addr 'USB0::1::2::3::0::INSTR': Run interactively on device found in --addr 'USB0::1::2::3::0::INSTR'
+  ebUnit --captureDir=pics screen        : Take screenshot to pics directory (form device in default --addr)
+  ebUnit reset                           : Send reset to UTH900 waveform generator
+  ebUnit sine channel=2 freq=2kHz        : Generate 2 kHz sine signal on channel 2
+  ebUnit sine channel=1 square channel=2 : chaining sine generation on channel 1, and square generation on channel 2
 
 Hint:
-  Run reset to synchronize ebUTG900 -tool with device state. Ref= ?? command=reset
-  One-liner in linux: ebUTG900 --addr $(ebUTG900 list_resources)
+  Run reset to synchronize ebUnit -tool with device state. Ref= ?? command=reset
+  One-liner in linux: ebUnit --addr $(ebUnit list_resources)
+
+
 #+end_example
 
 #+BEGIN_SRC bash :eval no-export :results output
-ebUTG900 reset on channel=1 on channel=2
+ebUnit reset; echo ISTAT=$?
+
 #+END_SRC
 
 #+RESULTS:
+: ISTAT=0
+
+
+#+BEGIN_SRC bash :eval no-export :results output
+ebUnit reset on channel=1 on channel=2
+#+END_SRC
+
+#+RESULTS:
+
+#+BEGIN_SRC bash :eval no-export :results output
+ebUnit reset on channel=2
+#+END_SRC
+
+#+RESULTS:
+
 
 #+BEGIN_SRC bash :eval no-export :results output
 ebUTG900  reset off channel=1 off channel=2
